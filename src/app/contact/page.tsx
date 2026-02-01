@@ -1,15 +1,61 @@
+'use client'
+
 import type { Metadata } from 'next'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 
-export const metadata: Metadata = {
-  title: 'Contact Us',
-  description: 'Get in touch with ConsultPro\'s expert business consultants. Contact us for strategic management, HR solutions, quality assurance, and performance optimization consulting services.',
-}
-
 export default function Contact() {
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    company: '',
+    message: ''
+  })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSubmitting(true)
+    setSubmitStatus('idle')
+
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: `${formData.firstName} ${formData.lastName}`.trim(),
+          email: formData.email,
+          company: formData.company,
+          message: formData.message,
+        }),
+      })
+
+      if (response.ok) {
+        setSubmitStatus('success')
+        setFormData({ firstName: '', lastName: '', email: '', company: '', message: '' })
+      } else {
+        setSubmitStatus('error')
+      }
+    } catch (error) {
+      setSubmitStatus('error')
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
+  }
   return (
     <article className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -74,7 +120,18 @@ export default function Contact() {
             <Card>
               <CardContent className="p-10">
                 <h2 className="text-2xl font-bold text-foreground mb-8">Send Us a Message</h2>
-                <form className="space-y-6" aria-label="Contact form">
+                <form onSubmit={handleSubmit} className="space-y-6" aria-label="Contact form">
+                  {submitStatus === 'success' && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+                      <p className="text-green-800">Thank you! Your message has been sent successfully.</p>
+                    </div>
+                  )}
+                  {submitStatus === 'error' && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+                      <p className="text-red-800">Sorry, there was an error sending your message. Please try again.</p>
+                    </div>
+                  )}
+                  
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label htmlFor="firstName" className="text-sm font-semibold text-foreground">
@@ -84,6 +141,8 @@ export default function Contact() {
                         type="text"
                         id="firstName"
                         name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
                         required
                       />
                     </div>
@@ -95,6 +154,8 @@ export default function Contact() {
                         type="text"
                         id="lastName"
                         name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
                         required
                       />
                     </div>
@@ -108,6 +169,8 @@ export default function Contact() {
                       type="email"
                       id="email"
                       name="email"
+                      value={formData.email}
+                      onChange={handleChange}
                       required
                     />
                   </div>
@@ -120,26 +183,9 @@ export default function Contact() {
                       type="text"
                       id="company"
                       name="company"
+                      value={formData.company}
+                      onChange={handleChange}
                     />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <label htmlFor="service" className="text-sm font-semibold text-foreground">
-                      Service Interest
-                    </label>
-                    <select
-                      id="service"
-                      name="service"
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <option value="">Select a service</option>
-                      <option value="strategic">Strategic Management</option>
-                      <option value="operations">Operational Excellence</option>
-                      <option value="hr">Human Resources</option>
-                      <option value="quality">Quality Management</option>
-                      <option value="performance">Performance Analytics</option>
-                      <option value="change">Change Management</option>
-                    </select>
                   </div>
                   
                   <div className="space-y-2">
@@ -150,18 +196,21 @@ export default function Contact() {
                       id="message"
                       name="message"
                       rows={5}
+                      value={formData.message}
+                      onChange={handleChange}
                       required
                       placeholder="Tell us about your project or consulting needs..."
                     />
                   </div>
                   
                   <Button
-                    type="button"
+                    type="submit"
                     size="lg"
-                    className="w-full text-lg py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                    disabled={isSubmitting}
+                    className="w-full text-lg py-6 h-auto bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:opacity-50"
                     aria-label="Send your message to ConsultPro"
                   >
-                    Send Message
+                    {isSubmitting ? 'Sending...' : 'Send Message'}
                   </Button>
                 </form>
               </CardContent>
