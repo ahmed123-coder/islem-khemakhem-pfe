@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
@@ -15,7 +16,7 @@ export default function Navbar() {
               ConsultPro
             </Link>
           </div>
-          <div className="hidden md:flex items-center space-x-10">
+          <div className="hidden md:flex items-center space-x-8">
             <Link href="/" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
               Home
             </Link>
@@ -25,14 +26,16 @@ export default function Navbar() {
             <Link href="/blog" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
               Blog
             </Link>
-            <Link href="/contact" className="btn-primary">
-              Contact Us
-            </Link>
+            <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+              <Link href="/contact">Contact Us</Link>
+            </Button>
           </div>
           <div className="md:hidden flex items-center">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-blue-600 p-2"
+              className="text-gray-700 hover:text-blue-600"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {isOpen ? (
@@ -41,7 +44,7 @@ export default function Navbar() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 )}
               </svg>
-            </button>
+            </Button>
           </div>
         </div>
       </div>

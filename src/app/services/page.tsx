@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import ServiceCard from '@/components/ServiceCard'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 
 export const metadata: Metadata = {
   title: 'Business Consulting Services',
@@ -45,8 +47,8 @@ export default function Services() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <header className="text-center mb-20">
-          <h1 className="text-5xl font-bold text-gray-900 mb-8">Professional Business Consulting Services</h1>
-          <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
+          <h1 className="text-5xl font-bold text-foreground mb-8">Professional Business Consulting Services</h1>
+          <p className="text-xl text-muted-foreground max-w-4xl mx-auto leading-relaxed">
             We provide comprehensive consulting and business support services designed to optimize your operations, enhance performance, and drive sustainable growth across all aspects of your organization.
           </p>
         </header>
@@ -62,16 +64,20 @@ export default function Services() {
         </section>
         
         {/* CTA Section */}
-        <section className="mt-20 text-center bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
-            Need a Custom Solution?
-          </h2>
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Every business is unique. Let us create a tailored consulting approach that addresses your specific challenges and objectives.
-          </p>
-          <a href="/contact" className="btn-primary" aria-label="Contact us to discuss your needs">
-            Discuss Your Needs
-          </a>
+        <section className="mt-20 text-center">
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50">
+            <CardContent className="p-12">
+              <h2 className="text-3xl font-bold text-foreground mb-6">
+                Need a Custom Solution?
+              </h2>
+              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+                Every business is unique. Let us create a tailored consulting approach that addresses your specific challenges and objectives.
+              </p>
+              <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+                <a href="/contact" aria-label="Contact us to discuss your needs">Discuss Your Needs</a>
+              </Button>
+            </CardContent>
+          </Card>
         </section>
       </div>
     </article>

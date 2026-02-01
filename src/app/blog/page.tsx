@@ -1,4 +1,9 @@
 import type { Metadata } from 'next'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
 
 export const metadata: Metadata = {
   title: 'Business Consulting Blog',
@@ -9,50 +14,56 @@ const articles = [
   {
     id: 1,
     title: 'The Future of Business Consulting in 2024',
-    excerpt: 'Exploring emerging trends, digital transformation, and innovative methodologies shaping the modern consulting landscape and client expectations.',
+    excerpt: 'Exploring emerging trends, digital transformation, and innovative methodologies shaping the modern consulting landscape.',
     date: '2024-01-15',
     readTime: '5 min read',
-    category: 'Strategy'
+    category: 'Strategy',
+    featured: true
   },
   {
     id: 2,
     title: 'Effective Performance Management Strategies',
-    excerpt: 'Key approaches to measuring, tracking, and improving organizational performance through data-driven insights, KPI optimization, and continuous improvement frameworks.',
+    excerpt: 'Key approaches to measuring, tracking, and improving organizational performance through data-driven insights.',
     date: '2024-01-10',
     readTime: '7 min read',
-    category: 'Performance'
+    category: 'Performance',
+    featured: false
   },
   {
     id: 3,
     title: 'Digital Transformation in Human Resources',
-    excerpt: 'How technology and automation are revolutionizing HR processes, from recruitment and onboarding to employee engagement, performance tracking, and retention strategies.',
+    excerpt: 'How technology and automation are revolutionizing HR processes and employee engagement strategies.',
     date: '2024-01-05',
     readTime: '6 min read',
-    category: 'HR'
+    category: 'HR',
+    featured: false
   },
   {
     id: 4,
     title: 'Quality Management Best Practices',
-    excerpt: 'Essential practices for implementing effective quality management systems, achieving ISO compliance, and establishing continuous improvement processes in modern organizations.',
+    excerpt: 'Essential practices for implementing effective quality management systems and achieving ISO compliance.',
     date: '2023-12-28',
     readTime: '8 min read',
-    category: 'Quality'
+    category: 'Quality',
+    featured: false
   },
   {
     id: 5,
     title: 'Leadership in Times of Change',
-    excerpt: 'Strategic leadership approaches for navigating organizational change, building resilient business cultures, and maintaining team performance during transformation initiatives.',
+    excerpt: 'Strategic leadership approaches for navigating organizational change and building resilient business cultures.',
     date: '2023-12-20',
     readTime: '6 min read',
-    category: 'Leadership'
+    category: 'Leadership',
+    featured: false
   },
   {
     id: 6,
     title: 'Data-Driven Decision Making',
-    excerpt: 'Leveraging business analytics, intelligence tools, and performance metrics to make informed strategic decisions and drive competitive advantage in dynamic markets.',
+    excerpt: 'Leveraging business analytics and intelligence tools to make informed strategic decisions.',
     date: '2023-12-15',
     readTime: '9 min read',
-    category: 'Analytics'
+    category: 'Analytics',
+    featured: false
   }
 ]
 
@@ -62,64 +73,82 @@ export default function Blog() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <header className="text-center mb-20">
-          <h1 className="text-5xl font-bold text-gray-900 mb-8">Business Consulting Insights</h1>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            Stay informed with the latest trends, strategies, and best practices in business consulting, management, and organizational excellence from our expert consultants.
+          <Badge variant="outline" className="mb-6 text-blue-600 border-blue-200">
+            Expert Insights
+          </Badge>
+          <h1 className="text-4xl font-bold text-foreground mb-6">Business Consulting Insights</h1>
+          <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            Stay informed with the latest trends, strategies, and best practices in business consulting and organizational excellence.
           </p>
         </header>
         
         {/* Articles Grid */}
-        <section aria-label="Blog articles">
-          <h2 className="sr-only">Latest Articles</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <section>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {articles.map((article) => (
-              <article key={article.id} className="card p-8 h-full group hover:-translate-y-1">
-                <header className="flex items-center justify-between mb-4">
-                  <span className="bg-blue-100 text-blue-800 text-sm font-semibold px-3 py-1 rounded-full">
-                    {article.category}
-                  </span>
-                  <span className="text-sm text-gray-500">{article.readTime}</span>
-                </header>
-                <h3 className="text-2xl font-bold text-gray-900 mb-4 leading-tight group-hover:text-blue-600 transition-colors">
-                  {article.title}
-                </h3>
-                <p className="text-gray-600 mb-6 leading-relaxed flex-1">{article.excerpt}</p>
-                <footer className="flex items-center justify-between">
-                  <time className="text-sm text-gray-500" dateTime={article.date}>{article.date}</time>
-                  <button className="text-blue-600 hover:text-blue-800 font-semibold flex items-center group" aria-label={`Read more about ${article.title}`}>
-                    Read More
-                    <svg className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </footer>
-              </article>
+              <Card key={article.id} className={`h-full group hover:-translate-y-1 transition-all duration-300 hover:shadow-xl ${
+                article.featured ? 'ring-2 ring-blue-200 bg-gradient-to-br from-blue-50/50 to-white' : ''
+              }`}>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <Badge 
+                      variant={article.featured ? "default" : "secondary"} 
+                      className={article.featured ? "bg-blue-600" : "bg-blue-100 text-blue-800 hover:bg-blue-200"}
+                    >
+                      {article.category}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">{article.readTime}</span>
+                  </div>
+                  {article.featured && (
+                    <Badge variant="outline" className="w-fit text-xs text-blue-600 border-blue-300">
+                      ✨ Featured
+                    </Badge>
+                  )}
+                </CardHeader>
+                <CardContent className="flex flex-col h-full pt-0">
+                  <h3 className="text-lg font-bold text-foreground mb-3 leading-tight group-hover:text-blue-600 transition-colors">
+                    {article.title}
+                  </h3>
+                  <p className="text-muted-foreground mb-4 leading-relaxed flex-1 text-sm">{article.excerpt}</p>
+                  <Separator className="my-3" />
+                  <div className="flex items-center justify-between">
+                    <time className="text-xs text-muted-foreground" dateTime={article.date}>{article.date}</time>
+                    <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800 p-0 h-auto text-sm">
+                      Read More →
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
         </section>
         
         {/* Newsletter CTA */}
-        <section className="mt-20 text-center bg-gradient-to-r from-slate-50 to-gray-50 rounded-2xl p-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">
-            Stay Updated with Expert Insights
-          </h2>
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-            Subscribe to our newsletter for the latest insights, industry trends, and expert advice on business consulting and organizational excellence.
-          </p>
-          <form className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto" aria-label="Newsletter subscription">
-            <label htmlFor="email" className="sr-only">Email address</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              placeholder="Enter your email"
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            <button type="button" className="btn-primary whitespace-nowrap">
-              Subscribe
-            </button>
-          </form>
+        <section className="mt-20">
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
+            <CardContent className="p-10 text-center">
+              <Badge variant="outline" className="mb-4 text-blue-600 border-blue-300">
+                Stay Updated
+              </Badge>
+              <h2 className="text-2xl font-bold text-foreground mb-4">
+                Expert Insights Delivered
+              </h2>
+              <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
+                Subscribe for the latest insights, industry trends, and expert advice on business consulting.
+              </p>
+              <form className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="flex-1 bg-white"
+                  required
+                />
+                <Button type="button" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+                  Subscribe
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         </section>
       </div>
     </article>
