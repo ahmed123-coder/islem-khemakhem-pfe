@@ -8,26 +8,35 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
 
   return (
-    <nav className="bg-white/95 backdrop-blur-md shadow-xl sticky top-0 z-50 border-b border-gray-100">
+    <nav className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20">
-          <div className="flex items-center">
-            <Link href="/" className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent hover:from-blue-700 hover:to-indigo-700 transition-all duration-300">
-              ConsultPro
-            </Link>
+        <div className="flex justify-between h-16">
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-lg bg-[#2B5A8E] flex items-center justify-center text-white font-bold text-xl">
+              D
+            </div>
+            <span className="text-xl font-bold text-gray-900">DSL Conseil</span>
           </div>
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
-              Home
+            <Link href="/" className="text-[#2B5A8E] font-medium">
+              Accueil
             </Link>
-            <Link href="/services" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+            <Link href="/services" className="text-[#64748B] hover:text-[#2B5A8E] transition-colors">
               Services
             </Link>
-            <Link href="/blog" className="text-gray-700 hover:text-blue-600 transition-colors font-medium">
+            <Link href="/blog" className="text-[#64748B] hover:text-[#2B5A8E] transition-colors">
               Blog
             </Link>
-            <Button asChild size="lg" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
-              <Link href="/contact">Contact Us</Link>
+            <Link href="/contact" className="text-[#64748B] hover:text-[#2B5A8E] transition-colors">
+              Contact
+            </Link>
+          </div>
+          <div className="hidden md:flex items-center gap-4">
+            <Link href="/login" className="text-gray-700">
+              Connexion
+            </Link>
+            <Button className="bg-[#2B5A8E] hover:bg-[#234a73] rounded-lg">
+              Prendre RDV
             </Button>
           </div>
           <div className="md:hidden flex items-center">
@@ -35,7 +44,6 @@ export default function Navbar() {
               variant="ghost"
               size="icon"
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-blue-600"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {isOpen ? (
@@ -49,19 +57,19 @@ export default function Navbar() {
         </div>
       </div>
       {isOpen && (
-        <div className="md:hidden border-t border-gray-200">
+        <div className="md:hidden border-t">
           <div className="px-4 pt-4 pb-6 space-y-4 bg-white">
-            <Link href="/" className="block text-gray-700 hover:text-blue-600 font-medium py-2">
-              Home
+            <Link href="/" className="block text-[#2B5A8E] font-medium py-2">
+              Accueil
             </Link>
-            <Link href="/services" className="block text-gray-700 hover:text-blue-600 font-medium py-2">
+            <Link href="/services" className="block text-gray-700 py-2">
               Services
             </Link>
-            <Link href="/blog" className="block text-gray-700 hover:text-blue-600 font-medium py-2">
+            <Link href="/blog" className="block text-gray-700 py-2">
               Blog
             </Link>
-            <Link href="/contact" className="block text-gray-700 hover:text-blue-600 font-medium py-2">
-              Contact Us
+            <Link href="/contact" className="block text-gray-700 py-2">
+              Contact
             </Link>
           </div>
         </div>

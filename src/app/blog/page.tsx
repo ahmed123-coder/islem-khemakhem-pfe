@@ -10,64 +10,22 @@ export const metadata: Metadata = {
   description: 'Expert insights on business consulting, strategic management, HR solutions, quality management, and performance optimization. Stay updated with industry trends and best practices.',
 }
 
-const articles = [
-  {
-    id: 1,
-    title: 'The Future of Business Consulting in 2024',
-    excerpt: 'Exploring emerging trends, digital transformation, and innovative methodologies shaping the modern consulting landscape.',
-    date: '2024-01-15',
-    readTime: '5 min read',
-    category: 'Strategy',
-    featured: true
-  },
-  {
-    id: 2,
-    title: 'Effective Performance Management Strategies',
-    excerpt: 'Key approaches to measuring, tracking, and improving organizational performance through data-driven insights.',
-    date: '2024-01-10',
-    readTime: '7 min read',
-    category: 'Performance',
-    featured: false
-  },
-  {
-    id: 3,
-    title: 'Digital Transformation in Human Resources',
-    excerpt: 'How technology and automation are revolutionizing HR processes and employee engagement strategies.',
-    date: '2024-01-05',
-    readTime: '6 min read',
-    category: 'HR',
-    featured: false
-  },
-  {
-    id: 4,
-    title: 'Quality Management Best Practices',
-    excerpt: 'Essential practices for implementing effective quality management systems and achieving ISO compliance.',
-    date: '2023-12-28',
-    readTime: '8 min read',
-    category: 'Quality',
-    featured: false
-  },
-  {
-    id: 5,
-    title: 'Leadership in Times of Change',
-    excerpt: 'Strategic leadership approaches for navigating organizational change and building resilient business cultures.',
-    date: '2023-12-20',
-    readTime: '6 min read',
-    category: 'Leadership',
-    featured: false
-  },
-  {
-    id: 6,
-    title: 'Data-Driven Decision Making',
-    excerpt: 'Leveraging business analytics and intelligence tools to make informed strategic decisions.',
-    date: '2023-12-15',
-    readTime: '9 min read',
-    category: 'Analytics',
-    featured: false
+async function getBlogs() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/blogs`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
   }
-]
+}
 
-export default function Blog() {
+export default async function Blog() {
+  const articles = await getBlogs();
+
+  if (!articles.length) {
+    return <div className="py-20 text-center">No blogs available</div>;
+  }
   return (
     <article className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -85,25 +43,14 @@ export default function Blog() {
         {/* Articles Grid */}
         <section>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {articles.map((article) => (
-              <Card key={article.id} className={`h-full group hover:-translate-y-1 transition-all duration-300 hover:shadow-xl ${
-                article.featured ? 'ring-2 ring-blue-200 bg-gradient-to-br from-blue-50/50 to-white' : ''
-              }`}>
+            {articles.map((article: any) => (
+              <Card key={article.id} className="h-full group hover:-translate-y-1 transition-all duration-300 hover:shadow-xl">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between mb-3">
-                    <Badge 
-                      variant={article.featured ? "default" : "secondary"} 
-                      className={article.featured ? "bg-blue-600" : "bg-blue-100 text-blue-800 hover:bg-blue-200"}
-                    >
-                      {article.category}
+                    <Badge variant="secondary" className="bg-blue-100 text-blue-800 hover:bg-blue-200">
+                      {article.author}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">{article.readTime}</span>
                   </div>
-                  {article.featured && (
-                    <Badge variant="outline" className="w-fit text-xs text-blue-600 border-blue-300">
-                      ✨ Featured
-                    </Badge>
-                  )}
                 </CardHeader>
                 <CardContent className="flex flex-col h-full pt-0">
                   <h3 className="text-lg font-bold text-foreground mb-3 leading-tight group-hover:text-blue-600 transition-colors">
@@ -112,7 +59,9 @@ export default function Blog() {
                   <p className="text-muted-foreground mb-4 leading-relaxed flex-1 text-sm">{article.excerpt}</p>
                   <Separator className="my-3" />
                   <div className="flex items-center justify-between">
-                    <time className="text-xs text-muted-foreground" dateTime={article.date}>{article.date}</time>
+                    <time className="text-xs text-muted-foreground" dateTime={new Date(article.createdAt).toISOString()}>
+                      {new Date(article.createdAt).toLocaleDateString()}
+                    </time>
                     <Button variant="ghost" size="sm" className="text-blue-600 hover:text-blue-800 p-0 h-auto text-sm">
                       Read More →
                     </Button>

@@ -8,40 +8,22 @@ export const metadata: Metadata = {
   description: 'Comprehensive business consulting services including strategic management, operational excellence, HR solutions, quality management, performance analytics, and change management.',
 }
 
-const services = [
-  {
-    title: 'Strategic Management',
-    description: 'Develop comprehensive business strategies, market analysis, and growth roadmaps for sustainable competitive advantage.',
-    icon: '🎯'
-  },
-  {
-    title: 'Operational Excellence',
-    description: 'Optimize business processes, workflow automation, and operational efficiency to reduce costs and improve productivity.',
-    icon: '⚙️'
-  },
-  {
-    title: 'Human Resources',
-    description: 'Complete HR solutions including talent acquisition, performance management, training programs, and organizational development.',
-    icon: '👥'
-  },
-  {
-    title: 'Quality Management',
-    description: 'Implement ISO standards, quality control systems, and continuous improvement processes for operational excellence.',
-    icon: '✅'
-  },
-  {
-    title: 'Performance Analytics',
-    description: 'Advanced data analytics, KPI development, and business intelligence solutions for data-driven decision making.',
-    icon: '📊'
-  },
-  {
-    title: 'Change Management',
-    description: 'Guide organizations through digital transformation, restructuring, and cultural change initiatives.',
-    icon: '🔄'
+async function getServices() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/services`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
   }
-]
+}
 
-export default function Services() {
+export default async function Services() {
+  const services = await getServices();
+
+  if (!services.length) {
+    return <div className="py-20 text-center">No services available</div>;
+  }
   return (
     <article className="py-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

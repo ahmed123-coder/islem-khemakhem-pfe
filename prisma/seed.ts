@@ -4,9 +4,12 @@ import * as bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Delete all users
+  // Delete all data
+  await prisma.contact.deleteMany({});
+  await prisma.blog.deleteMany({});
+  await prisma.service.deleteMany({});
   await prisma.user.deleteMany({});
-  console.log('✅ Deleted all users');
+  console.log('✅ Deleted all data');
 
   // Hash passwords
   const hashedAdminPassword = await bcrypt.hash('admin123', 10);
@@ -33,6 +36,70 @@ async function main() {
     },
   });
   console.log('✅ Created regular user:', user.email);
+
+  // Create services
+  const services = await prisma.service.createMany({
+    data: [
+      {
+        title: 'Business Strategy',
+        description: 'Develop comprehensive strategies to drive growth and competitive advantage',
+        icon: '📊',
+      },
+      {
+        title: 'Digital Transformation',
+        description: 'Modernize operations with cutting-edge technology solutions',
+        icon: '💻',
+      },
+      {
+        title: 'Financial Advisory',
+        description: 'Expert guidance on financial planning and investment strategies',
+        icon: '💰',
+      },
+    ],
+  });
+  console.log('✅ Created services:', services.count);
+
+  // Create blogs
+  const blogs = await prisma.blog.createMany({
+    data: [
+      {
+        title: '5 Strategies for Business Growth in 2024',
+        excerpt: 'Discover proven methods to scale your business effectively',
+        content: 'Full article content here...',
+        published: true,
+      },
+      {
+        title: 'Digital Transformation: A Complete Guide',
+        excerpt: 'Everything you need to know about modernizing your business',
+        content: 'Full article content here...',
+        published: true,
+      },
+      {
+        title: 'Financial Planning Best Practices',
+        excerpt: 'Expert tips for managing your business finances',
+        content: 'Full article content here...',
+        published: true,
+      },
+    ],
+  });
+  console.log('✅ Created blogs:', blogs.count);
+
+  // Create contacts
+  const contacts = await prisma.contact.createMany({
+    data: [
+      {
+        name: 'Alice Williams',
+        email: 'alice@example.com',
+        message: 'Interested in business strategy consulting',
+      },
+      {
+        name: 'Bob Davis',
+        email: 'bob@example.com',
+        message: 'Need help with digital transformation',
+      },
+    ],
+  });
+  console.log('✅ Created contacts:', contacts.count);
 }
 
 main()
