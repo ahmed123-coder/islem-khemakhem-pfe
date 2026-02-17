@@ -1,7 +1,22 @@
+'use client'
+
 import Link from 'next/link'
 import { Mail, Phone, MapPin } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import type { FooterContent } from '@/lib/content'
 
 export default function Footer() {
+  const [content, setContent] = useState<FooterContent | null>(null)
+
+  useEffect(() => {
+    fetch('/api/content/footer')
+      .then(res => res.json())
+      .then(data => setContent(data.value))
+      .catch(() => setContent(null))
+  }, [])
+
+  if (!content) return null
+
   return (
     <footer className="bg-[#1E293B] text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -9,12 +24,12 @@ export default function Footer() {
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-lg bg-[#F59E0B] flex items-center justify-center text-white font-bold text-xl">
-                D
+                {content.company.charAt(0)}
               </div>
-              <span className="text-xl font-bold">DSL Conseil</span>
+              <span className="text-xl font-bold">{content.company}</span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Cabinet de conseil en management, RH, qualité et performance. Nous accompagnons les PME dans leur transformation.
+              {content.tagline}
             </p>
           </div>
           
@@ -43,15 +58,15 @@ export default function Footer() {
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm">
                 <Mail className="h-4 w-4 text-[#F59E0B]" />
-                <span className="text-gray-400">contact@dsl-conseil.com</span>
+                <span className="text-gray-400">{content.email}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Phone className="h-4 w-4 text-[#F59E0B]" />
-                <span className="text-gray-400">+33 1 23 45 67 89</span>
+                <span className="text-gray-400">{content.phone}</span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <MapPin className="h-4 w-4 text-[#F59E0B]" />
-                <span className="text-gray-400">Paris, France</span>
+                <span className="text-gray-400">{content.address}</span>
               </div>
             </div>
           </div>
@@ -59,7 +74,7 @@ export default function Footer() {
         
         <div className="border-t border-gray-700 mt-12 pt-8 text-center">
           <p className="text-gray-400 text-sm">
-            &copy; 2026 DSL Conseil. Tous droits réservés.
+            &copy; {new Date().getFullYear()} {content.company}. Tous droits réservés.
           </p>
         </div>
       </div>

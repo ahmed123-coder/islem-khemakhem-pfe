@@ -1,11 +1,22 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
+import type { NavbarContent } from '@/lib/content'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
+  const [content, setContent] = useState<NavbarContent | null>(null)
+
+  useEffect(() => {
+    fetch('/api/content/navbar')
+      .then(res => res.json())
+      .then(data => setContent(data.value))
+      .catch(() => setContent({ logo: 'DSL Conseil', links: [] }))
+  }, [])
+
+  if (!content) return null
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -13,23 +24,20 @@ export default function Navbar() {
         <div className="flex justify-between h-16">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-[#2B5A8E] flex items-center justify-center text-white font-bold text-xl">
-              D
+              {content.logo.charAt(0)}
             </div>
-            <span className="text-xl font-bold text-gray-900">DSL Conseil</span>
+            <span className="text-xl font-bold text-gray-900">{content.logo}</span>
           </div>
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-[#2B5A8E] font-medium">
-              Accueil
-            </Link>
-            <Link href="/services" className="text-[#64748B] hover:text-[#2B5A8E] transition-colors">
-              Services
-            </Link>
-            <Link href="/blog" className="text-[#64748B] hover:text-[#2B5A8E] transition-colors">
-              Blog
-            </Link>
-            <Link href="/contact" className="text-[#64748B] hover:text-[#2B5A8E] transition-colors">
-              Contact
-            </Link>
+            {content.links.map((link, i) => (
+              <Link
+                key={i}
+                href={link.href}
+                className={i === 0 ? "text-[#2B5A8E] font-medium" : "text-[#64748B] hover:text-[#2B5A8E] transition-colors"}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
           <div className="hidden md:flex items-center gap-4">
             <Link href="/login" className="text-gray-700">
@@ -59,18 +67,15 @@ export default function Navbar() {
       {isOpen && (
         <div className="md:hidden border-t">
           <div className="px-4 pt-4 pb-6 space-y-4 bg-white">
-            <Link href="/" className="block text-[#2B5A8E] font-medium py-2">
-              Accueil
-            </Link>
-            <Link href="/services" className="block text-gray-700 py-2">
-              Services
-            </Link>
-            <Link href="/blog" className="block text-gray-700 py-2">
-              Blog
-            </Link>
-            <Link href="/contact" className="block text-gray-700 py-2">
-              Contact
-            </Link>
+            {content.links.map((link, i) => (
+              <Link
+                key={i}
+                href={link.href}
+                className={i === 0 ? "block text-[#2B5A8E] font-medium py-2" : "block text-gray-700 py-2"}
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
         </div>
       )}

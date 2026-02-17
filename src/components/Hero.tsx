@@ -1,8 +1,23 @@
+'use client'
+
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { useState, useEffect } from 'react'
+import type { HeroContent } from '@/lib/content'
 
 export default function Hero() {
+  const [content, setContent] = useState<HeroContent | null>(null)
+
+  useEffect(() => {
+    fetch('/api/content/hero')
+      .then(res => res.json())
+      .then(data => setContent(data.value))
+      .catch(() => setContent(null))
+  }, [])
+
+  if (!content) return null
+
   return (
     <section className="relative bg-[#2B5A8E] text-white overflow-hidden min-h-[600px]">
       <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1600')] bg-cover bg-center opacity-30"></div>
@@ -12,19 +27,22 @@ export default function Hero() {
             Cabinet de Conseil & Accompagnement
           </Badge>
           <h1 className="text-5xl lg:text-6xl font-serif font-bold mb-6 leading-tight">
-            Transformez votre entreprise avec{' '}
-            <span className="text-[#F59E0B]">l'excellence</span>
+            {content.title}
           </h1>
           <p className="text-xl mb-10 text-white/90 leading-relaxed">
-            Conseil en management, RH, qualité et performance. Nous accompagnons les PME vers l'efficacité et la croissance durable.
+            {content.subtitle}
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button className="bg-[#F59E0B] hover:bg-[#ea8c00] text-white rounded-lg px-6 py-6 text-base">
-              Prendre rendez-vous →
-            </Button>
-            <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-[#2B5A8E] rounded-lg px-6 py-6 text-base">
-              Découvrir nos services
-            </Button>
+            <Link href={content.ctaLink}>
+              <Button className="bg-[#F59E0B] hover:bg-[#ea8c00] text-white rounded-lg px-6 py-6 text-base">
+                {content.ctaText} →
+              </Button>
+            </Link>
+            <Link href="/services">
+              <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-[#2B5A8E] rounded-lg px-6 py-6 text-base">
+                Découvrir nos services
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

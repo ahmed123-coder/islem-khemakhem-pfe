@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Delete all data
+  await prisma.siteContent.deleteMany({});
   await prisma.contact.deleteMany({});
   await prisma.blog.deleteMany({});
   await prisma.service.deleteMany({});
@@ -100,6 +101,54 @@ async function main() {
     ],
   });
   console.log('✅ Created contacts:', contacts.count);
+
+  // Create site content
+  const navbar = await prisma.siteContent.create({
+    data: {
+      key: 'navbar',
+      value: {
+        logo: 'DSL Conseil',
+        links: [
+          { label: 'Accueil', href: '/' },
+          { label: 'Services', href: '/services' },
+          { label: 'Blog', href: '/blog' },
+          { label: 'Contact', href: '/contact' },
+        ],
+      },
+    },
+  });
+  console.log('✅ Created navbar content');
+
+  const hero = await prisma.siteContent.create({
+    data: {
+      key: 'hero',
+      value: {
+        title: "Transformez votre entreprise avec l'excellence",
+        subtitle: 'Conseil en management, RH, qualité et performance. Nous accompagnons les PME vers l\'efficacité et la croissance durable.',
+        ctaText: 'Prendre rendez-vous',
+        ctaLink: '/prendre-rdv',
+      },
+    },
+  });
+  console.log('✅ Created hero content');
+
+  const footer = await prisma.siteContent.create({
+    data: {
+      key: 'footer',
+      value: {
+        company: 'DSL Conseil',
+        tagline: 'Cabinet de conseil en management, RH, qualité et performance. Nous accompagnons les PME dans leur transformation.',
+        email: 'contact@dsl-conseil.com',
+        phone: '+33 1 23 45 67 89',
+        address: 'Paris, France',
+        social: {
+          linkedin: 'https://linkedin.com/company/dsl-conseil',
+          twitter: 'https://twitter.com/dslconseil',
+        },
+      },
+    },
+  });
+  console.log('✅ Created footer content');
 }
 
 main()
