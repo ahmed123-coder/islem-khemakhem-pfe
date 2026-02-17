@@ -21,7 +21,9 @@ export default function LoginPage() {
     })
 
     if (res.ok) {
-      router.push('/dashboard')
+      const data = await res.json()
+      const redirectPath = data.user.role === 'ADMIN' ? '/admin' : '/dashboard'
+      router.push(redirectPath)
       router.refresh()
     } else {
       const data = await res.json()
