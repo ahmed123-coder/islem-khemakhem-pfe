@@ -6,6 +6,16 @@ export const metadata: Metadata = {
   description: 'Des expertises au service de votre performance',
 }
 
+async function getServices() {
+  try {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/services`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    return res.json();
+  } catch {
+    return [];
+  }
+}
+
 const services = [
   {
     icon: '💼',
@@ -60,7 +70,13 @@ const methodology = [
   }
 ]
 
-export default function Services() {
+export default async function Services() {
+  const services = await getServices();
+
+  if (!services.length) {
+    return <div className="py-20 text-center">No services available</div>;
+  }
+
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -81,7 +97,7 @@ export default function Services() {
       {/* Services Grid */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-          {services.map((service, index) => (
+          {services.map((service: any, index: number) => (
             <div key={index} className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
               <div className={`${index % 2 === 1 ? 'lg:order-2' : ''}`}>
                 <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-3xl mb-6">
@@ -93,16 +109,18 @@ export default function Services() {
                 <p className="text-gray-600 mb-6 leading-relaxed">
                   {service.description}
                 </p>
-                <ul className="grid grid-cols-2 gap-3 mb-6">
-                  {service.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-center gap-3 text-gray-700">
-                      <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+                {service.features && Array.isArray(service.features) && (
+                  <ul className="grid grid-cols-2 gap-3 mb-6">
+                    {service.features.map((feature: string, idx: number) => (
+                      <li key={idx} className="flex items-center gap-3 text-gray-700">
+                        <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 <Link 
                   href="/contact"
                   className="inline-flex items-center gap-2 bg-[#2B5A8E] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#234a73] transition-all"

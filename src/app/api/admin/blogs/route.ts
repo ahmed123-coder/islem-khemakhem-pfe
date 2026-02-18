@@ -9,7 +9,7 @@ export async function GET() {
   }
 
   const blogs = await prisma.blog.findMany({ orderBy: { createdAt: 'desc' } })
-  return NextResponse.json(blogs)
+  return NextResponse.json(blogs, { status: 200 })
 }
 
 export async function POST(req: NextRequest) {
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
 
   const data = await req.json()
   const blog = await prisma.blog.create({ data })
-  return NextResponse.json(blog)
+  return NextResponse.json(blog, { status: 201 })
 }
 
 export async function PUT(req: NextRequest) {
@@ -31,7 +31,7 @@ export async function PUT(req: NextRequest) {
 
   const { id, ...data } = await req.json()
   const blog = await prisma.blog.update({ where: { id }, data })
-  return NextResponse.json(blog)
+  return NextResponse.json(blog, { status: 201})
 }
 
 export async function DELETE(req: NextRequest) {
@@ -45,5 +45,5 @@ export async function DELETE(req: NextRequest) {
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
 
   await prisma.blog.delete({ where: { id } })
-  return NextResponse.json({ success: true })
+  return NextResponse.json({ success: true }, { status: 200 })
 }

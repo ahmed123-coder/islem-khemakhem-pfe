@@ -38,6 +38,9 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+            <Link href="/pricing" className="text-[#64748B] hover:text-[#2B5A8E] transition-colors">
+              Pricing
+            </Link>
           </div>
           <div className="hidden md:flex items-center gap-4">
             <Link href="/login" className="text-gray-700">
@@ -76,6 +79,9 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+            <Link href="/pricing" className="block text-gray-700 py-2">
+              Pricing
+            </Link>
           </div>
         </div>
       )}
