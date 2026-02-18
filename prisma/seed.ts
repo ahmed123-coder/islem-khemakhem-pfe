@@ -5,6 +5,12 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Delete all data
+  await prisma.message.deleteMany({});
+  await prisma.mission.deleteMany({});
+  await prisma.subscriptions.deleteMany({});
+  await prisma.subscription_packages.deleteMany({});
+  await prisma.subscription_plans.deleteMany({});
+  await prisma.consultant.deleteMany({});
   await prisma.siteContent.deleteMany({});
   await prisma.contact.deleteMany({});
   await prisma.blog.deleteMany({});
@@ -14,7 +20,8 @@ async function main() {
 
   // Hash passwords
   const hashedAdminPassword = await bcrypt.hash('admin123', 10);
-  const hashedUserPassword = await bcrypt.hash('user123', 10);
+  const hashedClientPassword = await bcrypt.hash('client123', 10);
+  const hashedConsultantPassword = await bcrypt.hash('consultant123', 10);
 
   // Create admin user
   const admin = await prisma.user.create({
@@ -27,16 +34,27 @@ async function main() {
   });
   console.log('✅ Created admin user:', admin.email);
 
-  // Create regular user
-  const user = await prisma.user.create({
+  // Create client user
+  const client = await prisma.user.create({
     data: {
-      email: 'user@consultpro.com',
-      password: hashedUserPassword,
-      name: 'Regular User',
-      role: 'USER',
+      email: 'client@consultpro.com',
+      password: hashedClientPassword,
+      name: 'Client User',
+      role: 'CLIENT',
     },
   });
-  console.log('✅ Created regular user:', user.email);
+  console.log('✅ Created client user:', client.email);
+
+  // Create consultant
+  const consultant = await prisma.consultant.create({
+    data: {
+      email: 'consultant@consultpro.com',
+      password: hashedConsultantPassword,
+      name: 'Consultant Expert',
+      specialty: 'Business Strategy',
+    },
+  });
+  console.log('✅ Created consultant:', consultant.email);
 
   // Create services
   const services = await prisma.service.createMany({
@@ -101,6 +119,75 @@ async function main() {
     ],
   });
   console.log('✅ Created contacts:', contacts.count);
+
+  // Create subscription plans
+  const essentialPlan = await prisma.subscription_plans.create({
+    data: {
+      name: 'Essential',
+      nameAr: 'أساسي',
+      planType: 'ESSENTIAL',
+      description: 'Perfect for small businesses',
+      active: true,
+    },
+  });
+
+  const proPlan = await prisma.subscription_plans.create({
+    data: {
+      name: 'Pro',
+      nameAr: 'محترف',
+      planType: 'PRO',
+      description: 'For growing companies',
+      active: true,
+    },
+  });
+
+  const premiumPlan = await prisma.subscription_plans.create({
+    data: {
+      name: 'Premium',
+      nameAr: 'متميز',
+      planType: 'PREMIUM',
+      description: 'Enterprise solution',
+      active: true,
+    },
+  });
+  console.log('✅ Created subscription plans');
+
+  // Create subscription packages
+  await prisma.subscription_packages.createMany({
+    data: [
+      {
+        planId: essentialPlan.id,
+        priceMonthly: 99.000,
+        priceYearly: 990.000,
+        currency: 'TND',
+        features: JSON.stringify(['50 messages', '1 mission', 'Basic diagnostic']),
+        maxMessages: 50,
+        maxMissions: 1,
+        hasDiagnostic: true,
+      },
+      {
+        planId: proPlan.id,
+        priceMonthly: 199.000,
+        priceYearly: 1990.000,
+        currency: 'TND',
+        features: JSON.stringify(['200 messages', '5 missions', 'Advanced diagnostic', 'Priority support']),
+        maxMessages: 200,
+        maxMissions: 5,
+        hasDiagnostic: true,
+      },
+      {
+        planId: premiumPlan.id,
+        priceMonthly: 399.000,
+        priceYearly: 3990.000,
+        currency: 'TND',
+        features: JSON.stringify(['Unlimited messages', 'Unlimited missions', 'Full diagnostic', '24/7 support', 'Dedicated consultant']),
+        maxMessages: null,
+        maxMissions: null,
+        hasDiagnostic: true,
+      },
+    ],
+  });
+  console.log('✅ Created subscription packages');
 
   // Create site content
   const navbar = await prisma.siteContent.create({

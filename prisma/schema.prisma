@@ -8,18 +8,135 @@ datasource db {
 }
 
 enum Role {
-  USER
+  CLIENT
+  CONSULTANT
   ADMIN
 }
 
+enum SubscriptionPlan {
+  ESSENTIAL
+  PRO
+  PREMIUM
+}
+
+enum BillingPeriod {
+  MONTHLY
+  YEARLY
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+  SUSPENDED
+}
+
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
+  id            String          @id @default(cuid())
+  email         String          @unique
+  password      String
+  name          String?
+  role          Role            @default(CLIENT)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  subscriptions subscriptions[]
+  missions      Mission[]       @relation("ClientMissions")
+  messages      Message[]
+}
+
+model Consultant {
+  id        String    @id @default(cuid())
+  email     String    @unique
   password  String
-  name      String?
-  role      Role     @default(USER)
+  name      String
+  specialty String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  missions  Mission[] @relation("ConsultantMissions")
+}
+
+model subscription_plans {
+  id                    String                  @id @default(cuid())
+  name                  String
+  nameAr                String?
+  planType              SubscriptionPlan
+  description           String?
+  active                Boolean                 @default(true)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt @default(now())
+
+  subscription_packages subscription_packages[]
+}
+
+model subscription_packages {
+  id                 String              @id @default(cuid())
+  planId             String
+  priceMonthly       Decimal             @default(0) @db.Decimal(10, 3)
+  priceYearly        Decimal             @default(0) @db.Decimal(10, 3)
+  currency           String              @default("TND")
+  features           Json                @default("[]")
+  maxMessages        Int?
+  maxMissions        Int?
+  hasDiagnostic      Boolean             @default(true)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt @default(now())
+
+  subscription_plans subscription_plans  @relation(fields: [planId], references: [id])
+  subscriptions      subscriptions[]
+}
+
+model subscriptions {
+  id                    String                @id @default(cuid())
+  userId                String
+  packageId             String
+  billingCycle          BillingPeriod         @default(MONTHLY)
+  status                SubscriptionStatus
+  startDate             DateTime
+  endDate               DateTime
+  currentPeriodStart    DateTime              @default(now())
+  currentPeriodEnd      DateTime              @default(now())
+  autoRenew             Boolean               @default(true)
+  cancelledAt           DateTime?
+  cancelReason          String?
+  createdAt             DateTime              @default(now())
+  updatedAt             DateTime              @updatedAt @default(now())
+
+  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscription_packages subscription_packages @relation(fields: [packageId], references: [id])
+  missions              Mission[]
+
+  @@index([status])
+  @@index([userId])
+}
+
+model Mission {
+  id             String        @id @default(cuid())
+  title          String
+  clientId       String
+  consultantId   String
+  subscriptionId String
+  messageCount   Int           @default(0)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  client         User          @relation("ClientMissions", fields: [clientId], references: [id])
+  consultant     Consultant    @relation("ConsultantMissions", fields: [consultantId], references: [id])
+  subscription   subscriptions @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  messages       Message[]
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String
+  senderId  String
+  missionId String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  sender    User     @relation(fields: [senderId], references: [id])
+  mission   Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
 }
 
 model Blog {
@@ -52,7 +169,7 @@ model Contact {
 }
 
 model SiteContent {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   key       String   @unique
   value     Json
   createdAt DateTime @default(now())
