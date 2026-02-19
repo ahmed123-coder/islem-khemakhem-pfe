@@ -5,10 +5,12 @@ import { Card } from '@/components/ui/card'
 import { FileText, Briefcase, Mail, Users } from 'lucide-react'
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ blogs: 0, services: 0, contacts: 0, subscriptions: 0 })
+  const [stats, setStats] = useState({ blogs: 0, services: 0, contacts: 0, subscriptions: 0, missions: 0 })
 
   useEffect(() => {
-    fetch('/api/admin/stats').then(r => r.json()).then(setStats).catch(() => {})
+    fetch('/api/admin/stats').then(r => r.json()).then(data => {
+      setStats({ ...data, missions: data.missions || 0 })
+    }).catch(() => {})
   }, [])
 
   const cards = [
@@ -16,6 +18,7 @@ export default function AdminDashboard() {
     { label: 'Services', value: stats.services, icon: Briefcase, color: 'bg-green-500' },
     { label: 'Contacts', value: stats.contacts, icon: Mail, color: 'bg-yellow-500' },
     { label: 'Subscriptions', value: stats.subscriptions, icon: Users, color: 'bg-purple-500' },
+    { label: 'Missions', value: stats.missions, icon: Briefcase, color: 'bg-indigo-500' },
   ]
 
   return (

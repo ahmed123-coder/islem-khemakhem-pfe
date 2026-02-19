@@ -15,6 +15,7 @@ export default function AdminSidebar() {
     { href: '/admin/blogs', label: 'Blogs', icon: FileText },
     { href: '/admin/services', label: 'Services', icon: Briefcase },
     { href: '/admin/contacts', label: 'Contacts', icon: Mail },
+    { href: '/admin/missions', label: 'Missions', icon: Briefcase },
   ]
 
   const subscriptionLinks = [
