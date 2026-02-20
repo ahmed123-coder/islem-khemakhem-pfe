@@ -45,8 +45,8 @@ async function main() {
   });
   console.log('✅ Created client user:', client.email);
 
-  // Create consultant
-  const consultant = await prisma.consultant.create({
+  // Create consultants
+  const consultant1 = await prisma.consultant.create({
     data: {
       email: 'consultant@consultpro.com',
       password: hashedConsultantPassword,
@@ -54,7 +54,16 @@ async function main() {
       specialty: 'Business Strategy',
     },
   });
-  console.log('✅ Created consultant:', consultant.email);
+  
+  const consultant2 = await prisma.consultant.create({
+    data: {
+      email: 'consultant2@consultpro.com',
+      password: hashedConsultantPassword,
+      name: 'Marie Dupont',
+      specialty: 'Digital Transformation',
+    },
+  });
+  console.log('✅ Created consultants:', consultant1.email, consultant2.email);
 
   // Create services
   const services = await prisma.service.createMany({
@@ -189,6 +198,114 @@ async function main() {
   });
   console.log('✅ Created subscription packages');
 
+  // Create subscriptions for client
+  const packages = await prisma.subscription_packages.findMany();
+  const activeSubscription = await prisma.subscriptions.create({
+    data: {
+      userId: client.id,
+      packageId: packages[1].id, // Pro plan
+      billingCycle: 'MONTHLY',
+      status: 'ACTIVE',
+      startDate: new Date(),
+      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      autoRenew: true,
+    },
+  });
+  console.log('✅ Created active subscription for client');
+
+  // Create missions
+  const mission1 = await prisma.mission.create({
+    data: {
+      title: 'Digital Transformation Strategy',
+      description: 'Develop a comprehensive digital transformation roadmap for the company',
+      status: 'ACTIVE',
+      progress: 45,
+      clientId: client.id,
+      consultantId: consultant1.id,
+      subscriptionId: activeSubscription.id,
+      messageCount: 12,
+    },
+  });
+
+  const mission2 = await prisma.mission.create({
+    data: {
+      title: 'Business Process Optimization',
+      description: 'Analyze and optimize core business processes to improve efficiency',
+      status: 'ACTIVE',
+      progress: 70,
+      clientId: client.id,
+      consultantId: consultant2.id,
+      subscriptionId: activeSubscription.id,
+      messageCount: 25,
+    },
+  });
+
+  const mission3 = await prisma.mission.create({
+    data: {
+      title: 'Market Expansion Analysis',
+      description: 'Research and analyze potential new markets for expansion',
+      status: 'PENDING',
+      progress: 0,
+      clientId: client.id,
+      consultantId: consultant1.id,
+      subscriptionId: activeSubscription.id,
+      messageCount: 0,
+    },
+  });
+
+  const mission4 = await prisma.mission.create({
+    data: {
+      title: 'Financial Restructuring',
+      description: 'Complete financial audit and restructuring plan',
+      status: 'COMPLETED',
+      progress: 100,
+      clientId: client.id,
+      consultantId: consultant2.id,
+      subscriptionId: activeSubscription.id,
+      messageCount: 48,
+    },
+  });
+  console.log('✅ Created missions:', 4);
+
+  // Create messages for missions
+  await prisma.message.createMany({
+    data: [
+      {
+        content: 'Hello, I would like to discuss the digital transformation strategy.',
+        senderId: client.id,
+        missionId: mission1.id,
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      },
+      {
+        content: 'Of course! Let me share some initial insights on your current digital infrastructure.',
+        senderId: client.id,
+        missionId: mission1.id,
+        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 + 3600000),
+      },
+      {
+        content: 'I have reviewed your business processes. Here are my recommendations.',
+        senderId: client.id,
+        missionId: mission2.id,
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+      },
+      {
+        content: 'Thank you for the detailed analysis. When can we schedule a follow-up meeting?',
+        senderId: client.id,
+        missionId: mission2.id,
+        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      },
+      {
+        content: 'The financial restructuring has been completed successfully.',
+        senderId: client.id,
+        missionId: mission4.id,
+        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
+      },
+    ],
+  });
+  console.log('✅ Created messages for missions');
+
   // Create site content
   const navbar = await prisma.siteContent.create({
     data: {
@@ -236,6 +353,13 @@ async function main() {
     },
   });
   console.log('✅ Created footer content');
+
+  console.log('\n🎉 Seed completed successfully!');
+  console.log('\n📝 Test Credentials:');
+  console.log('Admin: admin@consultpro.com / admin123');
+  console.log('Client: client@consultpro.com / client123');
+  console.log('Consultant: consultant@consultpro.com / consultant123');
+  console.log('Consultant 2: consultant2@consultpro.com / consultant123');
 }
 
 main()
