@@ -34,13 +34,13 @@ export default function AdminSidebar() {
   ]
 
   return (
-    <aside className="w-64 bg-gray-900 text-white flex flex-col">
-      <div className="p-6 border-b border-gray-700">
-        <h1 className="text-2xl font-bold">Admin Panel</h1>
+    <aside className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col shadow-xl">
+      <div className="p-6 border-b border-gray-700/50">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Admin Panel</h1>
         <p className="text-xs text-gray-400 mt-1">SaaS Management</p>
       </div>
       
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-hide">
         {links.map(link => {
           const Icon = link.icon
           const isActive = pathname === link.href
@@ -48,12 +48,12 @@ export default function AdminSidebar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition ${
-                isActive ? 'bg-blue-600' : 'hover:bg-gray-800'
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
+                isActive ? 'bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg shadow-blue-500/30' : 'hover:bg-gray-700/50 hover:translate-x-1'
               }`}
             >
-              <Icon size={20} />
-              <span>{link.label}</span>
+              <Icon size={20} className={isActive ? '' : 'group-hover:scale-110 transition-transform'} />
+              <span className="font-medium">{link.label}</span>
             </Link>
           )
         })}
@@ -61,48 +61,46 @@ export default function AdminSidebar() {
         <div>
           <button
             onClick={() => setSubscriptionOpen(!subscriptionOpen)}
-            className="flex items-center justify-between w-full px-4 py-3 rounded-lg hover:bg-gray-800 transition"
+            className="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group hover:translate-x-1"
           >
             <div className="flex items-center gap-3">
-              <Package size={20} />
-              <span>Subscriptions</span>
+              <Package size={20} className="group-hover:scale-110 transition-transform" />
+              <span className="font-medium">Subscriptions</span>
             </div>
-            <ChevronDown size={16} className={`transition ${subscriptionOpen ? 'rotate-180' : ''}`} />
+            <ChevronDown size={16} className={`transition-transform duration-300 ${subscriptionOpen ? 'rotate-180' : ''}`} />
           </button>
           
-          {subscriptionOpen && (
-            <div className="ml-4 mt-2 space-y-1">
-              {subscriptionLinks.map(link => {
-                const Icon = link.icon
-                const isActive = pathname === link.href
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition ${
-                      isActive ? 'bg-blue-600' : 'hover:bg-gray-800'
-                    }`}
-                  >
-                    <Icon size={16} />
-                    <span>{link.label}</span>
-                  </Link>
-                )
-              })}
-            </div>
-          )}
+          <div className={`ml-4 mt-1 space-y-1 overflow-hidden transition-all duration-300 ${subscriptionOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
+            {subscriptionLinks.map(link => {
+              const Icon = link.icon
+              const isActive = pathname === link.href
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all duration-200 group ${
+                    isActive ? 'bg-gradient-to-r from-blue-600 to-blue-500 shadow-md' : 'hover:bg-gray-700/50 hover:translate-x-1'
+                  }`}
+                >
+                  <Icon size={16} className={isActive ? '' : 'group-hover:scale-110 transition-transform'} />
+                  <span>{link.label}</span>
+                </Link>
+              )
+            })}
+          </div>
         </div>
       </nav>
 
-      <div className="p-4 border-t border-gray-700 space-y-2">
-        <Link href="/" className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-800 transition">
-          <Home size={16} />
+      <div className="p-4 border-t border-gray-700/50 space-y-1">
+        <Link href="/" className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group hover:translate-x-1">
+          <Home size={16} className="group-hover:scale-110 transition-transform" />
           <span className="text-sm">Back to Site</span>
         </Link>
         <button 
           onClick={handleLogout}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-800 transition w-full text-left"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-200 w-full text-left group hover:translate-x-1"
         >
-          <LogOut size={16} />
+          <LogOut size={16} className="group-hover:scale-110 transition-transform" />
           <span className="text-sm">Logout</span>
         </button>
       </div>
