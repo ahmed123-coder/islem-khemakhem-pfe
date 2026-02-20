@@ -44,6 +44,7 @@ export async function GET(req: NextRequest) {
     } else if (user.role === 'CONSULTANT') {
       where.consultantId = user.userId
     }
+    // ADMIN sees all missions (no filter)
 
     const missions = await prisma.mission.findMany({
       where,

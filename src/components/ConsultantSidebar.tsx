@@ -1,11 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Home, Briefcase, Users, Calendar, Settings, LogOut } from 'lucide-react'
 
 export default function ConsultantSidebar() {
   const pathname = usePathname()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    router.push('/login')
+  }
 
   const links = [
     { href: '/consultant', icon: Home, label: 'Dashboard' },
@@ -39,7 +45,10 @@ export default function ConsultantSidebar() {
             </Link>
           )
         })}
-        <button className="flex items-center gap-3 px-4 py-3 rounded-lg mb-2 text-gray-600 hover:bg-gray-50 w-full transition-colors">
+        <button 
+          onClick={handleLogout}
+          className="flex items-center gap-3 px-4 py-3 rounded-lg mb-2 text-gray-600 hover:bg-gray-50 w-full transition-colors"
+        >
           <LogOut size={20} />
           <span>Logout</span>
         </button>

@@ -27,7 +27,9 @@ export default function MissionsAdmin() {
   const loadData = async () => {
     const res = await fetch('/api/missions')
     const data = await res.json()
-    setMissions(data)
+    console.log('API Response:', data)
+    console.log('Is Array:', Array.isArray(data))
+    setMissions(Array.isArray(data) ? data : [])
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,7 +110,8 @@ export default function MissionsAdmin() {
 
         <div className={editItem ? '' : 'lg:col-span-2'}>
           <div className="space-y-4">
-            <h2 className="text-xl font-bold">All Missions</h2>
+            <h2 className="text-xl font-bold">All Missions ({missions.length})</h2>
+            {missions.length === 0 && <p className="text-gray-500">No missions found</p>}
             {missions.map(mission => (
               <Card key={mission.id} className="p-6">
                 <div className="flex justify-between items-start mb-4">
