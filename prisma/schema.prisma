@@ -47,9 +47,10 @@ model User {
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  subscriptions subscriptions[]
-  missions      Mission[]       @relation("ClientMissions")
-  messages      Message[]
+  subscriptions     subscriptions[]
+  missions          Mission[]           @relation("ClientMissions")
+  messages          Message[]
+  uploadedDocuments MissionDocument[]
 }
 
 model Consultant {
@@ -131,10 +132,11 @@ model Mission {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
-  client         User          @relation("ClientMissions", fields: [clientId], references: [id])
-  consultant     Consultant    @relation("ConsultantMissions", fields: [consultantId], references: [id])
-  subscription   subscriptions @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  client         User              @relation("ClientMissions", fields: [clientId], references: [id])
+  consultant     Consultant        @relation("ConsultantMissions", fields: [consultantId], references: [id])
+  subscription   subscriptions     @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
   messages       Message[]
+  documents      MissionDocument[]
 
   @@index([clientId])
   @@index([consultantId])
@@ -187,4 +189,21 @@ model SiteContent {
   value     Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model MissionDocument {
+  id           String   @id @default(cuid())
+  fileName     String
+  fileUrl      String
+  fileSize     Int?
+  mimeType     String?
+  uploadedById String
+  missionId    String
+  createdAt    DateTime @default(now())
+
+  uploadedBy User    @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
+  mission    Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  @@index([missionId])
+  @@index([uploadedById])
 }
