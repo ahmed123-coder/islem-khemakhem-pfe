@@ -22,7 +22,13 @@ export default function LoginPage() {
 
     if (res.ok) {
       const data = await res.json()
-      const redirectPath = data.user.role === 'ADMIN' ? '/admin' : '/dashboard'
+      const role = data.user.role
+      
+      const redirectPath = 
+        role === 'ADMIN' ? '/admin' :
+        role === 'CONSULTANT' ? '/consultant' :
+        role === 'CLIENT' ? '/client' : '/dashboard'
+      
       router.push(redirectPath)
       router.refresh()
     } else {
