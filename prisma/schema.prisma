@@ -63,6 +63,7 @@ model Consultant {
   updatedAt DateTime  @updatedAt
 
   missions  Mission[] @relation("ConsultantMissions")
+  services  ConsultantService[]
 }
 
 model subscription_plans {
@@ -93,6 +94,7 @@ model subscription_packages {
 
   subscription_plans subscription_plans  @relation(fields: [planId], references: [id])
   subscriptions      subscriptions[]
+  services           PackageService[]
 }
 
 model subscriptions {
@@ -171,6 +173,9 @@ model Service {
   icon        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  
+  consultants ConsultantService[]
+  packages    PackageService[]
 }
 
 model Contact {
@@ -206,4 +211,30 @@ model MissionDocument {
 
   @@index([missionId])
   @@index([uploadedById])
+}
+
+// Many-to-Many: Package <-> Service
+model PackageService {
+  id        String   @id @default(cuid())
+  packageId String
+  serviceId String
+  createdAt DateTime @default(now())
+
+  package subscription_packages @relation(fields: [packageId], references: [id], onDelete: Cascade)
+  service Service               @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([packageId, serviceId])
+}
+
+// Many-to-Many: Consultant <-> Service
+model ConsultantService {
+  id           String     @id @default(cuid())
+  consultantId String
+  serviceId    String
+  createdAt    DateTime   @default(now())
+
+  consultant Consultant @relation(fields: [consultantId], references: [id], onDelete: Cascade)
+  service    Service    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@unique([consultantId, serviceId])
 }

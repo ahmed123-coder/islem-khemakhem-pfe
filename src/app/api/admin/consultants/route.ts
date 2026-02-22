@@ -15,6 +15,11 @@ export async function GET() {
             missions: true,
           },
         },
+        services: {
+          include: {
+            service: true
+          }
+        }
       },
       orderBy: { createdAt: 'desc' },
     })

@@ -7,6 +7,11 @@ export async function GET() {
       include: {
         subscription_plans: true,
         subscriptions: true,
+        services: {
+          include: {
+            service: true
+          }
+        }
       },
       orderBy: { createdAt: 'desc' },
     });

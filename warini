@@ -1,0 +1,56 @@
+Package (Essential/Pro/Premium)
+  └── Services (استراتيجية التحول الرقمي، استشارات مالية، ...)
+       └── Consultants (متخصصين في هذه الخدمة)
+
+
+Package (Essential)
+  ├── Service 1: استراتيجية التحول الرقمي
+  │     ├── Consultant: محمد (متخصص)
+  │     └── Consultant: أحمد (متخصص)
+  │
+  └── Service 2: استشارات مالية
+        ├── Consultant: فاطمة (متخصصة)
+        └── Consultant: سارة (متخصصة)
+
+كيفاش تستعملها:
+1. Admin يربط Services بـ Package:
+// في /admin/subscription-packages
+await prisma.packageService.create({
+  data: {
+    packageId: "package-id",
+    serviceId: "service-id"
+  }
+})
+
+Copy
+typescript
+2. Admin يربط Consultants بـ Service:
+// في /admin/consultants
+await prisma.consultantService.create({
+  data: {
+    consultantId: "consultant-id",
+    serviceId: "service-id"
+  }
+})
+
+Copy
+typescript
+3. Client يشوف Services في Package:
+const packageWithServices = await prisma.subscription_packages.findUnique({
+  where: { id: packageId },
+  include: {
+    services: {
+      include: {
+        service: {
+          include: {
+            consultants: {
+              include: {
+                consultant: true
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+})

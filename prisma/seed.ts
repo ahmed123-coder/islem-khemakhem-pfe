@@ -5,6 +5,8 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Delete all data
+  await prisma.consultantService.deleteMany({});
+  await prisma.packageService.deleteMany({});
   await prisma.message.deleteMany({});
   await prisma.mission.deleteMany({});
   await prisma.subscriptions.deleteMany({});
@@ -66,26 +68,30 @@ async function main() {
   console.log('✅ Created consultants:', consultant1.email, consultant2.email);
 
   // Create services
-  const services = await prisma.service.createMany({
-    data: [
-      {
-        title: 'Business Strategy',
-        description: 'Develop comprehensive strategies to drive growth and competitive advantage',
-        icon: '📊',
-      },
-      {
-        title: 'Digital Transformation',
-        description: 'Modernize operations with cutting-edge technology solutions',
-        icon: '💻',
-      },
-      {
-        title: 'Financial Advisory',
-        description: 'Expert guidance on financial planning and investment strategies',
-        icon: '💰',
-      },
-    ],
+  const service1 = await prisma.service.create({
+    data: {
+      title: 'Business Strategy',
+      description: 'Develop comprehensive strategies to drive growth and competitive advantage',
+      icon: '📊',
+    },
   });
-  console.log('✅ Created services:', services.count);
+
+  const service2 = await prisma.service.create({
+    data: {
+      title: 'Digital Transformation',
+      description: 'Modernize operations with cutting-edge technology solutions',
+      icon: '💻',
+    },
+  });
+
+  const service3 = await prisma.service.create({
+    data: {
+      title: 'Financial Advisory',
+      description: 'Expert guidance on financial planning and investment strategies',
+      icon: '💰',
+    },
+  });
+  console.log('✅ Created services:', 3);
 
   // Create blogs
   const blogs = await prisma.blog.createMany({
@@ -162,48 +168,74 @@ async function main() {
   console.log('✅ Created subscription plans');
 
   // Create subscription packages
-  await prisma.subscription_packages.createMany({
-    data: [
-      {
-        planId: essentialPlan.id,
-        priceMonthly: 99.000,
-        priceYearly: 990.000,
-        currency: 'TND',
-        features: JSON.stringify(['50 messages', '1 mission', 'Basic diagnostic']),
-        maxMessages: 50,
-        maxMissions: 1,
-        hasDiagnostic: true,
-      },
-      {
-        planId: proPlan.id,
-        priceMonthly: 199.000,
-        priceYearly: 1990.000,
-        currency: 'TND',
-        features: JSON.stringify(['200 messages', '5 missions', 'Advanced diagnostic', 'Priority support']),
-        maxMessages: 200,
-        maxMissions: 5,
-        hasDiagnostic: true,
-      },
-      {
-        planId: premiumPlan.id,
-        priceMonthly: 399.000,
-        priceYearly: 3990.000,
-        currency: 'TND',
-        features: JSON.stringify(['Unlimited messages', 'Unlimited missions', 'Full diagnostic', '24/7 support', 'Dedicated consultant']),
-        maxMessages: null,
-        maxMissions: null,
-        hasDiagnostic: true,
-      },
-    ],
+  const essentialPackage = await prisma.subscription_packages.create({
+    data: {
+      planId: essentialPlan.id,
+      priceMonthly: 99.000,
+      priceYearly: 990.000,
+      currency: 'TND',
+      features: JSON.stringify(['50 messages', '1 mission', 'Basic diagnostic']),
+      maxMessages: 50,
+      maxMissions: 1,
+      hasDiagnostic: true,
+    },
+  });
+
+  const proPackage = await prisma.subscription_packages.create({
+    data: {
+      planId: proPlan.id,
+      priceMonthly: 199.000,
+      priceYearly: 1990.000,
+      currency: 'TND',
+      features: JSON.stringify(['200 messages', '5 missions', 'Advanced diagnostic', 'Priority support']),
+      maxMessages: 200,
+      maxMissions: 5,
+      hasDiagnostic: true,
+    },
+  });
+
+  const premiumPackage = await prisma.subscription_packages.create({
+    data: {
+      planId: premiumPlan.id,
+      priceMonthly: 399.000,
+      priceYearly: 3990.000,
+      currency: 'TND',
+      features: JSON.stringify(['Unlimited messages', 'Unlimited missions', 'Full diagnostic', '24/7 support', 'Dedicated consultant']),
+      maxMessages: null,
+      maxMissions: null,
+      hasDiagnostic: true,
+    },
   });
   console.log('✅ Created subscription packages');
 
+  // Link services to packages
+  await prisma.packageService.createMany({
+    data: [
+      { packageId: essentialPackage.id, serviceId: service1.id },
+      { packageId: proPackage.id, serviceId: service1.id },
+      { packageId: proPackage.id, serviceId: service2.id },
+      { packageId: premiumPackage.id, serviceId: service1.id },
+      { packageId: premiumPackage.id, serviceId: service2.id },
+      { packageId: premiumPackage.id, serviceId: service3.id },
+    ],
+  });
+  console.log('✅ Linked services to packages');
+
+  // Link consultants to services
+  await prisma.consultantService.createMany({
+    data: [
+      { consultantId: consultant1.id, serviceId: service1.id },
+      { consultantId: consultant1.id, serviceId: service3.id },
+      { consultantId: consultant2.id, serviceId: service2.id },
+    ],
+  });
+  console.log('✅ Linked consultants to services');
+
   // Create subscriptions for client
-  const packages = await prisma.subscription_packages.findMany();
   const activeSubscription = await prisma.subscriptions.create({
     data: {
       userId: client.id,
-      packageId: packages[1].id, // Pro plan
+      packageId: proPackage.id,
       billingCycle: 'MONTHLY',
       status: 'ACTIVE',
       startDate: new Date(),

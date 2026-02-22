@@ -6,24 +6,29 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
 
-type Package = { id: string; planId: string; priceMonthly: number; priceYearly: number; currency: string; features: string[]; maxMessages?: number; maxMissions?: number; hasDiagnostic: boolean }
+type Package = { id: string; planId: string; priceMonthly: number; priceYearly: number; currency: string; features: string[]; maxMessages?: number; maxMissions?: number; hasDiagnostic: boolean; services?: any[] }
 type Plan = { id: string; name: string }
+type Service = { id: string; title: string }
 
 export default function SubscriptionPackagesAdmin() {
   const [packages, setPackages] = useState<Package[]>([])
   const [plans, setPlans] = useState<Plan[]>([])
+  const [services, setServices] = useState<Service[]>([])
   const [editItem, setEditItem] = useState<Package | null>(null)
   const [form, setForm] = useState<Partial<Package>>({})
+  const [selectedPackage, setSelectedPackage] = useState<string | null>(null)
 
   useEffect(() => { loadData() }, [])
 
   const loadData = async () => {
-    const [pkgRes, planRes] = await Promise.all([
+    const [pkgRes, planRes, svcRes] = await Promise.all([
       fetch('/api/admin/subscription-packages'),
-      fetch('/api/admin/subscription-plans')
+      fetch('/api/admin/subscription-plans'),
+      fetch('/api/admin/services')
     ])
     setPackages(await pkgRes.json())
     setPlans(await planRes.json())
+    setServices(await svcRes.json())
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,6 +44,16 @@ export default function SubscriptionPackagesAdmin() {
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this package?')) return
     await fetch(`/api/admin/subscription-packages?id=${id}`, { method: 'DELETE' })
+    loadData()
+  }
+
+  const addServiceToPackage = async (packageId: string, serviceId: string) => {
+    await fetch('/api/admin/package-services', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ packageId, serviceId }) })
+    loadData()
+  }
+
+  const removeServiceFromPackage = async (packageId: string, serviceId: string) => {
+    await fetch(`/api/admin/package-services?packageId=${packageId}&serviceId=${serviceId}`, { method: 'DELETE' })
     loadData()
   }
 
@@ -79,8 +94,29 @@ export default function SubscriptionPackagesAdmin() {
               <p className="text-sm text-gray-600">{pkg.priceMonthly} {pkg.currency}/mo - {pkg.priceYearly} {pkg.currency}/yr</p>
               <div className="flex gap-2 mt-2">
                 <Button size="sm" onClick={() => { setEditItem(pkg); setForm(pkg) }}>Edit</Button>
+                <Button size="sm" variant="outline" onClick={() => setSelectedPackage(selectedPackage === pkg.id ? null : pkg.id)}>Services</Button>
                 <Button size="sm" variant="destructive" onClick={() => handleDelete(pkg.id)}>Delete</Button>
               </div>
+              {selectedPackage === pkg.id && (
+                <div className="mt-4 p-3 bg-gray-50 rounded">
+                  <h4 className="font-semibold mb-2">Manage Services</h4>
+                  <div className="space-y-2">
+                    {services.map(svc => {
+                      const isLinked = pkg.services?.some((ps: any) => ps.serviceId === svc.id)
+                      return (
+                        <div key={svc.id} className="flex items-center justify-between">
+                          <span className="text-sm">{svc.title}</span>
+                          {isLinked ? (
+                            <Button size="sm" variant="destructive" onClick={() => removeServiceFromPackage(pkg.id, svc.id)}>Remove</Button>
+                          ) : (
+                            <Button size="sm" onClick={() => addServiceToPackage(pkg.id, svc.id)}>Add</Button>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
             </Card>
           ))}
         </div>
