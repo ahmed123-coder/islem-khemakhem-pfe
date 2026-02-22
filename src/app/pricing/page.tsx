@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -24,12 +25,52 @@ interface Package {
 export default function PricingPage() {
   const [packages, setPackages] = useState<Package[]>([]);
   const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'YEARLY'>('MONTHLY');
+  const [loading, setLoading] = useState<string | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     fetch('/api/admin/subscription-packages')
       .then((res) => res.json())
       .then((data) => setPackages(data));
   }, []);
+
+  const handleSubscribe = async (packageId: string) => {
+    setLoading(packageId);
+    try {
+      // Get current user first
+      const userRes = await fetch('/api/auth/me');
+      if (!userRes.ok) {
+        alert('Please login first');
+        router.push('/login');
+        return;
+      }
+      
+      const userData = await userRes.json();
+      
+      const res = await fetch('/api/client/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          packageId, 
+          billingCycle,
+          clientId: userData.id 
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        alert('Subscription created successfully!');
+        router.push('/client');
+      } else {
+        alert(data.error || 'Failed to subscribe');
+      }
+    } catch (error) {
+      alert('An error occurred');
+    } finally {
+      setLoading(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-20 px-4">
@@ -107,13 +148,15 @@ export default function PricingPage() {
                 </ul>
 
                 <Button
+                  onClick={() => handleSubscribe(pkg.id)}
+                  disabled={loading === pkg.id}
                   className={`w-full ${
                     pkg.subscription_plans.planType === 'PRO'
                       ? 'bg-blue-600 hover:bg-blue-700'
                       : 'bg-gray-900 hover:bg-gray-800'
                   }`}
                 >
-                  Choisir ce plan
+                  {loading === pkg.id ? 'Processing...' : 'Choisir ce plan'}
                 </Button>
               </Card>
             );
