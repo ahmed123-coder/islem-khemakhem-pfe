@@ -10,16 +10,6 @@ export async function GET() {
         name: true,
         specialty: true,
         createdAt: true,
-        _count: {
-          select: {
-            missions: true,
-          },
-        },
-        services: {
-          include: {
-            service: true
-          }
-        }
       },
       orderBy: { createdAt: 'desc' },
     })

@@ -10,12 +10,6 @@ export async function GET() {
         name: true,
         role: true,
         createdAt: true,
-        _count: {
-          select: {
-            subscriptions: true,
-            missions: true,
-          },
-        },
       },
       orderBy: { createdAt: 'desc' },
     })

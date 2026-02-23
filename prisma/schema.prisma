@@ -38,122 +38,51 @@ enum MissionStatus {
   COMPLETED
 }
 
+enum PurchaseType {
+  PACKAGE
+  SERVICE
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+enum ReservationStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
 model User {
   id            String          @id @default(cuid())
   email         String          @unique
   password      String
   name          String?
+  phone         String?
   role          Role            @default(CLIENT)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
 
-  subscriptions     subscriptions[]
-  missions          Mission[]           @relation("ClientMissions")
-  messages          Message[]
-  uploadedDocuments MissionDocument[]
+
 }
 
 model Consultant {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  password  String
-  name      String
-  specialty String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String
+  name        String
+  specialty   String?
+  hourlyRate  Decimal?  @db.Decimal(10, 2)
+  bio         String?
+  imageUrl    String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
-  missions  Mission[] @relation("ConsultantMissions")
-  services  ConsultantService[]
-}
 
-model subscription_plans {
-  id                    String                  @id @default(cuid())
-  name                  String
-  nameAr                String?
-  planType              SubscriptionPlan
-  description           String?
-  active                Boolean                 @default(true)
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt @default(now())
-
-  subscription_packages subscription_packages[]
-}
-
-model subscription_packages {
-  id                 String              @id @default(cuid())
-  planId             String
-  priceMonthly       Decimal             @default(0) @db.Decimal(10, 3)
-  priceYearly        Decimal             @default(0) @db.Decimal(10, 3)
-  currency           String              @default("TND")
-  features           Json                @default("[]")
-  maxMessages        Int?
-  maxMissions        Int?
-  hasDiagnostic      Boolean             @default(true)
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt @default(now())
-
-  subscription_plans subscription_plans  @relation(fields: [planId], references: [id])
-  subscriptions      subscriptions[]
-  services           PackageService[]
-}
-
-model subscriptions {
-  id                    String                @id @default(cuid())
-  userId                String
-  packageId             String
-  billingCycle          BillingPeriod         @default(MONTHLY)
-  status                SubscriptionStatus
-  startDate             DateTime
-  endDate               DateTime
-  currentPeriodStart    DateTime              @default(now())
-  currentPeriodEnd      DateTime              @default(now())
-  autoRenew             Boolean               @default(true)
-  cancelledAt           DateTime?
-  cancelReason          String?
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt @default(now())
-
-  user                  User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  subscription_packages subscription_packages @relation(fields: [packageId], references: [id])
-  missions              Mission[]
-
-  @@index([status])
-  @@index([userId])
-}
-
-model Mission {
-  id             String        @id @default(cuid())
-  title          String
-  description    String?
-  status         MissionStatus @default(PENDING)
-  progress       Int           @default(0)
-  clientId       String
-  consultantId   String
-  subscriptionId String
-  messageCount   Int           @default(0)
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-
-  client         User              @relation("ClientMissions", fields: [clientId], references: [id])
-  consultant     Consultant        @relation("ConsultantMissions", fields: [consultantId], references: [id])
-  subscription   subscriptions     @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-  messages       Message[]
-  documents      MissionDocument[]
-
-  @@index([clientId])
-  @@index([consultantId])
-  @@index([status])
-}
-
-model Message {
-  id        String   @id @default(cuid())
-  content   String
-  senderId  String
-  missionId String
-  createdAt DateTime @default(now())
-
-  sender    User     @relation(fields: [senderId], references: [id])
-  mission   Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
 }
 
 model Blog {
@@ -167,15 +96,15 @@ model Blog {
 }
 
 model Service {
-  id          String   @id @default(cuid())
-  title       String
-  description String
-  icon        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
-  consultants ConsultantService[]
-  packages    PackageService[]
+  id            String   @id @default(cuid())
+  title         String
+  description   String
+  price         Decimal  @db.Decimal(10, 2)
+  durationHours Int      @default(1)
+  icon          String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Contact {
@@ -194,47 +123,4 @@ model SiteContent {
   value     Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model MissionDocument {
-  id           String   @id @default(cuid())
-  fileName     String
-  fileUrl      String
-  fileSize     Int?
-  mimeType     String?
-  uploadedById String
-  missionId    String
-  createdAt    DateTime @default(now())
-
-  uploadedBy User    @relation(fields: [uploadedById], references: [id], onDelete: Cascade)
-  mission    Mission @relation(fields: [missionId], references: [id], onDelete: Cascade)
-
-  @@index([missionId])
-  @@index([uploadedById])
-}
-
-// Many-to-Many: Package <-> Service
-model PackageService {
-  id        String   @id @default(cuid())
-  packageId String
-  serviceId String
-  createdAt DateTime @default(now())
-
-  package subscription_packages @relation(fields: [packageId], references: [id], onDelete: Cascade)
-  service Service               @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-
-  @@unique([packageId, serviceId])
-}
-
-// Many-to-Many: Consultant <-> Service
-model ConsultantService {
-  id           String     @id @default(cuid())
-  consultantId String
-  serviceId    String
-  createdAt    DateTime   @default(now())
-
-  consultant Consultant @relation(fields: [consultantId], references: [id], onDelete: Cascade)
-  service    Service    @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-
-  @@unique([consultantId, serviceId])
 }

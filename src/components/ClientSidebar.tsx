@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, FileText, MessageSquare, Settings, LogOut } from 'lucide-react'
+import { Home, Settings, LogOut } from 'lucide-react'
 
 export default function ClientSidebar() {
   const pathname = usePathname()
@@ -14,20 +14,18 @@ export default function ClientSidebar() {
   }
 
   const links = [
-    { href: '/client', icon: Home, label: 'Dashboard' },
-    { href: '/client/missions', icon: FileText, label: 'My Missions' },
-    { href: '/client/messages', icon: MessageSquare, label: 'Messages' },
-    { href: '/client/settings', icon: Settings, label: 'Settings' },
+    { href: '/client', label: 'Dashboard', icon: Home },
+    { href: '/client/settings', label: 'Settings', icon: Settings },
   ]
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 min-h-screen shadow-lg">
-      <div className="p-6 border-b border-gray-100">
-        <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Client Portal</h2>
-        <p className="text-xs text-gray-500 mt-1">Manage your missions</p>
+    <aside className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col shadow-xl">
+      <div className="p-6 border-b border-gray-700/50">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Client Portal</h1>
       </div>
-      <nav className="px-4 py-4 space-y-1 overflow-y-auto scrollbar-hide">
-        {links.map((link) => {
+      
+      <nav className="flex-1 p-4 space-y-1">
+        {links.map(link => {
           const Icon = link.icon
           const isActive = pathname === link.href
           return (
@@ -35,9 +33,7 @@ export default function ClientSidebar() {
               key={link.href}
               href={link.href}
               className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                isActive
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
-                  : 'text-gray-600 hover:bg-gray-50 hover:translate-x-1'
+                isActive ? 'bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg shadow-blue-500/30' : 'hover:bg-gray-700/50 hover:translate-x-1'
               }`}
             >
               <Icon size={20} className={isActive ? '' : 'group-hover:scale-110 transition-transform'} />
@@ -45,14 +41,21 @@ export default function ClientSidebar() {
             </Link>
           )
         })}
+      </nav>
+
+      <div className="p-4 border-t border-gray-700/50 space-y-1">
+        <Link href="/" className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group hover:translate-x-1">
+          <Home size={16} className="group-hover:scale-110 transition-transform" />
+          <span className="text-sm">Back to Site</span>
+        </Link>
         <button 
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 w-full transition-all duration-200 group hover:translate-x-1"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-200 w-full text-left group hover:translate-x-1"
         >
-          <LogOut size={20} className="group-hover:scale-110 transition-transform" />
-          <span className="font-medium">Logout</span>
+          <LogOut size={16} className="group-hover:scale-110 transition-transform" />
+          <span className="text-sm">Logout</span>
         </button>
-      </nav>
+      </div>
     </aside>
   )
 }

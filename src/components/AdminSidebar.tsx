@@ -2,14 +2,12 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, FileText, Briefcase, Mail, Settings, ChevronDown, Package, CreditCard, Users, UserCheck, LogOut } from 'lucide-react'
-import { useState } from 'react'
+import { Home, FileText, Briefcase, Mail, Settings, Users, UserCheck, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export default function AdminSidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const [subscriptionOpen, setSubscriptionOpen] = useState(false)
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -20,17 +18,10 @@ export default function AdminSidebar() {
     { href: '/admin', label: 'Dashboard', icon: Home },
     { href: '/admin/users', label: 'Users (Clients)', icon: Users },
     { href: '/admin/consultants', label: 'Consultants', icon: UserCheck },
-    { href: '/admin/missions', label: 'Missions', icon: Briefcase },
     { href: '/admin/content', label: 'Content Editor', icon: Settings },
     { href: '/admin/blogs', label: 'Blogs', icon: FileText },
     { href: '/admin/services', label: 'Services', icon: Briefcase },
     { href: '/admin/contacts', label: 'Contacts', icon: Mail },
-  ]
-
-  const subscriptionLinks = [
-    { href: '/admin/subscription-plans', label: 'Plans', icon: Package },
-    { href: '/admin/subscription-packages', label: 'Packages', icon: CreditCard },
-    { href: '/admin/subscriptions', label: 'Subscriptions', icon: Users },
   ]
 
   return (
@@ -57,38 +48,6 @@ export default function AdminSidebar() {
             </Link>
           )
         })}
-
-        <div>
-          <button
-            onClick={() => setSubscriptionOpen(!subscriptionOpen)}
-            className="flex items-center justify-between w-full px-4 py-3 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group hover:translate-x-1"
-          >
-            <div className="flex items-center gap-3">
-              <Package size={20} className="group-hover:scale-110 transition-transform" />
-              <span className="font-medium">Subscriptions</span>
-            </div>
-            <ChevronDown size={16} className={`transition-transform duration-300 ${subscriptionOpen ? 'rotate-180' : ''}`} />
-          </button>
-          
-          <div className={`ml-4 mt-1 space-y-1 overflow-hidden transition-all duration-300 ${subscriptionOpen ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'}`}>
-            {subscriptionLinks.map(link => {
-              const Icon = link.icon
-              const isActive = pathname === link.href
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-all duration-200 group ${
-                    isActive ? 'bg-gradient-to-r from-blue-600 to-blue-500 shadow-md' : 'hover:bg-gray-700/50 hover:translate-x-1'
-                  }`}
-                >
-                  <Icon size={16} className={isActive ? '' : 'group-hover:scale-110 transition-transform'} />
-                  <span>{link.label}</span>
-                </Link>
-              )
-            })}
-          </div>
-        </div>
       </nav>
 
       <div className="p-4 border-t border-gray-700/50 space-y-1">

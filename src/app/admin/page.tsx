@@ -2,20 +2,16 @@
 
 import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
-import { FileText, Briefcase, Mail, Users, UserCheck, DollarSign, TrendingUp, Activity } from 'lucide-react'
+import { FileText, Briefcase, Mail, Users, UserCheck, Activity } from 'lucide-react'
 import Link from 'next/link'
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ 
     blogs: 0, 
     services: 0, 
-    contacts: 0, 
-    subscriptions: 0, 
-    missions: 0,
+    contacts: 0,
     clients: 0,
     consultants: 0,
-    revenue: 0,
-    activeMissions: 0,
     pendingContacts: 0
   })
 
@@ -25,12 +21,8 @@ export default function AdminDashboard() {
         blogs: data.blogs || 0,
         services: data.services || 0,
         contacts: data.contacts || 0,
-        subscriptions: data.subscriptions || 0,
-        missions: data.missions || 0,
         clients: data.clients || 0,
         consultants: data.consultants || 0,
-        revenue: data.revenue || 0,
-        activeMissions: data.activeMissions || 0,
         pendingContacts: data.pendingContacts || 0
       })
     }).catch(() => {})
@@ -39,15 +31,13 @@ export default function AdminDashboard() {
   const mainCards = [
     { label: 'Total Clients', value: stats.clients, icon: Users, color: 'bg-blue-500', href: '/admin/users' },
     { label: 'Consultants', value: stats.consultants, icon: UserCheck, color: 'bg-green-500', href: '/admin/consultants' },
-    { label: 'Active Subscriptions', value: stats.subscriptions, icon: TrendingUp, color: 'bg-purple-500', href: '/admin/subscriptions' },
-    { label: 'Revenue (TND)', value: stats.revenue.toFixed(2), icon: DollarSign, color: 'bg-emerald-500', href: '/admin/subscriptions' },
+    { label: 'Services', value: stats.services, icon: Briefcase, color: 'bg-purple-500', href: '/admin/services' },
+    { label: 'Blog Posts', value: stats.blogs, icon: FileText, color: 'bg-pink-500', href: '/admin/blogs' },
   ]
 
   const activityCards = [
-    { label: 'Total Missions', value: stats.missions, icon: Briefcase, color: 'bg-indigo-500', href: '/admin/missions' },
-    { label: 'Active Missions', value: stats.activeMissions, icon: Activity, color: 'bg-orange-500', href: '/admin/missions' },
-    { label: 'Pending Contacts', value: stats.pendingContacts, icon: Mail, color: 'bg-yellow-500', href: '/admin/contacts' },
-    { label: 'Blog Posts', value: stats.blogs, icon: FileText, color: 'bg-pink-500', href: '/admin/blogs' },
+    { label: 'Total Contacts', value: stats.contacts, icon: Mail, color: 'bg-indigo-500', href: '/admin/contacts' },
+    { label: 'Pending Contacts', value: stats.pendingContacts, icon: Activity, color: 'bg-yellow-500', href: '/admin/contacts' },
   ]
 
   return (
@@ -85,7 +75,7 @@ export default function AdminDashboard() {
       {/* Activity Stats */}
       <div>
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Activity & Content</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {activityCards.map(card => {
             const Icon = card.icon
             return (
@@ -119,9 +109,13 @@ export default function AdminDashboard() {
             <h3 className="font-semibold text-gray-900">Manage Consultants</h3>
             <p className="text-sm text-gray-600 mt-1">Add or edit consultants</p>
           </Link>
-          <Link href="/admin/subscription-plans" className="p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 transition">
-            <h3 className="font-semibold text-gray-900">Subscription Plans</h3>
-            <p className="text-sm text-gray-600 mt-1">Configure pricing plans</p>
+          <Link href="/admin/services" className="p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 transition">
+            <h3 className="font-semibold text-gray-900">Manage Services</h3>
+            <p className="text-sm text-gray-600 mt-1">Add or edit services</p>
+          </Link>
+          <Link href="/admin/blogs" className="p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 transition">
+            <h3 className="font-semibold text-gray-900">Manage Blogs</h3>
+            <p className="text-sm text-gray-600 mt-1">Create and publish blog posts</p>
           </Link>
         </div>
       </div>
