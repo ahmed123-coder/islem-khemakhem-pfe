@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { User, Settings } from 'lucide-react'
+import { Card } from '@/components/ui/card'
+import { Calendar, User, Settings, Clock } from 'lucide-react'
 import Link from 'next/link'
 
 interface UserData {
@@ -22,37 +23,62 @@ export default function ConsultantDashboard() {
 
   if (loading) return <div className="p-8">Loading...</div>
 
+  const mainCards = [
+    { label: 'My Appointments', value: 0, icon: Calendar, color: 'bg-blue-500', href: '/consultant/appointments' },
+    { label: 'Hours This Month', value: 0, icon: Clock, color: 'bg-green-500', href: '/consultant/appointments' },
+  ]
+
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">Consultant Dashboard</h1>
+        <h1 className="text-3xl font-bold text-gray-900">Consultant Dashboard</h1>
         <p className="text-gray-600 mt-2">Welcome back, {user?.name || 'Consultant'}!</p>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center gap-4 mb-4">
-            <User className="text-blue-500" size={40} />
-            <div>
-              <h2 className="text-xl font-bold text-gray-800">Profile</h2>
-              <p className="text-gray-600 text-sm">Manage your account</p>
-            </div>
-          </div>
-          <Link href="/consultant/settings" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-            View Profile →
-          </Link>
+
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Overview</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {mainCards.map(card => {
+            const Icon = card.icon
+            return (
+              <Link key={card.label} href={card.href}>
+                <Card className="p-6 hover:shadow-lg transition-shadow cursor-pointer">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-gray-600 text-sm">{card.label}</p>
+                      <p className="text-3xl font-bold mt-2">{card.value}</p>
+                    </div>
+                    <div className={`${card.color} p-3 rounded-lg`}>
+                      <Icon className="text-white" size={24} />
+                    </div>
+                  </div>
+                </Card>
+              </Link>
+            )
+          })}
         </div>
-        
-        <div className="bg-white p-6 rounded-lg shadow">
-          <div className="flex items-center gap-4 mb-4">
-            <Settings className="text-purple-500" size={40} />
-            <div>
-              <h2 className="text-xl font-bold text-gray-800">Settings</h2>
-              <p className="text-gray-600 text-sm">Update your preferences</p>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Link href="/consultant/settings" className="p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 transition">
+            <div className="flex items-center gap-3">
+              <User className="text-blue-500" size={24} />
+              <div>
+                <h3 className="font-semibold text-gray-900">Profile</h3>
+                <p className="text-sm text-gray-600 mt-1">Manage your account</p>
+              </div>
             </div>
-          </div>
-          <Link href="/consultant/settings" className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-            Go to Settings →
+          </Link>
+          <Link href="/consultant/settings" className="p-4 bg-white border-2 border-gray-200 rounded-lg hover:border-blue-500 transition">
+            <div className="flex items-center gap-3">
+              <Settings className="text-purple-500" size={24} />
+              <div>
+                <h3 className="font-semibold text-gray-900">Settings</h3>
+                <p className="text-sm text-gray-600 mt-1">Update your preferences</p>
+              </div>
+            </div>
           </Link>
         </div>
       </div>
