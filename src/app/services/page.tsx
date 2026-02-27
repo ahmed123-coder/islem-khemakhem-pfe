@@ -1,80 +1,24 @@
-import type { Metadata } from 'next'
+'use client'
+
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
-export const metadata: Metadata = {
-  title: 'Services - DSL Conseil',
-  description: 'Des expertises au service de votre performance',
-}
+export default function Services() {
+  const [services, setServices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-async function getServices() {
-  try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/services`, { cache: 'no-store' });
-    if (!res.ok) return [];
-    return res.json();
-  } catch {
-    return [];
-  }
-}
+  useEffect(() => {
+    fetch('/api/services')
+      .then(res => res.json())
+      .then(data => {
+        setServices(data);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
-const services = [
-  {
-    icon: '💼',
-    title: 'Management & Stratégie',
-    description: 'Accompagnement des dirigeants dans le pilotage stratégique, l\'organisation et la gouvernance de leur entreprise.',
-    features: ['Diagnostic stratégique', 'Coaching de direction', 'Plan de développement', 'Conduite du changement']
-  },
-  {
-    icon: '👥',
-    title: 'Ressources Humaines',
-    description: 'Optimisation de la gestion des talents, du recrutement à la fidélisation, en passant par la GPEC.',
-    features: ['Audit RH', 'GPEC & Mobilité', 'Recrutement', 'Formation']
-  },
-  {
-    icon: '🛡️',
-    title: 'Qualité & RSE',
-    description: 'Mise en place de démarches qualité, certifications et intégration de la responsabilité sociétale.',
-    features: ['Certification ISO 9001', 'Audit qualité', 'Démarche RSE', 'Amélioration continue']
-  },
-  {
-    icon: '📈',
-    title: 'Performance',
-    description: 'Conception de tableaux de bord, définition de KPIs et optimisation des processus.',
-    features: ['Tableaux de bord', 'KPIs', 'Optimisation processus', 'Analyse performance']
-  }
-]
-
-const methodology = [
-  {
-    number: 1,
-    icon: '🎯',
-    title: 'Diagnostic',
-    description: 'Audit complet de votre organisation et identification des axes d\'amélioration.'
-  },
-  {
-    number: 2,
-    icon: '📋',
-    title: 'Plan d\'action',
-    description: 'Élaboration d\'un plan d\'action personnalisé avec des objectifs mesurables.'
-  },
-  {
-    number: 3,
-    icon: '🎓',
-    title: 'Accompagnement',
-    description: 'Mise en œuvre, formation des équipes et transfert de compétences.'
-  },
-  {
-    number: 4,
-    icon: '📊',
-    title: 'Suivi & Mesure',
-    description: 'Pilotage des résultats et ajustements pour garantir la pérennité.'
-  }
-]
-
-export default async function Services() {
-  const services = await getServices();
-
-  if (!services.length) {
-    return <div className="py-20 text-center">No services available</div>;
+  if (loading) {
+    return <div className="py-20 text-center">Loading...</div>;
   }
 
   return (
@@ -98,7 +42,7 @@ export default async function Services() {
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
           {services.map((service: any, index: number) => (
-            <div key={index} className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
+            <div key={service.id} className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
               <div className={`${index % 2 === 1 ? 'lg:order-2' : ''}`}>
                 <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-3xl mb-6">
                   {service.icon}
@@ -109,18 +53,10 @@ export default async function Services() {
                 <p className="text-gray-600 mb-6 leading-relaxed">
                   {service.description}
                 </p>
-                {service.features && Array.isArray(service.features) && (
-                  <ul className="grid grid-cols-2 gap-3 mb-6">
-                    {service.features.map((feature: string, idx: number) => (
-                      <li key={idx} className="flex items-center gap-3 text-gray-700">
-                        <svg className="w-5 h-5 text-teal-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <div className="mb-6">
+                  <p className="text-2xl font-bold text-blue-700">{service.price} TND</p>
+                  <p className="text-sm text-gray-500">{service.durationHours} hours</p>
+                </div>
                 <Link 
                   href="/contact"
                   className="inline-flex items-center gap-2 bg-[#2B5A8E] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#234a73] transition-all"
@@ -152,28 +88,22 @@ export default async function Services() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {methodology.map((step, index) => (
-              <div key={index} className="relative">
-                {index < methodology.length - 1 && (
-                  <div className="hidden lg:block absolute top-16 left-[60%] w-full h-0.5">
-                    <div className="flex items-center justify-center">
-                      <div className="w-12 h-12 bg-[#F59E0B] rounded-full flex items-center justify-center text-white font-bold">
-                        {step.number}
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-24 h-24 bg-blue-50 rounded-full text-4xl mb-6 border-4 border-white shadow-sm">
-                    {step.icon}
-                  </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                    {step.title}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {step.description}
-                  </p>
+            {[
+              { number: 1, icon: '🎯', title: 'Diagnostic', description: 'Audit complet de votre organisation et identification des axes d\'amélioration.' },
+              { number: 2, icon: '📋', title: 'Plan d\'action', description: 'Élaboration d\'un plan d\'action personnalisé avec des objectifs mesurables.' },
+              { number: 3, icon: '🎓', title: 'Accompagnement', description: 'Mise en œuvre, formation des équipes et transfert de compétences.' },
+              { number: 4, icon: '📊', title: 'Suivi & Mesure', description: 'Pilotage des résultats et ajustements pour garantir la pérennité.' }
+            ].map((step, index) => (
+              <div key={index} className="text-center">
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-blue-50 rounded-full text-4xl mb-6 border-4 border-white shadow-sm">
+                  {step.icon}
                 </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  {step.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {step.description}
+                </p>
               </div>
             ))}
           </div>
