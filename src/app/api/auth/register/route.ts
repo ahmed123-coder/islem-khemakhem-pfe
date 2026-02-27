@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import bcrypt from 'bcrypt'
+import * as bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { createToken, setAuthCookie } from '@/lib/auth'
 
