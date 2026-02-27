@@ -73,37 +73,48 @@ async function main() {
   // Create services
   const service1 = await prisma.service.create({
     data: {
-      title: 'Personal Financial Consultation',
-      description: 'Personal consultation session to analyze financial situation and create investment plan',
-      price: 200.00,
-      durationHours: 2,
-      icon: '💰',
+      title: 'Management de la performance cachée',
+      description: 'Identifier les dysfonctionnements invisibles qui freinent la performance et transformer les coûts cachés en valeur durable.',
+      price: 500.00,
+      durationHours: 4,
+      icon: '⭐',
       isActive: true,
     },
   });
 
   const service2 = await prisma.service.create({
     data: {
-      title: 'Market and Competitor Analysis',
-      description: 'Comprehensive market and competitor study with strategic recommendations',
-      price: 350.00,
+      title: 'Gestion des parcours professionnels',
+      description: 'Construire des trajectoires professionnelles alignées avec la stratégie de l\'entreprise.',
+      price: 400.00,
       durationHours: 3,
-      icon: '📊',
+      icon: '👥',
       isActive: true,
     },
   });
 
   const service3 = await prisma.service.create({
     data: {
-      title: 'Technical Consultation',
-      description: 'Technical consultation for business solutions and digital transformation',
-      price: 300.00,
-      durationHours: 2,
-      icon: '💻',
+      title: 'Marque employeur',
+      description: 'Renforcer l\'attractivité et la fidélisation en créant une expérience collaborateur cohérente et engageante.',
+      price: 450.00,
+      durationHours: 3,
+      icon: '🌟',
       isActive: true,
     },
   });
-  console.log('✅ Created services:', 3);
+
+  const service4 = await prisma.service.create({
+    data: {
+      title: 'Recrutement stratégique',
+      description: 'Sécuriser le choix des talents pour soutenir la croissance et la performance.',
+      price: 350.00,
+      durationHours: 2,
+      icon: '🎯',
+      isActive: true,
+    },
+  });
+  console.log('✅ Created services:', 4);
 
   // Create blogs
   const blogs = await prisma.blog.createMany({
