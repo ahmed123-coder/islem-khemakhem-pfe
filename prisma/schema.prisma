@@ -13,23 +13,17 @@ enum Role {
   ADMIN
 }
 
-enum SubscriptionPlan {
-  ESSENTIAL
-  PRO
+enum TierType {
+  BASIC
+  STANDARD
   PREMIUM
 }
 
-enum BillingPeriod {
-  MONTHLY
-  YEARLY
-}
-
-enum SubscriptionStatus {
+enum OrderStatus {
+  PENDING
   ACTIVE
-  PAST_DUE
+  COMPLETED
   CANCELLED
-  EXPIRED
-  SUSPENDED
 }
 
 enum MissionStatus {
@@ -37,6 +31,12 @@ enum MissionStatus {
   IN_PROGRESS
   COMPLETED
   CANCELLED
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
 }
 
 enum SenderType {
@@ -49,49 +49,205 @@ enum UploaderType {
   CONSULTANT
 }
 
-enum PurchaseType {
-  PACKAGE
-  SERVICE
-}
-
-enum PurchaseStatus {
-  PENDING
-  COMPLETED
-  CANCELLED
-}
-
 enum ReservationStatus {
-  SCHEDULED
+  PENDING
+  CONFIRMED
   COMPLETED
   CANCELLED
   NO_SHOW
 }
 
+enum NotificationType {
+  ORDER
+  MESSAGE
+  CALL
+  MISSION
+  SYSTEM
+}
+
 model User {
-  id            String          @id @default(cuid())
-  email         String          @unique
+  id            String         @id @default(cuid())
+  email         String         @unique
   password      String
   name          String?
   phone         String?
-  role          Role            @default(CLIENT)
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  missions      Mission[]
+  role          Role           @default(CLIENT)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  orders        Order[]
+  messages      Message[]
+  notifications Notification[]
+  reservations  Reservation[]
+  missionFiles  MissionFile[]
 }
 
 model Consultant {
-  id          String    @id @default(cuid())
-  email       String    @unique
-  password    String
+  id           String        @id @default(cuid())
+  email        String        @unique
+  password     String
+  name         String
+  specialty    String?
+  hourlyRate   Decimal?      @db.Decimal(10, 2)
+  bio          String?
+  imageUrl     String?
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  orders       Order[]
+  missions     Mission[]
+  reservations Reservation[]
+}
+
+model Service {
+  id          String        @id @default(cuid())
   name        String
-  specialty   String?
-  hourlyRate  Decimal?  @db.Decimal(10, 2)
-  bio         String?
-  imageUrl    String?
-  isActive    Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  missions    Mission[]
+  description String
+  category    String?
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  tiers       ServiceTier[]
+}
+
+model ServiceTier {
+  id                   String        @id @default(cuid())
+  serviceId            String
+  tierType             TierType
+  price                Decimal       @db.Decimal(10, 2)
+  maxMessages          Int?
+  maxCallDuration      Int?
+  canSelectConsultant  Boolean       @default(false)
+  description          String?
+  createdAt            DateTime      @default(now())
+  service              Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  orders               Order[]
+  reservations         Reservation[]
+
+  @@index([serviceId])
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  clientId        String
+  consultantId    String?
+  serviceTierId   String
+  status          OrderStatus @default(PENDING)
+  messagesUsed    Int         @default(0)
+  callMinutesUsed Int         @default(0)
+  createdAt       DateTime    @default(now())
+  closedAt        DateTime?
+  client          User        @relation(fields: [clientId], references: [id])
+  consultant      Consultant? @relation(fields: [consultantId], references: [id])
+  serviceTier     ServiceTier @relation(fields: [serviceTierId], references: [id])
+  messages        Message[]
+  calls           Call[]
+  missions        Mission[]
+
+  @@index([clientId])
+  @@index([consultantId])
+  @@index([status])
+}
+
+model Message {
+  id         String     @id @default(cuid())
+  orderId    String
+  senderId   String
+  senderType SenderType
+  content    String
+  createdAt  DateTime   @default(now())
+  order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  sender     User       @relation(fields: [senderId], references: [id])
+
+  @@index([orderId])
+}
+
+model Call {
+  id           String    @id @default(cuid())
+  orderId      String
+  duration     Int
+  startedAt    DateTime
+  endedAt      DateTime?
+  recordingUrl String?
+  order        Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model Mission {
+  id           String         @id @default(cuid())
+  orderId      String
+  consultantId String
+  title        String
+  description  String?
+  status       MissionStatus  @default(PENDING)
+  startedAt    DateTime?
+  closedAt     DateTime?
+  createdAt    DateTime       @default(now())
+  order        Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  consultant   Consultant     @relation(fields: [consultantId], references: [id])
+  milestones   Milestone[]
+  files        MissionFile[]
+
+  @@index([orderId])
+  @@index([consultantId])
+}
+
+model Milestone {
+  id          String          @id @default(cuid())
+  missionId   String
+  title       String
+  description String?
+  status      MilestoneStatus @default(PENDING)
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime        @default(now())
+  mission     Mission         @relation(fields: [missionId], references: [id], onDelete: Cascade)
+
+  @@index([missionId])
+}
+
+model MissionFile {
+  id           String       @id @default(cuid())
+  missionId    String
+  uploadedById String
+  fileName     String
+  fileUrl      String
+  fileType     String
+  createdAt    DateTime     @default(now())
+  mission      Mission      @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+
+  @@index([missionId])
+}
+
+model Reservation {
+  id             String            @id @default(cuid())
+  clientId       String
+  consultantId   String
+  serviceTierId  String
+  requestedDate  DateTime
+  status         ReservationStatus @default(PENDING)
+  createdAt      DateTime          @default(now())
+  client         User              @relation(fields: [clientId], references: [id])
+  consultant     Consultant        @relation(fields: [consultantId], references: [id])
+  serviceTier    ServiceTier       @relation(fields: [serviceTierId], references: [id])
+
+  @@index([clientId])
+  @@index([consultantId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
 }
 
 model Blog {
@@ -102,19 +258,6 @@ model Blog {
   published Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model Service {
-  id            String   @id @default(cuid())
-  title         String
-  description   String
-  price         Decimal  @db.Decimal(10, 2)
-  durationHours Int      @default(1)
-  icon          String?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  missions      Mission[]
 }
 
 model Contact {
@@ -133,62 +276,4 @@ model SiteContent {
   value     Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model Mission {
-  id            String        @id @default(cuid())
-  title         String
-  description   String
-  status        MissionStatus @default(PENDING)
-  progress      Int           @default(0)
-  price         Decimal       @db.Decimal(10, 2)
-  startDate     DateTime
-  deadline      DateTime
-  clientId      String
-  consultantId  String
-  serviceId     String
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  client        User          @relation(fields: [clientId], references: [id])
-  consultant    Consultant    @relation(fields: [consultantId], references: [id])
-  service       Service       @relation(fields: [serviceId], references: [id])
-  milestones    Milestone[]
-  messages      Message[]
-  files         MissionFile[]
-}
-
-model Milestone {
-  id          String   @id @default(cuid())
-  missionId   String
-  title       String
-  description String?
-  completed   Boolean  @default(false)
-  order       Int
-  createdAt   DateTime @default(now())
-  mission     Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
-}
-
-model Message {
-  id          String     @id @default(cuid())
-  content     String
-  missionId   String
-  senderId    String
-  senderType  SenderType
-  receiverId  String
-  read        Boolean    @default(false)
-  createdAt   DateTime   @default(now())
-  mission     Mission    @relation(fields: [missionId], references: [id], onDelete: Cascade)
-}
-
-model MissionFile {
-  id            String       @id @default(cuid())
-  fileName      String
-  fileUrl       String
-  fileSize      Int
-  fileType      String
-  missionId     String
-  uploadedBy    String
-  uploaderType  UploaderType
-  createdAt     DateTime     @default(now())
-  mission       Mission      @relation(fields: [missionId], references: [id], onDelete: Cascade)
 }
