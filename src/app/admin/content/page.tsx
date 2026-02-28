@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
+import Image from 'next/image'
 
 type ContentSection = 'navbar' | 'footer' | 'hero'
 
@@ -12,26 +13,81 @@ export default function ContentEditor() {
   const [section, setSection] = useState<ContentSection>('hero')
   const [content, setContent] = useState<any>({})
   const [loading, setLoading] = useState(false)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string>('')
+  const [logoUrl, setLogoUrl] = useState('/logo.jpeg')
+  const [dbLogoUrl, setDbLogoUrl] = useState('')
 
   useEffect(() => {
     loadContent()
+    loadLogo()
   }, [section])
 
+  const loadLogo = async () => {
+    const res = await fetch('/api/content/navbar')
+    if (res.ok) {
+      const data = await res.json()
+      const url = data.value?.logoUrl || '/logo.jpeg'
+      setDbLogoUrl(url)
+      setLogoUrl(url)
+    }
+  }
+
   const loadContent = async () => {
-    const res = await fetch(`/api/content?key=${section}`)
-    const data = await res.json()
-    setContent(data.value || {})
+    const res = await fetch(`/api/content/${section}`)
+    if (res.ok) {
+      const data = await res.json()
+      setContent(data.value || {})
+    }
+  }
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setLogoFile(file)
+      setLogoPreview(URL.createObjectURL(file))
+    }
+  }
+
+  const handleLogoUpload = async () => {
+    if (!logoFile) return
+    
+    const formData = new FormData()
+    formData.append('logo', logoFile)
+    
+    setLoading(true)
+    const res = await fetch('/api/upload/logo', {
+      method: 'POST',
+      body: formData
+    })
+    
+    if (res.ok) {
+      const data = await res.json()
+      alert('Logo uploaded successfully!')
+      setLogoPreview('')
+      setLogoFile(null)
+      // Update logo URL from response
+      setLogoUrl(data.logoUrl)
+      setDbLogoUrl(data.logoUrl)
+    } else {
+      alert('Failed to upload logo')
+    }
+    setLoading(false)
   }
 
   const handleSave = async () => {
     setLoading(true)
-    await fetch('/api/content', {
-      method: 'POST',
+    const res = await fetch(`/api/content/${section}`, {
+      method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: section, value: content })
+      body: JSON.stringify({ value: content })
     })
     setLoading(false)
-    alert('Content saved!')
+    if (res.ok) {
+      alert('Content saved!')
+    } else {
+      alert('Failed to save content')
+    }
   }
 
   return (
@@ -44,7 +100,33 @@ export default function ContentEditor() {
         <Button onClick={() => setSection('footer')} variant={section === 'footer' ? 'default' : 'outline'}>Footer</Button>
       </div>
 
+      {/* Logo Upload Section */}
+      <Card className="p-6 max-w-3xl mb-6">
+        <h2 className="text-xl font-bold mb-4">Logo Management</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Current Logo</label>
+            <Image key={logoUrl} src={logoUrl} alt="Logo" width={100} height={100} className="rounded-lg" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">Upload New Logo</label>
+            <Input type="file" accept="image/jpeg,image/jpg,image/png" onChange={handleLogoChange} />
+          </div>
+          {logoPreview && (
+            <div>
+              <label className="block text-sm font-medium mb-2">Preview</label>
+              <img src={logoPreview} alt="Preview" className="w-24 h-24 rounded-lg" />
+            </div>
+          )}
+          <Button onClick={handleLogoUpload} disabled={!logoFile || loading}>
+            {loading ? 'Uploading...' : 'Upload Logo'}
+          </Button>
+        </div>
+      </Card>
+
       <Card className="p-6 max-w-3xl">
+        <h2 className="text-xl font-bold mb-4">Edit {section.charAt(0).toUpperCase() + section.slice(1)} Content</h2>
+        
         {section === 'hero' && (
           <div className="space-y-4">
             <div>
@@ -70,16 +152,16 @@ export default function ContentEditor() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">Logo Text</label>
-              <Input value={content.logoText || ''} onChange={e => setContent({ ...content, logoText: e.target.value })} />
+              <Input value={content.logo || ''} onChange={e => setContent({ ...content, logo: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Menu Items (JSON)</label>
+              <label className="block text-sm font-medium mb-2">Menu Links (JSON)</label>
               <Textarea 
-                rows={6}
-                value={JSON.stringify(content.menuItems || [], null, 2)} 
+                rows={8}
+                value={JSON.stringify(content.links || [], null, 2)} 
                 onChange={e => {
                   try {
-                    setContent({ ...content, menuItems: JSON.parse(e.target.value) })
+                    setContent({ ...content, links: JSON.parse(e.target.value) })
                   } catch {}
                 }} 
               />
@@ -92,11 +174,11 @@ export default function ContentEditor() {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">Company Name</label>
-              <Input value={content.companyName || ''} onChange={e => setContent({ ...content, companyName: e.target.value })} />
+              <Input value={content.company || ''} onChange={e => setContent({ ...content, company: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Description</label>
-              <Textarea value={content.description || ''} onChange={e => setContent({ ...content, description: e.target.value })} />
+              <label className="block text-sm font-medium mb-2">Tagline</label>
+              <Textarea value={content.tagline || ''} onChange={e => setContent({ ...content, tagline: e.target.value })} />
             </div>
             <div>
               <label className="block text-sm font-medium mb-2">Email</label>

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Mail, Phone, MapPin } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import type { FooterContent } from '@/lib/content'
@@ -23,9 +24,13 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-[#F59E0B] flex items-center justify-center text-white font-bold text-xl">
-                {content.company.charAt(0)}
-              </div>
+              <Image 
+                src={content.logoUrl || '/logo.jpeg'} 
+                alt="DSL Conseil Logo" 
+                width={60} 
+                height={60} 
+                className="rounded-lg"
+              />
               <span className="text-xl font-bold">{content.company}</span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">

@@ -182,6 +182,7 @@ async function main() {
         key: 'navbar',
         value: {
           logo: 'DSL Conseil',
+          logoUrl: '/logo.jpeg',
           links: [
             { label: 'Accueil', href: '/' },
             { label: 'Services', href: '/services' },
@@ -193,7 +194,7 @@ async function main() {
       {
         key: 'hero',
         value: {
-          title: "Transformez votre entreprise avec l'excellence",
+          title: "Vision: Votre catalyseur de performance pour un avenir ambitieux et durable.",
           subtitle: 'Conseil en management, RH, qualité et performance.',
           ctaText: 'Prendre rendez-vous',
           ctaLink: '/login',
@@ -203,6 +204,7 @@ async function main() {
         key: 'footer',
         value: {
           company: 'DSL Conseil',
+          logoUrl: '/logo.jpeg',
           tagline: 'Cabinet de conseil en management',
           email: 'contact@dsl-conseil.com',
           phone: '+33 1 23 45 67 89',
