@@ -4,13 +4,20 @@ import * as bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Delete all data (in correct order to avoid foreign key constraints)
-  await prisma.message.deleteMany({});
+  // Delete all data
+  await prisma.notification.deleteMany({});
+  await prisma.missionFile.deleteMany({});
+  await prisma.milestone.deleteMany({});
   await prisma.mission.deleteMany({});
+  await prisma.call.deleteMany({});
+  await prisma.message.deleteMany({});
+  await prisma.reservation.deleteMany({});
+  await prisma.order.deleteMany({});
+  await prisma.serviceTier.deleteMany({});
+  await prisma.service.deleteMany({});
   await prisma.siteContent.deleteMany({});
   await prisma.contact.deleteMany({});
   await prisma.blog.deleteMany({});
-  await prisma.service.deleteMany({});
   await prisma.consultant.deleteMany({});
   await prisma.user.deleteMany({});
   console.log('✅ Deleted all data');
@@ -50,7 +57,7 @@ async function main() {
       name: 'Ahmed Mohamed',
       specialty: 'Financial Consulting',
       hourlyRate: 100.00,
-      bio: 'Expert in financial consulting and investment with 10 years experience',
+      bio: 'Expert in financial consulting and investment with 10 years experience.',
       imageUrl: '/images/consultants/ahmed.jpg',
       isActive: true,
     },
@@ -63,117 +70,101 @@ async function main() {
       name: 'Sara Ahmed',
       specialty: 'Marketing Consulting',
       hourlyRate: 100.00,
-      bio: 'Specialist in digital marketing and branding',
+      bio: 'Specialist in digital marketing',
       imageUrl: '/images/consultants/sara.jpg',
       isActive: true,
     },
   });
-  console.log('✅ Created consultants:', consultant1.email, consultant2.email);
+  console.log('✅ Created consultants');
 
-  // Create services
+  // Create services with tiers
   const service1 = await prisma.service.create({
     data: {
-      title: 'Management de la performance cachée',
+      name: 'Management de la performance cachée',
       description: 'Identifier les dysfonctionnements invisibles qui freinent la performance et transformer les coûts cachés en valeur durable.',
-      price: 500.00,
-      durationHours: 4,
-      icon: '⭐',
+      category: 'Management',
       isActive: true,
     },
+  });
+
+  await prisma.serviceTier.createMany({
+    data: [
+      { serviceId: service1.id, tierType: 'BASIC', price: 300, maxMessages: 50, maxCallDuration: 60, description: 'Basic tier' },
+      { serviceId: service1.id, tierType: 'STANDARD', price: 500, maxMessages: 150, maxCallDuration: 180, canSelectConsultant: true, description: 'Standard tier' },
+      { serviceId: service1.id, tierType: 'PREMIUM', price: 800, maxMessages: null, maxCallDuration: null, canSelectConsultant: true, description: 'Premium tier' },
+    ],
   });
 
   const service2 = await prisma.service.create({
     data: {
-      title: 'Gestion des parcours professionnels',
+      name: 'Gestion des parcours professionnels',
       description: 'Construire des trajectoires professionnelles alignées avec la stratégie de l\'entreprise.',
-      price: 400.00,
-      durationHours: 3,
-      icon: '👥',
+      category: 'RH',
       isActive: true,
     },
+  });
+
+  await prisma.serviceTier.createMany({
+    data: [
+      { serviceId: service2.id, tierType: 'BASIC', price: 250, maxMessages: 40, maxCallDuration: 45, description: 'Basic tier' },
+      { serviceId: service2.id, tierType: 'STANDARD', price: 400, maxMessages: 120, maxCallDuration: 150, canSelectConsultant: true, description: 'Standard tier' },
+      { serviceId: service2.id, tierType: 'PREMIUM', price: 650, maxMessages: null, maxCallDuration: null, canSelectConsultant: true, description: 'Premium tier' },
+    ],
   });
 
   const service3 = await prisma.service.create({
     data: {
-      title: 'Marque employeur',
+      name: 'Marque employeur',
       description: 'Renforcer l\'attractivité et la fidélisation en créant une expérience collaborateur cohérente et engageante.',
-      price: 450.00,
-      durationHours: 3,
-      icon: '🌟',
+      category: 'RH',
       isActive: true,
     },
+  });
+
+  await prisma.serviceTier.createMany({
+    data: [
+      { serviceId: service3.id, tierType: 'BASIC', price: 300, maxMessages: 50, maxCallDuration: 60, description: 'Basic tier' },
+      { serviceId: service3.id, tierType: 'STANDARD', price: 450, maxMessages: 130, maxCallDuration: 150, canSelectConsultant: true, description: 'Standard tier' },
+      { serviceId: service3.id, tierType: 'PREMIUM', price: 700, maxMessages: null, maxCallDuration: null, canSelectConsultant: true, description: 'Premium tier' },
+    ],
   });
 
   const service4 = await prisma.service.create({
     data: {
-      title: 'Recrutement stratégique',
+      name: 'Recrutement stratégique',
       description: 'Sécuriser le choix des talents pour soutenir la croissance et la performance.',
-      price: 350.00,
-      durationHours: 2,
-      icon: '🎯',
+      category: 'RH',
       isActive: true,
     },
   });
-  console.log('✅ Created services:', 4);
+
+  await prisma.serviceTier.createMany({
+    data: [
+      { serviceId: service4.id, tierType: 'BASIC', price: 200, maxMessages: 30, maxCallDuration: 45, description: 'Basic tier' },
+      { serviceId: service4.id, tierType: 'STANDARD', price: 350, maxMessages: 100, maxCallDuration: 120, canSelectConsultant: true, description: 'Standard tier' },
+      { serviceId: service4.id, tierType: 'PREMIUM', price: 550, maxMessages: null, maxCallDuration: null, canSelectConsultant: true, description: 'Premium tier' },
+    ],
+  });
+
+  console.log('✅ Created services with tiers');
 
   // Create blogs
-  const blogs = await prisma.blog.createMany({
+  await prisma.blog.createMany({
     data: [
-      {
-        title: '5 Strategies for Business Growth in 2024',
-        excerpt: 'Discover proven methods to scale your business effectively',
-        content: 'Full article content here...',
-        published: true,
-      },
-      {
-        title: 'Digital Transformation: A Complete Guide',
-        excerpt: 'Everything you need to know about modernizing your business',
-        content: 'Full article content here...',
-        published: true,
-      },
-      {
-        title: 'Financial Planning Best Practices',
-        excerpt: 'Expert tips for managing your business finances',
-        content: 'Full article content here...',
-        published: true,
-      },
+      { title: '5 Strategies for Business Growth', excerpt: 'Discover proven methods', content: 'Content...', published: true },
+      { title: 'Digital Transformation Guide', excerpt: 'Everything you need to know', content: 'Content...', published: true },
     ],
   });
-  console.log('✅ Created blogs:', blogs.count);
+  console.log('✅ Created blogs');
 
   // Create contacts
-  const contacts = await prisma.contact.createMany({
+  await prisma.contact.createMany({
     data: [
-      {
-        name: 'Alice Williams',
-        email: 'alice@example.com',
-        message: 'Interested in business strategy consulting',
-      },
-      {
-        name: 'Bob Davis',
-        email: 'bob@example.com',
-        message: 'Need help with digital transformation',
-      },
+      { name: 'Alice Williams', email: 'alice@example.com', message: 'Interested in consulting' },
+      { name: 'Bob Davis', email: 'bob@example.com', message: 'Need help' },
     ],
   });
-  console.log('✅ Created contacts:', contacts.count);
-
-  // Create a mission
-  const mission1 = await prisma.mission.create({
-    data: {
-      title: 'Financial Planning Project',
-      description: 'Comprehensive financial planning and investment strategy',
-      status: 'IN_PROGRESS',
-      progress: 45,
-      price: 200.00,
-      startDate: new Date(),
-      deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      clientId: client.id,
-      consultantId: consultant1.id,
-      serviceId: service1.id,
-    },
-  });
-  console.log('✅ Created mission:', mission1.title);
+  console.log('✅ Created contacts');
 
   // Create site content
   await prisma.siteContent.createMany({
@@ -194,7 +185,7 @@ async function main() {
       {
         key: 'hero',
         value: {
-          title: "Vision: Votre catalyseur de performance pour un avenir ambitieux et durable.",
+          title: 'Vision: Votre catalyseur de performance pour un avenir ambitieux et durable.',
           subtitle: 'Conseil en management, RH, qualité et performance.',
           ctaText: 'Prendre rendez-vous',
           ctaLink: '/login',
@@ -219,8 +210,7 @@ async function main() {
   console.log('\n📝 Test Credentials:');
   console.log('Admin: admin@consultpro.com / admin123');
   console.log('Client: client@consultpro.com / client123');
-  console.log('Consultant 1: consultant@consultpro.com / consultant123');
-  console.log('Consultant 2: consultant2@consultpro.com / consultant123');
+  console.log('Consultant: consultant@consultpro.com / consultant123');
 }
 
 main()
