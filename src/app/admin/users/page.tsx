@@ -2,21 +2,26 @@
 
 import { useEffect, useState } from 'react'
 import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Trash2 } from 'lucide-react'
+import { Pencil, Trash2, Eye, EyeOff } from 'lucide-react'
 
 interface User {
   id: string
   email: string
   name: string | null
+  phone: string | null
   role: string
   createdAt: string
-  _count?: { subscriptions: number; missions: number }
 }
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
+  const [editUser, setEditUser] = useState<User | null>(null)
+  const [form, setForm] = useState<Partial<User & { password?: string }>>({})
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     fetchUsers()
@@ -31,6 +36,27 @@ export default function UsersPage() {
       console.error('Failed to fetch users:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const method = editUser ? 'PUT' : 'POST'
+    const body = editUser ? { id: editUser.id, ...form } : form
+    
+    try {
+      const res = await fetch('/api/admin/users', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+      if (res.ok) {
+        setForm({})
+        setEditUser(null)
+        fetchUsers()
+      }
+    } catch (error) {
+      console.error('Failed to save user:', error)
     }
   }
 
@@ -51,71 +77,57 @@ export default function UsersPage() {
 
   return (
     <div className="p-8">
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Users Management</h1>
-          <p className="text-gray-600 mt-2">Manage all client accounts</p>
+      <h1 className="text-3xl font-bold mb-6">Users Management</h1>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="p-6">
+          <h2 className="text-xl font-bold mb-4">{editUser ? 'Edit' : 'Create'} User</h2>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Input placeholder="Name" value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} required />
+            <Input placeholder="Email" type="email" value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })} required />
+            <Input placeholder="Phone" value={form.phone || ''} onChange={e => setForm({ ...form, phone: e.target.value })} />
+            {!editUser && (
+              <div className="relative">
+                <Input placeholder="Password" type={showPassword ? 'text' : 'password'} value={form.password || ''} onChange={e => setForm({ ...form, password: e.target.value })} required />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700">
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
+            )}
+            <select className="w-full p-2 border rounded" value={form.role || 'CLIENT'} onChange={e => setForm({ ...form, role: e.target.value })} required>
+              <option value="CLIENT">CLIENT</option>
+              <option value="CONSULTANT">CONSULTANT</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+            <div className="flex gap-2">
+              <Button type="submit">{editUser ? 'Update' : 'Create'}</Button>
+              {editUser && <Button type="button" variant="outline" onClick={() => { setEditUser(null); setForm({}) }}>Cancel</Button>}
+            </div>
+          </form>
+        </Card>
+
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold">All Users</h2>
+          <div className="space-y-2 max-h-[600px] overflow-y-auto">
+            {users.map(user => (
+              <Card key={user.id} className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="font-bold">{user.name || 'N/A'}</h3>
+                    <p className="text-sm text-gray-600">{user.email}</p>
+                    {user.phone && <p className="text-sm text-gray-600">{user.phone}</p>}
+                    <Badge className="mt-1" variant={user.role === 'ADMIN' ? 'default' : 'secondary'}>{user.role}</Badge>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" variant="outline" onClick={() => { setEditUser(user); setForm(user) }}><Pencil size={16} /></Button>
+                    <Button size="sm" variant="destructive" onClick={() => deleteUser(user.id)} disabled={user.role === 'ADMIN'}><Trash2 size={16} /></Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
-
-      <Card className="overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subscriptions</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Missions</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Joined</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {users.map(user => (
-                <tr key={user.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{user.name || 'N/A'}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-600">{user.email}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <Badge variant={user.role === 'ADMIN' ? 'default' : 'secondary'}>
-                      {user.role}
-                    </Badge>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-600">
-                    {user._count?.subscriptions || 0}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-600">
-                    {user._count?.missions || 0}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-gray-600">
-                    {new Date(user.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => deleteUser(user.id)}
-                        className="text-red-600 hover:text-red-800"
-                        disabled={user.role === 'ADMIN'}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      {users.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          No users found
-        </div>
-      )}
     </div>
   )
 }

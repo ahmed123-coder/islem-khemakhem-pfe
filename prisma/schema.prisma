@@ -225,7 +225,8 @@ model Reservation {
   clientId       String
   consultantId   String
   serviceTierId  String
-  requestedDate  DateTime
+  startTime      DateTime
+  endTime        DateTime
   status         ReservationStatus @default(PENDING)
   createdAt      DateTime          @default(now())
   client         User              @relation(fields: [clientId], references: [id])

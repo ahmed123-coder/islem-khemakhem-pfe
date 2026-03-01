@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Home, FileText, Briefcase, Mail, Settings, Users, UserCheck, LogOut } from 'lucide-react'
+import { Home, FileText, Briefcase, Mail, Settings, Users, UserCheck, LogOut, ShoppingCart } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export default function AdminSidebar() {
@@ -18,6 +18,7 @@ export default function AdminSidebar() {
     { href: '/admin', label: 'Dashboard', icon: Home },
     { href: '/admin/users', label: 'Users (Clients)', icon: Users },
     { href: '/admin/consultants', label: 'Consultants', icon: UserCheck },
+    { href: '/admin/subscriptions', label: 'Subscriptions', icon: ShoppingCart },
     { href: '/admin/content', label: 'Content Editor', icon: Settings },
     { href: '/admin/blogs', label: 'Blogs', icon: FileText },
     { href: '/admin/services', label: 'Services', icon: Briefcase },
