@@ -33,52 +33,82 @@ export default function Services() {
             Des expertises au service de votre performance
           </h1>
           <p className="text-xl text-blue-100 max-w-3xl">
-            Découvrez nos services avec des offres adaptées à vos besoins.
+            Quatre domaines d'intervention complémentaires pour une transformation globale de votre entreprise.
           </p>
         </div>
       </section>
 
       {/* Services Grid */}
       <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
           {services.map((service: any, index: number) => (
-            <div key={service.id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className={`grid grid-cols-1 lg:grid-cols-2 gap-8 p-8 ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
-                <div className={`${index % 2 === 1 ? 'lg:order-2' : ''}`}>
-                  {service.category && (
-                    <div className="mb-4">
-                      <img src={service.category} alt={service.name} className="w-16 h-16 object-cover rounded-lg" />
-                    </div>
-                  )}
-                  <h2 className="text-3xl font-serif font-bold text-gray-900 mb-4">
-                    {service.name}
-                  </h2>
-                  <p className="text-gray-600 mb-6 leading-relaxed">
-                    {service.description}
-                  </p>
-                </div>
-                <div className={`bg-gray-50 rounded-xl p-6 ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Offres disponibles</h3>
-                  <div className="space-y-3">
-                    {service.tiers?.map((tier: any) => (
-                      <div key={tier.id} className="bg-white p-4 rounded-lg border border-gray-200">
-                        <div className="flex justify-between items-start mb-2">
-                          <span className="font-bold text-lg text-blue-700">{tier.tierType}</span>
-                          <span className="text-2xl font-bold text-gray-900">${tier.price}</span>
-                        </div>
-                        {tier.description && <p className="text-sm text-gray-600 mb-2">{tier.description}</p>}
-                        <div className="text-sm text-gray-500 space-y-1">
-                          {tier.maxMessages && <p>✓ {tier.maxMessages} messages</p>}
-                          {tier.maxCallDuration && <p>✓ {tier.maxCallDuration} min d'appel</p>}
-                          {tier.canSelectConsultant && <p>✓ Choix du consultant</p>}
-                        </div>
-                      </div>
-                    ))}
+            <div key={service.id} className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
+              <div className={`${index % 2 === 1 ? 'lg:order-2' : ''}`}>
+                {service.category && (
+                  <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
+                    <img src={service.category} alt={service.name} className="w-full h-full object-cover" />
                   </div>
-                </div>
+                )}
+                <h2 className="text-3xl font-serif font-bold text-gray-900 mb-4">
+                  {service.name}
+                </h2>
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                  {service.description}
+                </p>
+                <Link 
+                  href={`/client/services?serviceId=${service.id}`}
+                  className="inline-flex items-center gap-2 bg-[#2B5A8E] text-white px-6 py-3 rounded-lg font-medium hover:bg-[#234a73] transition-all"
+                >
+                  Demander un devis
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </Link>
+              </div>
+              <div className={`bg-gray-200 rounded-2xl h-80 flex items-center justify-center ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
+                {service.category ? (
+                  <img src={service.category} alt={service.name} className="w-32 h-32 object-cover opacity-30" />
+                ) : (
+                  <div className="text-8xl opacity-20">📊</div>
+                )}
               </div>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Methodology Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <div className="inline-block bg-orange-100 text-orange-600 px-4 py-2 rounded-full text-sm font-medium mb-4">
+              NOTRE MÉTHODOLOGIE
+            </div>
+            <h2 className="text-4xl md:text-5xl font-serif font-bold text-gray-900">
+              Un processus éprouvé en 4 étapes
+            </h2>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              { number: 1, icon: '🎯', title: 'Diagnostic', description: 'Audit complet de votre organisation et identification des axes d\'amélioration.' },
+              { number: 2, icon: '📋', title: 'Plan d\'action', description: 'Élaboration d\'un plan d\'action personnalisé avec des objectifs mesurables.' },
+              { number: 3, icon: '🎓', title: 'Accompagnement', description: 'Mise en œuvre, formation des équipes et transfert de compétences.' },
+              { number: 4, icon: '📊', title: 'Suivi & Mesure', description: 'Pilotage des résultats et ajustements pour garantir la pérennité.' }
+            ].map((step, index) => (
+              <div key={index} className="text-center">
+                <div className="inline-flex items-center justify-center w-24 h-24 bg-blue-50 rounded-full text-4xl mb-6 border-4 border-white shadow-sm">
+                  {step.icon}
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  {step.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {step.description}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -95,7 +125,7 @@ export default function Services() {
             href="/contact"
             className="inline-block bg-[#F59E0B] hover:bg-[#D97706] text-white font-semibold px-8 py-4 rounded-lg transition-colors"
           >
-            Nous contacter
+            Réserver un créneau
           </Link>
         </div>
       </section>
