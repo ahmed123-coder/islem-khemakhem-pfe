@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 
 interface ServiceTier {
   id: string
@@ -30,7 +31,10 @@ interface Consultant {
 }
 
 export default function ServicesPage() {
-  const [step, setStep] = useState(1)
+  const searchParams = useSearchParams()
+  const serviceId = searchParams.get('serviceId')
+  
+  const [step, setStep] = useState(serviceId ? 2 : 1)
   const [services, setServices] = useState<Service[]>([])
   const [consultants, setConsultants] = useState<Consultant[]>([])
   const [selectedService, setSelectedService] = useState<Service | null>(null)
@@ -41,8 +45,14 @@ export default function ServicesPage() {
   const [selectedDuration, setSelectedDuration] = useState<number>(1)
 
   useEffect(() => {
-    fetch('/api/services/with-tiers').then(r => r.json()).then(setServices)
-  }, [])
+    fetch('/api/services/with-tiers').then(r => r.json()).then(data => {
+      setServices(data)
+      if (serviceId) {
+        const service = data.find((s: Service) => s.id === serviceId)
+        if (service) setSelectedService(service)
+      }
+    })
+  }, [serviceId])
 
   useEffect(() => {
     if (step === 3) {

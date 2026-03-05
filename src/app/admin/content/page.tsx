@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
 import Image from 'next/image'
+import { Upload, Trash2 } from 'lucide-react'
 
 type ContentSection = 'navbar' | 'footer' | 'hero'
 
@@ -17,10 +18,13 @@ export default function ContentEditor() {
   const [logoPreview, setLogoPreview] = useState<string>('')
   const [logoUrl, setLogoUrl] = useState('/logo.jpeg')
   const [dbLogoUrl, setDbLogoUrl] = useState('')
+  const [heroImages, setHeroImages] = useState<string[]>([])
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     loadContent()
     loadLogo()
+    if (section === 'hero') loadHeroImages()
   }, [section])
 
   const loadLogo = async () => {
@@ -39,6 +43,55 @@ export default function ContentEditor() {
       const data = await res.json()
       setContent(data.value || {})
     }
+  }
+
+  const loadHeroImages = async () => {
+    const res = await fetch('/api/hero')
+    if (res.ok) {
+      const data = await res.json()
+      setHeroImages(data.images || [])
+    }
+  }
+
+  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    
+    setUploading(true)
+    const formData = new FormData()
+    formData.append('file', file)
+    
+    try {
+      const res = await fetch('/api/upload/icon', { method: 'POST', body: formData })
+      const data = await res.json()
+      
+      const addRes = await fetch('/api/admin/hero', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageUrl: data.url })
+      })
+      
+      if (addRes.ok) {
+        loadHeroImages()
+        alert('Image uploaded successfully!')
+      }
+    } catch (error) {
+      alert('Upload failed')
+    } finally {
+      setUploading(false)
+    }
+  }
+
+  const deleteHeroImage = async (url: string) => {
+    if (!confirm('Delete this image?')) return
+    
+    const res = await fetch('/api/admin/hero', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ imageUrl: url })
+    })
+    
+    if (res.ok) loadHeroImages()
   }
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,6 +182,28 @@ export default function ContentEditor() {
         
         {section === 'hero' && (
           <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Hero Background Images</label>
+              <div className="mb-4">
+                <label className="cursor-pointer">
+                  <Button type="button" disabled={uploading || heroImages.length >= 3} asChild>
+                    <span>{uploading ? 'Uploading...' : <><Upload size={16} className="mr-2" />Upload Image</>}</span>
+                  </Button>
+                  <input type="file" accept="image/*" onChange={handleHeroImageUpload} className="hidden" disabled={heroImages.length >= 3} />
+                </label>
+                <p className="text-xs text-gray-500 mt-2">Max 3 images. Multiple images create slideshow animation.</p>
+              </div>
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                {heroImages.map((img, index) => (
+                  <div key={index} className="relative">
+                    <img src={img} alt={`Hero ${index + 1}`} className="w-full h-32 object-cover rounded" />
+                    <Button size="sm" variant="destructive" onClick={() => deleteHeroImage(img)} className="absolute top-2 right-2">
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
             <div>
               <label className="block text-sm font-medium mb-2">Title</label>
               <Input value={content.title || ''} onChange={e => setContent({ ...content, title: e.target.value })} />
