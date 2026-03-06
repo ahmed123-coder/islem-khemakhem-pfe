@@ -24,8 +24,9 @@ export default function ConsultantDashboard() {
   if (loading) return <div className="p-8">Loading...</div>
 
   const mainCards = [
-    { label: 'My Appointments', value: 0, icon: Calendar, color: 'bg-blue-500', href: '/consultant/appointments' },
-    { label: 'Hours This Month', value: 0, icon: Clock, color: 'bg-green-500', href: '/consultant/appointments' },
+    { label: 'My Clients', value: 0, icon: User, color: 'bg-blue-500', href: '/consultant/clients' },
+    { label: 'My Appointments', value: 0, icon: Calendar, color: 'bg-green-500', href: '/consultant/appointments' },
+    { label: 'Hours This Month', value: 0, icon: Clock, color: 'bg-purple-500', href: '/consultant/appointments' },
   ]
 
   return (
@@ -37,7 +38,7 @@ export default function ConsultantDashboard() {
 
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Overview</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {mainCards.map(card => {
             const Icon = card.icon
             return (

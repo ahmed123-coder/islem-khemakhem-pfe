@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Settings, LogOut } from 'lucide-react'
+import { Home, Settings, LogOut, Users } from 'lucide-react'
 
 export default function ConsultantSidebar() {
   const pathname = usePathname()
@@ -15,6 +15,7 @@ export default function ConsultantSidebar() {
 
   const links = [
     { href: '/consultant', label: 'Dashboard', icon: Home },
+    { href: '/consultant/clients', label: 'Clients', icon: Users },
     { href: '/consultant/settings', label: 'Settings', icon: Settings },
   ]
 
