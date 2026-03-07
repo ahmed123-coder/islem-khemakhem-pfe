@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { getConsultantId } from '@/lib/auth'
 
 const prisma = new PrismaClient()
 
 export async function GET(req: NextRequest) {
+  const consultantId = await getConsultantId()
+  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   const orderId = req.nextUrl.searchParams.get('orderId')
-  const consultantId = req.nextUrl.searchParams.get('consultantId')
   if (!orderId) return NextResponse.json({ error: 'Order ID required' }, { status: 400 })
-  if (!consultantId) return NextResponse.json({ error: 'Consultant ID required' }, { status: 400 })
 
   try {
     const order = await prisma.order.findUnique({ where: { id: orderId } })
@@ -26,8 +28,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const consultantId = await getConsultantId()
+  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
   try {
-    const { orderId, consultantId, content } = await req.json()
+    const { orderId, content } = await req.json()
     const order = await prisma.order.findUnique({ where: { id: orderId } })
     
     if (!order?.consultantId) return NextResponse.json({ error: 'Invalid order' }, { status: 400 })

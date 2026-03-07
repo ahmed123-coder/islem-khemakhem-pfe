@@ -60,3 +60,18 @@ export async function getCurrentUser() {
 
   return user
 }
+
+export async function getConsultantId(): Promise<string | null> {
+  try {
+    const token = await getAuthToken()
+    if (!token) return null
+
+    const payload = verifyToken(token)
+    if (!payload || payload.role !== 'CONSULTANT') return null
+
+    return payload.userId
+  } catch (error) {
+    return null
+  }
+}
+

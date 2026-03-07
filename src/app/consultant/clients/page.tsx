@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 
 export default function ConsultantClients() {
-  const [consultantId] = useState('TEMP_CONSULTANT_ID')
   const [activeTab, setActiveTab] = useState<'clients' | 'messages' | 'missions'>('clients')
   const [clients, setClients] = useState<any[]>([])
   const [selectedClient, setSelectedClient] = useState<string | null>(null)
@@ -25,7 +24,7 @@ export default function ConsultantClients() {
 
   const fetchClients = async () => {
     try {
-      const res = await fetch(`/api/consultant/clients?consultantId=${consultantId}`)
+      const res = await fetch('/api/consultant/clients')
       const data = await res.json()
       setClients(data)
       setLoading(false)
@@ -36,7 +35,7 @@ export default function ConsultantClients() {
 
   const fetchMessages = async (orderId: string) => {
     try {
-      const res = await fetch(`/api/consultant/messages?orderId=${orderId}&consultantId=${consultantId}`)
+      const res = await fetch(`/api/consultant/messages?orderId=${orderId}`)
       const data = await res.json()
       setMessages(data)
     } catch (error) {
@@ -46,7 +45,7 @@ export default function ConsultantClients() {
 
   const fetchMissions = async (orderId: string) => {
     try {
-      const res = await fetch(`/api/consultant/missions?orderId=${orderId}&consultantId=${consultantId}`)
+      const res = await fetch(`/api/consultant/missions?orderId=${orderId}`)
       const data = await res.json()
       setMissions(data)
     } catch (error) {
@@ -61,7 +60,7 @@ export default function ConsultantClients() {
       await fetch('/api/consultant/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: selectedClient, consultantId, content: newMessage })
+        body: JSON.stringify({ orderId: selectedClient, content: newMessage })
       })
       setNewMessage('')
       fetchMessages(selectedClient)
@@ -80,7 +79,7 @@ export default function ConsultantClients() {
       await fetch('/api/consultant/missions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId: selectedClient, consultantId, title })
+        body: JSON.stringify({ orderId: selectedClient, title })
       })
       fetchMissions(selectedClient)
     } catch (error) {

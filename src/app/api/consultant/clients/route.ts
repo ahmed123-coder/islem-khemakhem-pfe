@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { getConsultantId } from '@/lib/auth'
 
 const prisma = new PrismaClient()
 
 export async function GET(req: NextRequest) {
-  const consultantId = req.nextUrl.searchParams.get('consultantId')
-  if (!consultantId) return NextResponse.json({ error: 'Consultant ID required' }, { status: 400 })
+  const consultantId = await getConsultantId()
+  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
     const orders = await prisma.order.findMany({
