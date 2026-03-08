@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
         clientId: user.id,
         consultantId: consultantId,
         serviceTierId: serviceTierId,
-        status: 'PENDING'
+        status: 'ACTIVE'
       }
     })
 
