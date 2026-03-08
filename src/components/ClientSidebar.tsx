@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Settings, LogOut } from 'lucide-react'
+import { Home, Settings, LogOut, ShoppingBag, Calendar, MessageSquare, Bell } from 'lucide-react'
 
 export default function ClientSidebar() {
   const pathname = usePathname()
@@ -14,7 +14,11 @@ export default function ClientSidebar() {
   }
 
   const links = [
-    { href: '/client', label: 'Dashboard', icon: Home },
+    { href: '/client', label: 'My Subscriptions', icon: ShoppingBag },
+    { href: '/client/services', label: 'Browse Services', icon: Home },
+    { href: '/client/reservations', label: 'My Reservations', icon: Calendar },
+    { href: '/client/messages', label: 'Messages', icon: MessageSquare },
+    { href: '/client/notifications', label: 'Notifications', icon: Bell },
     { href: '/client/settings', label: 'Settings', icon: Settings },
   ]
 

@@ -21,7 +21,7 @@ enum TierType {
 
 enum OrderStatus {
   PENDING
-  ACTIVE
+   
   COMPLETED
   CANCELLED
 }
