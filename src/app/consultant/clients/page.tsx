@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react'
 
 export default function ConsultantClients() {
-  const [activeTab, setActiveTab] = useState<'clients' | 'messages' | 'missions'>('clients')
+  const [activeTab, setActiveTab] = useState<'clients' | 'messages' | 'missions' | 'calls'>('clients')
   const [clients, setClients] = useState<any[]>([])
   const [selectedClient, setSelectedClient] = useState<string | null>(null)
   const [messages, setMessages] = useState<any[]>([])
   const [missions, setMissions] = useState<any[]>([])
+  const [calls, setCalls] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -19,6 +20,7 @@ export default function ConsultantClients() {
     if (selectedClient) {
       fetchMessages(selectedClient)
       fetchMissions(selectedClient)
+      fetchCalls(selectedClient)
     }
   }, [selectedClient])
 
@@ -38,6 +40,16 @@ export default function ConsultantClients() {
       const res = await fetch(`/api/consultant/messages?orderId=${orderId}`)
       const data = await res.json()
       setMessages(data)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const fetchCalls = async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/consultant/calls?orderId=${orderId}`)
+      const data = await res.json()
+      setCalls(data)
     } catch (error) {
       console.error(error)
     }
@@ -82,6 +94,23 @@ export default function ConsultantClients() {
         body: JSON.stringify({ orderId: selectedClient, title })
       })
       fetchMissions(selectedClient)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const createMilestone = async (missionId: string) => {
+    const title = prompt('Milestone title:')
+    if (!title) return
+    const description = prompt('Milestone description (optional):')
+
+    try {
+      await fetch('/api/consultant/milestones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ missionId, title, description })
+      })
+      if (selectedClient) fetchMissions(selectedClient)
     } catch (error) {
       console.error(error)
     }
@@ -161,6 +190,12 @@ export default function ConsultantClients() {
                     >
                       Missions
                     </button>
+                    <button
+                      onClick={() => setActiveTab('calls')}
+                      className={`px-6 py-3 font-medium ${activeTab === 'calls' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+                    >
+                      Calls
+                    </button>
                   </div>
 
                   <div className="p-6">
@@ -212,7 +247,15 @@ export default function ConsultantClients() {
                               {mission.description && <p className="text-gray-600 mb-3">{mission.description}</p>}
                               
                               <div className="mt-4">
-                                <h4 className="font-medium mb-2">Tasks ({mission.milestones.length})</h4>
+                                <div className="flex justify-between items-center mb-2">
+                                  <h4 className="font-medium">Tasks ({mission.milestones.length})</h4>
+                                  <button 
+                                    onClick={() => createMilestone(mission.id)}
+                                    className="text-sm bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100"
+                                  >
+                                    + Add Task
+                                  </button>
+                                </div>
                                 <div className="space-y-2">
                                   {mission.milestones.map((milestone: any) => (
                                     <div key={milestone.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
@@ -237,6 +280,32 @@ export default function ConsultantClients() {
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {activeTab === 'calls' && (
+                      <div>
+                        {calls.length === 0 ? (
+                          <div className="text-center py-12 text-gray-500">No calls recorded yet</div>
+                        ) : (
+                          <div className="space-y-4">
+                            {calls.map(call => (
+                              <div key={call.id} className="border rounded-lg p-4">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <div className="font-medium">{new Date(call.startedAt).toLocaleString()}</div>
+                                    <div className="text-sm text-gray-500 text-gray-500">Duration: {call.duration} minutes</div>
+                                  </div>
+                                  {call.recordingUrl && (
+                                    <a href={call.recordingUrl} target="_blank" className="text-blue-600 hover:underline text-sm">
+                                      🎧 Recording
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
