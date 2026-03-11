@@ -116,6 +116,52 @@ export default function ConsultantClients() {
     }
   }
 
+  const updateMission = async (missionId: string) => {
+    const mission = missions.find(m => m.id === missionId)
+    if (!mission) return
+
+    const title = prompt('Mission title:', mission.title)
+    if (!title) return
+    const description = prompt('Mission description:', mission.description || '')
+    const status = prompt('Status (PENDING, IN_PROGRESS, COMPLETED):', mission.status)
+
+    try {
+      await fetch('/api/consultant/missions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ missionId, title, description, status })
+      })
+      if (selectedClient) fetchMissions(selectedClient)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const editMilestone = async (milestoneId: string) => {
+    // Find the milestone in all missions
+    let milestone: any = null
+    for (const m of missions) {
+      milestone = m.milestones.find((ms: any) => ms.id === milestoneId)
+      if (milestone) break
+    }
+    if (!milestone) return
+
+    const title = prompt('Milestone title:', milestone.title)
+    if (!title) return
+    const description = prompt('Milestone description:', milestone.description || '')
+
+    try {
+      await fetch('/api/consultant/milestones', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ milestoneId, title, description, status: milestone.status })
+      })
+      if (selectedClient) fetchMissions(selectedClient)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   const updateMilestone = async (milestoneId: string, status: string) => {
     try {
       await fetch('/api/consultant/milestones', {
@@ -235,16 +281,26 @@ export default function ConsultantClients() {
                           {missions.map(mission => (
                             <div key={mission.id} className="border rounded-lg p-4">
                               <div className="flex justify-between items-start mb-3">
-                                <h3 className="font-semibold text-lg">{mission.title}</h3>
-                                <span className={`px-3 py-1 rounded-full text-sm ${
-                                  mission.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                                  mission.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
-                                  'bg-gray-100 text-gray-700'
-                                }`}>
-                                  {mission.status}
-                                </span>
+                                <div className="flex-1">
+                                  <h3 className="font-semibold text-lg">{mission.title}</h3>
+                                  {mission.description && <p className="text-gray-600 mb-3">{mission.description}</p>}
+                                </div>
+                                <div className="flex flex-col items-end gap-2">
+                                  <span className={`px-3 py-1 rounded-full text-sm ${
+                                    mission.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                    mission.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
+                                    'bg-gray-100 text-gray-700'
+                                  }`}>
+                                    {mission.status}
+                                  </span>
+                                  <button 
+                                    onClick={() => updateMission(mission.id)}
+                                    className="text-xs text-blue-600 hover:underline"
+                                  >
+                                    Edit Mission
+                                  </button>
+                                </div>
                               </div>
-                              {mission.description && <p className="text-gray-600 mb-3">{mission.description}</p>}
                               
                               <div className="mt-4">
                                 <div className="flex justify-between items-center mb-2">
@@ -269,10 +325,16 @@ export default function ConsultantClients() {
                                         <div className={milestone.status === 'COMPLETED' ? 'line-through text-gray-500' : ''}>
                                           {milestone.title}
                                         </div>
-                                        {milestone.dueDate && (
-                                          <div className="text-xs text-gray-500">Due: {new Date(milestone.dueDate).toLocaleDateString()}</div>
+                                        {milestone.description && (
+                                          <div className="text-xs text-gray-400">{milestone.description}</div>
                                         )}
                                       </div>
+                                      <button 
+                                        onClick={() => editMilestone(milestone.id)}
+                                        className="text-xs text-gray-400 hover:text-blue-500"
+                                      >
+                                        Edit
+                                      </button>
                                     </div>
                                   ))}
                                 </div>

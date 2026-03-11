@@ -57,6 +57,21 @@ export default function OrderDetails() {
     }
   }
 
+  const updateMilestoneStatus = async (milestoneId: string, status: string) => {
+    try {
+      const res = await fetch('/api/client/milestones', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ milestoneId, status })
+      })
+      if (res.ok) {
+        fetchOrder()
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   const sendMessage = async () => {
     if (!newMessage.trim() || sending) return
     
@@ -307,15 +322,18 @@ export default function OrderDetails() {
                           <div className="space-y-3">
                             {mission.milestones?.map((milestone: any) => (
                               <div key={milestone.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
-                                <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                                  milestone.status === 'COMPLETED' ? 'bg-green-500 border-green-500' : 'border-gray-300'
-                                }`}>
+                                <button 
+                                  onClick={() => updateMilestoneStatus(milestone.id, milestone.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED')}
+                                  className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
+                                    milestone.status === 'COMPLETED' ? 'bg-green-500 border-green-500' : 'border-gray-300 hover:border-green-500'
+                                  }`}
+                                >
                                   {milestone.status === 'COMPLETED' && (
                                     <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                     </svg>
                                   )}
-                                </div>
+                                </button>
                                 <div className="flex-1 min-w-0">
                                   <p className={`font-medium ${milestone.status === 'COMPLETED' ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
                                     {milestone.title}
