@@ -12,7 +12,7 @@ export default function OrderDetails() {
   const [reservations, setReservations] = useState<any[]>([])
   const [messages, setMessages] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'reservations' | 'messages' | 'calls'>('reservations')
+  const [activeTab, setActiveTab] = useState<'reservations' | 'messages' | 'calls' | 'missions'>('reservations')
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
 
@@ -157,6 +157,12 @@ export default function OrderDetails() {
             >
               📞 Calls ({order.calls?.length || 0})
             </button>
+            <button
+              onClick={() => setActiveTab('missions')}
+              className={`px-6 py-3 font-medium ${activeTab === 'missions' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+            >
+              🚀 Missions ({order.missions?.length || 0})
+            </button>
           </div>
 
           <div className="p-6">
@@ -262,6 +268,71 @@ export default function OrderDetails() {
                               🎧 Listen Recording
                             </a>
                           )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Missions Tab */}
+            {activeTab === 'missions' && (
+              <div>
+                {!order.missions || order.missions.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">No missions assigned yet</div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-6">
+                    {order.missions.map((mission: any) => (
+                      <div key={mission.id} className="border rounded-lg p-6 bg-white shadow-sm">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h3 className="text-xl font-bold text-gray-900">{mission.title}</h3>
+                            {mission.description && <p className="text-gray-600 mt-1">{mission.description}</p>}
+                          </div>
+                          <span className={`px-4 py-1.5 rounded-full text-sm font-semibold ${
+                            mission.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                            mission.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
+                            mission.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                          }`}>
+                            {mission.status}
+                          </span>
+                        </div>
+                        
+                        <div className="mt-6">
+                          <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">
+                            Milestones ({mission.milestones?.length || 0})
+                          </h4>
+                          <div className="space-y-3">
+                            {mission.milestones?.map((milestone: any) => (
+                              <div key={milestone.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl border border-gray-100">
+                                <div className={`flex-shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                                  milestone.status === 'COMPLETED' ? 'bg-green-500 border-green-500' : 'border-gray-300'
+                                }`}>
+                                  {milestone.status === 'COMPLETED' && (
+                                    <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className={`font-medium ${milestone.status === 'COMPLETED' ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                                    {milestone.title}
+                                  </p>
+                                  {milestone.description && (
+                                    <p className="text-sm text-gray-500 truncate">{milestone.description}</p>
+                                  )}
+                                </div>
+                                {milestone.dueDate && (
+                                  <div className="text-right">
+                                    <span className="text-xs font-medium text-gray-500 block">Due Date</span>
+                                    <span className="text-sm text-gray-700">{new Date(milestone.dueDate).toLocaleDateString()}</span>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     ))}
