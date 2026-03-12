@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { JoinZoomButton } from '@/components/JoinZoomButton'
 
 export default function ConsultantReservations() {
   const [reservations, setReservations] = useState<any[]>([])
@@ -209,6 +210,20 @@ export default function ConsultantReservations() {
                   </span>
                 </div>
               </div>
+              {selectedReservation.zoomJoinUrl && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <span className="text-blue-800 text-sm font-semibold mb-2 block">Zoom Meeting Details:</span>
+                  <div className="space-y-2">
+                    {selectedReservation.zoomPassword && (
+                      <div className="text-sm">
+                        <span className="text-gray-600">Password:</span>{' '}
+                        <code className="bg-white px-2 py-0.5 rounded border">{selectedReservation.zoomPassword}</code>
+                      </div>
+                    )}
+                    <JoinZoomButton joinUrl={selectedReservation.zoomJoinUrl} className="w-full justify-center" />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="border-t pt-4">

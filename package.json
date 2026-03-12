@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
+    "test-zoom": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" src/scripts/test-zoom.ts"
   },
   "prisma": {
     "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
@@ -22,6 +23,7 @@
     "bcryptjs": "^2.4.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "dotenv": "^17.3.1",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.564.0",
     "next": "^14.2.0",

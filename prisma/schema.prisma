@@ -233,6 +233,10 @@ model Reservation {
   consultant     Consultant        @relation(fields: [consultantId], references: [id])
   serviceTier    ServiceTier       @relation(fields: [serviceTierId], references: [id])
 
+  zoomMeetingId  String?
+  zoomJoinUrl    String?
+  zoomPassword   String?
+
   @@index([clientId])
   @@index([consultantId])
 }
