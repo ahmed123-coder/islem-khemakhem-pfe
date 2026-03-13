@@ -7,64 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  CLIENT
-  CONSULTANT
-  ADMIN
-}
-
-enum TierType {
-  BASIC
-  STANDARD
-  PREMIUM
-}
-
-enum OrderStatus {
-  PENDING
-   
-  COMPLETED
-  CANCELLED
-}
-
-enum MissionStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
-}
-
-enum MilestoneStatus {
-  PENDING
-  IN_PROGRESS
-  COMPLETED
-}
-
-enum SenderType {
-  CLIENT
-  CONSULTANT
-}
-
-enum UploaderType {
-  CLIENT
-  CONSULTANT
-}
-
-enum ReservationStatus {
-  PENDING
-  CONFIRMED
-  COMPLETED
-  CANCELLED
-  NO_SHOW
-}
-
-enum NotificationType {
-  ORDER
-  MESSAGE
-  CALL
-  MISSION
-  SYSTEM
-}
-
 model User {
   id            String         @id @default(cuid())
   email         String         @unique
@@ -74,11 +16,11 @@ model User {
   role          Role           @default(CLIENT)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  orders        Order[]
   messages      Message[]
-  notifications Notification[]
-  reservations  Reservation[]
   missionFiles  MissionFile[]
+  notifications Notification[]
+  orders        Order[]
+  reservations  Reservation[]
 }
 
 model Consultant {
@@ -93,8 +35,8 @@ model Consultant {
   isActive     Boolean       @default(true)
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
-  orders       Order[]
   missions     Mission[]
+  orders       Order[]
   reservations Reservation[]
 }
 
@@ -110,18 +52,18 @@ model Service {
 }
 
 model ServiceTier {
-  id                   String        @id @default(cuid())
-  serviceId            String
-  tierType             TierType
-  price                Decimal       @db.Decimal(10, 2)
-  maxMessages          Int?
-  maxCallDuration      Int?
-  canSelectConsultant  Boolean       @default(false)
-  description          String?
-  createdAt            DateTime      @default(now())
-  service              Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  orders               Order[]
-  reservations         Reservation[]
+  id                  String        @id @default(cuid())
+  serviceId           String
+  tierType            TierType
+  price               Decimal       @db.Decimal(10, 2)
+  maxMessages         Int?
+  maxCallDuration     Int?
+  canSelectConsultant Boolean       @default(false)
+  description         String?
+  createdAt           DateTime      @default(now())
+  orders              Order[]
+  reservations        Reservation[]
+  service             Service       @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   @@index([serviceId])
 }
@@ -136,12 +78,12 @@ model Order {
   callMinutesUsed Int         @default(0)
   createdAt       DateTime    @default(now())
   closedAt        DateTime?
+  calls           Call[]
+  messages        Message[]
+  missions        Mission[]
   client          User        @relation(fields: [clientId], references: [id])
   consultant      Consultant? @relation(fields: [consultantId], references: [id])
   serviceTier     ServiceTier @relation(fields: [serviceTierId], references: [id])
-  messages        Message[]
-  calls           Call[]
-  missions        Mission[]
 
   @@index([clientId])
   @@index([consultantId])
@@ -174,18 +116,18 @@ model Call {
 }
 
 model Mission {
-  id           String         @id @default(cuid())
+  id           String        @id @default(cuid())
   orderId      String
   consultantId String
   title        String
   description  String?
-  status       MissionStatus  @default(PENDING)
+  status       MissionStatus @default(PENDING)
   startedAt    DateTime?
   closedAt     DateTime?
-  createdAt    DateTime       @default(now())
-  order        Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  consultant   Consultant     @relation(fields: [consultantId], references: [id])
+  createdAt    DateTime      @default(now())
   milestones   Milestone[]
+  consultant   Consultant    @relation(fields: [consultantId], references: [id])
+  order        Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   files        MissionFile[]
 
   @@index([orderId])
@@ -207,35 +149,31 @@ model Milestone {
 }
 
 model MissionFile {
-  id           String       @id @default(cuid())
+  id           String   @id @default(cuid())
   missionId    String
   uploadedById String
   fileName     String
   fileUrl      String
   fileType     String
-  createdAt    DateTime     @default(now())
-  mission      Mission      @relation(fields: [missionId], references: [id], onDelete: Cascade)
-  uploadedBy   User         @relation(fields: [uploadedById], references: [id])
+  createdAt    DateTime @default(now())
+  mission      Mission  @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
 
   @@index([missionId])
 }
 
 model Reservation {
-  id             String            @id @default(cuid())
-  clientId       String
-  consultantId   String
-  serviceTierId  String
-  startTime      DateTime
-  endTime        DateTime
-  status         ReservationStatus @default(PENDING)
-  createdAt      DateTime          @default(now())
-  client         User              @relation(fields: [clientId], references: [id])
-  consultant     Consultant        @relation(fields: [consultantId], references: [id])
-  serviceTier    ServiceTier       @relation(fields: [serviceTierId], references: [id])
-
-  zoomMeetingId  String?
-  zoomJoinUrl    String?
-  zoomPassword   String?
+  id            String            @id @default(cuid())
+  clientId      String
+  consultantId  String
+  serviceTierId String
+  startTime     DateTime
+  endTime       DateTime
+  status        ReservationStatus @default(PENDING)
+  createdAt     DateTime          @default(now())
+  client        User              @relation(fields: [clientId], references: [id])
+  consultant    Consultant        @relation(fields: [consultantId], references: [id])
+  serviceTier   ServiceTier       @relation(fields: [serviceTierId], references: [id])
 
   @@index([clientId])
   @@index([consultantId])
@@ -281,4 +219,62 @@ model SiteContent {
   value     Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum Role {
+  CLIENT
+  CONSULTANT
+  ADMIN
+}
+
+enum TierType {
+  BASIC
+  STANDARD
+  PREMIUM
+}
+
+enum OrderStatus {
+  PENDING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum MissionStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum MilestoneStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum SenderType {
+  CLIENT
+  CONSULTANT
+}
+
+enum UploaderType {
+  CLIENT
+  CONSULTANT
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum NotificationType {
+  ORDER
+  MESSAGE
+  CALL
+  MISSION
+  SYSTEM
 }
