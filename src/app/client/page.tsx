@@ -47,6 +47,17 @@ export default function ClientSubscriptions() {
     }
   }
 
+  const canJoin = (reservation: any) => {
+    const now = new Date()
+    const start = new Date(reservation.startTime)
+    const end = new Date(reservation.endTime)
+    
+    // Time before meeting when the join button becomes active (15 minutes)
+    const earlyAccessMs = 15 * 60 * 1000 
+    
+    return now.getTime() >= (start.getTime() - earlyAccessMs) && now.getTime() <= end.getTime()
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 py-8">
@@ -198,7 +209,7 @@ export default function ClientSubscriptions() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        {reservation.zoomJoinUrl && reservation.status === 'CONFIRMED' && (
+                        {reservation.zoomJoinUrl && reservation.status === 'CONFIRMED' && canJoin(reservation) && (
                           <JoinZoomButton joinUrl={reservation.zoomJoinUrl} />
                         )}
                       </td>

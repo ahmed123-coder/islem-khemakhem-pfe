@@ -172,6 +172,8 @@ model Reservation {
   startTime     DateTime
   endTime       DateTime
   status        ReservationStatus @default(PENDING)
+  zoomJoinUrl   String?
+  zoomPassword  String?
   createdAt     DateTime          @default(now())
   client        User              @relation(fields: [clientId], references: [id])
   consultant    Consultant        @relation(fields: [consultantId], references: [id])
