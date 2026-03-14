@@ -48,9 +48,18 @@ export default function ServicesAdmin() {
   }, [selectedServiceId])
 
   const loadData = async () => {
-    const res = await fetch('/api/admin/services')
-    const data = await res.json()
-    setServices(data)
+    try {
+      const res = await fetch('/api/admin/services')
+      if (res.ok) {
+        const data = await res.json()
+        setServices(Array.isArray(data) ? data : [])
+      } else {
+        setServices([])
+      }
+    } catch (e) {
+      console.error('Failed to load services', e)
+      setServices([])
+    }
   }
 
   const loadTiers = async (serviceId: string) => {
@@ -131,7 +140,7 @@ export default function ServicesAdmin() {
     if (selectedServiceId) loadTiers(selectedServiceId)
   }
 
-  const selectedService = services.find(s => s.id === selectedServiceId)
+  const selectedService = (Array.isArray(services) ? services : []).find(s => s.id === selectedServiceId)
 
   return (
     <div className="p-8 pb-24">
