@@ -1,18 +1,38 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url)
+    const serviceTierId = searchParams.get('serviceTierId')
+
+    let whereClause: any = { isActive: true }
+
+    if (serviceTierId) {
+      const serviceTier = await prisma.serviceTier.findUnique({
+        where: { id: serviceTierId },
+        select: { serviceId: true }
+      })
+
+      if (serviceTier) {
+        whereClause.services = {
+          some: {
+            id: serviceTier.serviceId
+          }
+        }
+      }
+    }
+
     const consultants = await prisma.consultant.findMany({
-      where: { isActive: true },
+      where: whereClause,
       include: {
         reservations: {
           where: {
-            requestedDate: {
+            startTime: {
               gte: new Date()
             }
           },
-          orderBy: { requestedDate: 'asc' }
+          orderBy: { startTime: 'asc' }
         },
         orders: {
           where: { status: 'ACTIVE' }

@@ -38,6 +38,7 @@ model Consultant {
   missions     Mission[]
   orders       Order[]
   reservations Reservation[]
+  services     Service[]
 }
 
 model Service {
@@ -49,6 +50,7 @@ model Service {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   tiers       ServiceTier[]
+  consultants Consultant[]
 }
 
 model ServiceTier {
