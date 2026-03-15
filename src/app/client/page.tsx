@@ -209,8 +209,24 @@ export default function ClientSubscriptions() {
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        {reservation.zoomJoinUrl && reservation.status === 'CONFIRMED' && canJoin(reservation) && (
-                          <JoinZoomButton joinUrl={reservation.zoomJoinUrl} />
+                        {reservation.status === 'CONFIRMED' ? (
+                          reservation.zoomJoinUrl ? (
+                            canJoin(reservation) ? (
+                              <JoinZoomButton joinUrl={reservation.zoomJoinUrl} />
+                            ) : (
+                              <div className="text-sm text-gray-500 italic">
+                                {new Date() < new Date(reservation.startTime) 
+                                  ? 'Starts ' + new Date(reservation.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                                  : 'Meeting Ended'}
+                              </div>
+                            )
+                          ) : (
+                            <span className="text-sm text-gray-400 italic">Link pending...</span>
+                          )
+                        ) : reservation.status === 'PENDING' ? (
+                          <span className="text-sm text-gray-400 italic">Awaiting confirmation</span>
+                        ) : (
+                          <span className="text-sm text-gray-400 italic">-</span>
                         )}
                       </td>
                     </tr>
