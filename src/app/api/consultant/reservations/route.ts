@@ -9,9 +9,15 @@ export async function GET(req: NextRequest) {
   const consultantId = await getConsultantId()
   if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const { searchParams } = new URL(req.url)
+  const clientId = searchParams.get('clientId')
+
   try {
     const reservations = await prisma.reservation.findMany({
-      where: { consultantId },
+      where: { 
+        consultantId,
+        ...(clientId ? { clientId } : {})
+      },
       include: {
         client: { select: { id: true, name: true, email: true } },
         serviceTier: { include: { service: true } }

@@ -3,12 +3,13 @@
 import { useEffect, useState } from 'react'
 
 export default function ConsultantClients() {
-  const [activeTab, setActiveTab] = useState<'clients' | 'messages' | 'missions' | 'calls'>('clients')
+  const [activeTab, setActiveTab] = useState<'clients' | 'messages' | 'missions' | 'calls' | 'reservations'>('clients')
   const [clients, setClients] = useState<any[]>([])
   const [selectedClient, setSelectedClient] = useState<string | null>(null)
   const [messages, setMessages] = useState<any[]>([])
   const [missions, setMissions] = useState<any[]>([])
   const [calls, setCalls] = useState<any[]>([])
+  const [reservations, setReservations] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -18,11 +19,23 @@ export default function ConsultantClients() {
 
   useEffect(() => {
     if (selectedClient) {
+      const clientData = clients.find(c => c.id === selectedClient)
       fetchMessages(selectedClient)
       fetchMissions(selectedClient)
       fetchCalls(selectedClient)
+      if (clientData?.clientId) {
+        fetchReservations(clientData.clientId)
+      }
     }
-  }, [selectedClient])
+  }, [selectedClient, clients])
+
+  const canJoin = (reservation: any) => {
+    const now = new Date()
+    const start = new Date(reservation.startTime)
+    const end = new Date(reservation.endTime)
+    const earlyAccessMs = 15 * 60 * 1000 
+    return now.getTime() >= (start.getTime() - earlyAccessMs) && now.getTime() <= end.getTime()
+  }
 
   const fetchClients = async () => {
     try {
@@ -60,6 +73,16 @@ export default function ConsultantClients() {
       const res = await fetch(`/api/consultant/missions?orderId=${orderId}`)
       const data = await res.json()
       setMissions(data)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const fetchReservations = async (clientId: string) => {
+    try {
+      const res = await fetch(`/api/consultant/reservations?clientId=${clientId}`)
+      const data = await res.json()
+      setReservations(data)
     } catch (error) {
       console.error(error)
     }
@@ -242,6 +265,12 @@ export default function ConsultantClients() {
                     >
                       Calls
                     </button>
+                    <button
+                      onClick={() => setActiveTab('reservations')}
+                      className={`px-6 py-3 font-medium ${activeTab === 'reservations' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+                    >
+                      Reservations
+                    </button>
                   </div>
 
                   <div className="p-6">
@@ -366,6 +395,68 @@ export default function ConsultantClients() {
                                 </div>
                               </div>
                             ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {activeTab === 'reservations' && (
+                      <div>
+                        {reservations.length === 0 ? (
+                          <div className="text-center py-12 text-gray-500">No reservations found for this client</div>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zoom</th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-white divide-y divide-gray-200">
+                                {reservations.map(res => (
+                                  <tr key={res.id}>
+                                    <td className="px-4 py-3">
+                                      <div className="text-sm font-medium">{res.serviceTier.service.name}</div>
+                                      <div className="text-xs text-gray-500">{res.serviceTier.tierType}</div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <div className="text-sm">{new Date(res.startTime).toLocaleDateString()}</div>
+                                      <div className="text-xs text-gray-500">
+                                        {new Date(res.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                        res.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                                        res.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                                        res.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                                        'bg-gray-100 text-gray-700'
+                                      }`}>
+                                        {res.status}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      {res.status === 'CONFIRMED' && res.zoomJoinUrl && canJoin(res) ? (
+                                        <a 
+                                          href={res.zoomJoinUrl} 
+                                          target="_blank" 
+                                          className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs inline-block"
+                                        >
+                                          Join
+                                        </a>
+                                      ) : res.status === 'CONFIRMED' && res.zoomJoinUrl ? (
+                                        <span className="text-xs text-gray-400 italic">Starting soon</span>
+                                      ) : (
+                                        <span className="text-xs text-gray-300">-</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
                         )}
                       </div>
