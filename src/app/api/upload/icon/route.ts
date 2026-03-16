@@ -1,8 +1,7 @@
-import { NextResponse } from 'next/server'
-import { writeFile } from 'fs/promises'
-import { join } from 'path'
+import { NextRequest, NextResponse } from 'next/server'
+import { uploadImage } from '@/lib/cloudinary'
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
@@ -14,13 +13,11 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    const filename = `icon-${Date.now()}-${file.name.replace(/\s/g, '-')}`
-    const path = join(process.cwd(), 'public', 'uploads', filename)
+    const url = await uploadImage(buffer, 'icons')
     
-    await writeFile(path, buffer)
-    
-    return NextResponse.json({ url: `/uploads/${filename}` })
+    return NextResponse.json({ url })
   } catch (error) {
+    console.error('Upload error:', error)
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
   }
 }
