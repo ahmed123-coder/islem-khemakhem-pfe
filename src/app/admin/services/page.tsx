@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
 import { Upload, Image as ImageIcon, Plus, Trash2, Edit2, X } from 'lucide-react'
 
-type Service = { id: string; title: string; description: string; icon?: string }
+type Service = { id: string; name: string; description: string; category?: string; logo?: string; isActive?: boolean }
 type Tier = { 
   id: string; 
   serviceId: string; 
@@ -76,12 +77,12 @@ export default function ServicesAdmin() {
     
     setUploading(true)
     const formData = new FormData()
-    formData.append('file', file)
+    formData.append('logo', file)
     
     try {
-      const res = await fetch('/api/upload/icon', { method: 'POST', body: formData })
+      const res = await fetch('/api/upload/logo', { method: 'POST', body: formData })
       const data = await res.json()
-      setForm({ ...form, icon: data.url })
+      setForm({ ...form, logo: data.logoUrl })
     } catch (error) {
       console.error('Upload failed:', error)
     } finally {
@@ -152,13 +153,14 @@ export default function ServicesAdmin() {
           <Card className="p-6">
             <h2 className="text-xl font-bold mb-4">{editItem ? 'Edit' : 'Create'} Service</h2>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <Input placeholder="Title" value={form.title || ''} onChange={e => setForm({ ...form, title: e.target.value })} required />
+              <Input placeholder="Service Name" value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} required />
+              <Input placeholder="Category" value={form.category || ''} onChange={e => setForm({ ...form, category: e.target.value })} />
               <Textarea placeholder="Description" rows={3} value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} required />
               
               <div className="space-y-2">
-                <label className="block text-sm font-medium">Service Icon</label>
+                <label className="block text-sm font-medium">Service Logo</label>
                 <div className="flex gap-2">
-                  <Input placeholder="Icon URL" value={form.icon || ''} onChange={e => setForm({ ...form, icon: e.target.value })} />
+                  <Input placeholder="Logo URL" value={form.logo || ''} onChange={e => setForm({ ...form, logo: e.target.value })} />
                   <label className="cursor-pointer">
                     <Button type="button" variant="outline" disabled={uploading} asChild size="sm">
                       <span>{uploading ? 'Uploading...' : <><Upload size={14} className="mr-2" />Upload</>}</span>
@@ -180,9 +182,12 @@ export default function ServicesAdmin() {
             {services.map(service => (
               <Card key={service.id} className={`p-4 transition-all ${selectedServiceId === service.id ? 'ring-2 ring-primary border-primary' : ''}`}>
                 <div className="flex gap-3">
-                  {service.icon && <img src={service.icon} alt={service.title} className="w-12 h-12 object-cover rounded" />}
+                  {service.logo && <img src={service.logo} alt={service.name} className="w-12 h-12 object-cover rounded" />}
                   <div className="flex-1">
-                    <h3 className="font-bold">{service.title}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold">{service.name}</h3>
+                      {service.category && <Badge variant="secondary" className="text-[10px] py-0">{service.category}</Badge>}
+                    </div>
                     <p className="text-sm text-gray-600 line-clamp-2">{service.description}</p>
                   </div>
                 </div>
@@ -207,7 +212,7 @@ export default function ServicesAdmin() {
           {selectedServiceId ? (
             <>
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Tiers for: <span className="text-primary">{selectedService?.title}</span></h2>
+                <h2 className="text-xl font-bold">Tiers for: <span className="text-primary">{selectedService?.name}</span></h2>
                 <Button variant="ghost" size="sm" onClick={() => setSelectedServiceId(null)}>
                   <X size={16} className="mr-1" /> Close
                 </Button>
