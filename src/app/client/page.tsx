@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { JoinZoomButton } from '@/components/JoinZoomButton'
 
 export default function ClientSubscriptions() {
   const [orders, setOrders] = useState<any[]>([])
@@ -44,6 +45,17 @@ export default function ClientSubscriptions() {
       case 'NO_SHOW': return 'bg-gray-100 text-gray-700'
       default: return 'bg-yellow-100 text-yellow-700'
     }
+  }
+
+  const canJoin = (reservation: any) => {
+    const now = new Date()
+    const start = new Date(reservation.startTime)
+    const end = new Date(reservation.endTime)
+    
+    // Time before meeting when the join button becomes active (15 minutes)
+    const earlyAccessMs = 15 * 60 * 1000 
+    
+    return now.getTime() >= (start.getTime() - earlyAccessMs) && now.getTime() <= end.getTime()
   }
 
   return (
@@ -171,6 +183,7 @@ export default function ClientSubscriptions() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Consultant</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Meeting</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -194,6 +207,27 @@ export default function ClientSubscriptions() {
                         <span className={`px-3 py-1 rounded-full text-xs font-medium ${getReservationStatusColor(reservation.status)}`}>
                           {reservation.status}
                         </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {reservation.status === 'CONFIRMED' ? (
+                          reservation.zoomJoinUrl ? (
+                            canJoin(reservation) ? (
+                              <JoinZoomButton joinUrl={reservation.zoomJoinUrl} />
+                            ) : (
+                              <div className="text-sm text-gray-500 italic">
+                                {new Date() < new Date(reservation.startTime) 
+                                  ? 'Starts ' + new Date(reservation.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                                  : 'Meeting Ended'}
+                              </div>
+                            )
+                          ) : (
+                            <span className="text-sm text-gray-400 italic">Link pending...</span>
+                          )
+                        ) : reservation.status === 'PENDING' ? (
+                          <span className="text-sm text-gray-400 italic">Awaiting confirmation</span>
+                        ) : (
+                          <span className="text-sm text-gray-400 italic">-</span>
+                        )}
                       </td>
                     </tr>
                   ))}

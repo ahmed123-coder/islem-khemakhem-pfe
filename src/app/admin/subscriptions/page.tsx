@@ -32,9 +32,15 @@ export default function SubscriptionsPage() {
     try {
       const res = await fetch('/api/admin/orders')
       const data = await res.json()
-      setOrders(data)
+      if (res.ok && Array.isArray(data)) {
+        setOrders(data)
+      } else {
+        console.error('API Error:', data.error || 'Unknown error')
+        setOrders([])
+      }
     } catch (error) {
       console.error('Failed to fetch orders:', error)
+      setOrders([])
     } finally {
       setLoading(false)
     }
@@ -111,7 +117,7 @@ export default function SubscriptionsPage() {
 
         <div className={editOrder ? "lg:col-span-2" : "lg:col-span-3"}>
           <div className="space-y-4 max-h-[700px] overflow-y-auto">
-            {orders.map(order => (
+            {Array.isArray(orders) && orders.map(order => (
               <Card key={order.id} className="p-4">
                 <div className="flex justify-between items-start">
                   <div className="flex-1">

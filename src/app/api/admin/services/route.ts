@@ -9,7 +9,7 @@ export async function GET() {
   }
 
   const services = await prisma.service.findMany({ orderBy: { createdAt: 'desc' } })
-  return NextResponse.json(services.map(s => ({ ...s, title: s.name, icon: s.category })))
+  return NextResponse.json(services)
 }
 
 export async function POST(req: NextRequest) {
@@ -18,15 +18,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { title, description, icon } = await req.json()
+  const { name, description, category, logo } = await req.json()
   const service = await prisma.service.create({ 
     data: { 
-      name: title, 
+      name, 
       description, 
-      category: icon 
+      category,
+      logo
     } 
   })
-  return NextResponse.json({ ...service, title: service.name, icon: service.category })
+  return NextResponse.json(service)
 }
 
 export async function PUT(req: NextRequest) {
@@ -35,16 +36,18 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { id, title, description, icon } = await req.json()
+  const { id, name, description, category, logo, isActive } = await req.json()
   const service = await prisma.service.update({ 
     where: { id }, 
     data: { 
-      name: title, 
+      name, 
       description, 
-      category: icon 
+      category,
+      logo,
+      isActive: isActive !== undefined ? isActive : true
     } 
   })
-  return NextResponse.json({ ...service, title: service.name, icon: service.category })
+  return NextResponse.json(service)
 }
 
 export async function DELETE(req: NextRequest) {

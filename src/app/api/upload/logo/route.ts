@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile } from 'fs/promises'
-import { join } from 'path'
 import { prisma } from '@/lib/prisma'
+import { uploadImage } from '@/lib/cloudinary'
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,30 +14,10 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    // Save to public folder with both timestamped and favicon names
-    const timestamp = Date.now()
-    const filename = `logo-${timestamp}.jpeg`
-    const path = join(process.cwd(), 'public', filename)
-    await writeFile(path, buffer)
-
-    // Also save as favicon.ico for browser icon
-    const faviconPath = join(process.cwd(), 'public', 'favicon.ico')
-    await writeFile(faviconPath, buffer)
-
-    const logoUrl = `/${filename}`
+    // Upload logo to Cloudinary
+    const logoUrl = await uploadImage(buffer, 'logos')
 
     // Update navbar and footer with new logo URL
-    await prisma.siteContent.updateMany({
-      where: { key: { in: ['navbar', 'footer'] } },
-      data: {
-        value: {
-          ...(await prisma.siteContent.findFirst({ where: { key: 'navbar' } }))?.value as any,
-          logoUrl
-        }
-      }
-    })
-
-    // Update navbar
     const navbar = await prisma.siteContent.findUnique({ where: { key: 'navbar' } })
     if (navbar) {
       await prisma.siteContent.update({
@@ -47,7 +26,6 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    // Update footer
     const footer = await prisma.siteContent.findUnique({ where: { key: 'footer' } })
     if (footer) {
       await prisma.siteContent.update({
@@ -58,6 +36,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, logoUrl })
   } catch (error) {
+    console.error('Logo upload error:', error)
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
   }
 }

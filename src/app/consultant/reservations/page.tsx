@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { JoinZoomButton } from '@/components/JoinZoomButton'
 
 export default function ConsultantReservations() {
   const [reservations, setReservations] = useState<any[]>([])
@@ -11,6 +12,17 @@ export default function ConsultantReservations() {
 
   const timeSlots = ['10:00', '11:00', '12:00', '13:00', '14:00', '15:00']
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+  const canJoin = (reservation: any) => {
+    const now = new Date()
+    const start = new Date(reservation.startTime)
+    const end = new Date(reservation.endTime)
+    
+    // Time before meeting when the join button becomes active (15 minutes)
+    const earlyAccessMs = 15 * 60 * 1000 
+    
+    return now.getTime() >= (start.getTime() - earlyAccessMs) && now.getTime() <= end.getTime()
+  }
 
   useEffect(() => {
     fetchReservations()
@@ -27,9 +39,10 @@ export default function ConsultantReservations() {
     try {
       const res = await fetch('/api/consultant/reservations')
       const data = await res.json()
-      setReservations(data)
+      setReservations(Array.isArray(data) ? data : [])
       setLoading(false)
     } catch (error) {
+      setReservations([])
       setLoading(false)
     }
   }
@@ -39,7 +52,7 @@ export default function ConsultantReservations() {
     slotDate.setDate(slotDate.getDate() + dayIndex)
     const [slotHour] = hour.split(':')
     
-    return reservations.find(res => {
+    return (Array.isArray(reservations) ? reservations : []).find(res => {
       const start = new Date(res.startTime)
       return (
         start.getDate() === slotDate.getDate() &&
@@ -209,6 +222,20 @@ export default function ConsultantReservations() {
                   </span>
                 </div>
               </div>
+              {selectedReservation.zoomJoinUrl && canJoin(selectedReservation) && (
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                  <span className="text-blue-800 text-sm font-semibold mb-2 block">Zoom Meeting Details:</span>
+                  <div className="space-y-2">
+                    {selectedReservation.zoomPassword && (
+                      <div className="text-sm">
+                        <span className="text-gray-600">Password:</span>{' '}
+                        <code className="bg-white px-2 py-0.5 rounded border">{selectedReservation.zoomPassword}</code>
+                      </div>
+                    )}
+                    <JoinZoomButton joinUrl={selectedReservation.zoomJoinUrl} className="w-full justify-center" />
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="border-t pt-4">

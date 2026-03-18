@@ -54,3 +54,28 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create mission' }, { status: 500 })
   }
 }
+export async function PATCH(req: NextRequest) {
+  const consultantId = await getConsultantId()
+  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  try {
+    const { missionId, title, description, status } = await req.json()
+    const mission = await prisma.mission.findUnique({ where: { id: missionId } })
+
+    if (!mission || mission.consultantId !== consultantId) {
+      return NextResponse.json({ error: 'Mission not found or unauthorized' }, { status: 403 })
+    }
+
+    const updatedMission = await prisma.mission.update({
+      where: { id: missionId },
+      data: {
+        title,
+        description,
+        status
+      }
+    })
+    return NextResponse.json(updatedMission)
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed to update mission' }, { status: 500 })
+  }
+}

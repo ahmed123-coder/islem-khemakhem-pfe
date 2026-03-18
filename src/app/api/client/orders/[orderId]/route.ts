@@ -14,7 +14,10 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
       include: {
         serviceTier: { include: { service: true } },
         consultant: { select: { id: true, name: true, specialty: true, email: true } },
-        missions: { include: { milestones: true } },
+        missions: { 
+          where: { NOT: { status: 'PENDING' } },
+          include: { milestones: true } 
+        },
         calls: { orderBy: { startedAt: 'desc' } }
       }
     })

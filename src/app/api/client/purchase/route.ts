@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { createZoomMeeting } from '@/lib/zoom'
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,6 +73,32 @@ export async function POST(request: NextRequest) {
         status: 'PENDING'
       }
     })
+
+    // Create Zoom Meeting
+    let zoomData = {}
+    try {
+      const zoomMeeting = await createZoomMeeting({
+        topic: `Consultation: ${serviceTier.service.name} - ${user.name || user.email}`,
+        startTime: new Date(startTime).toISOString(),
+        duration: serviceTier.maxCallDuration || 60,
+      })
+
+      zoomData = {
+        zoomMeetingId: zoomMeeting.id.toString(),
+        zoomJoinUrl: zoomMeeting.join_url,
+        zoomPassword: zoomMeeting.password,
+      }
+
+      // Update reservation with zoom details
+      await prisma.reservation.update({
+        where: { id: reservation.id },
+        data: zoomData
+      })
+    } catch (zoomError) {
+      console.error('Failed to create Zoom meeting:', zoomError)
+      // Note: We continue even if Zoom fails so the booking is not lost
+      // In a real app, you might want to queue a retry or notify admin
+    }
 
     // Create notification
     await prisma.notification.create({

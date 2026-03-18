@@ -18,18 +18,36 @@ interface Consultant {
   imageUrl: string | null
   isActive: boolean
   createdAt: string
+  services?: { id: string }[]
+}
+
+interface Service {
+  id: string
+  name: string
 }
 
 export default function ConsultantsPage() {
   const [consultants, setConsultants] = useState<Consultant[]>([])
   const [loading, setLoading] = useState(true)
   const [editConsultant, setEditConsultant] = useState<Consultant | null>(null)
-  const [form, setForm] = useState<Partial<Consultant & { password?: string }>>({})
+  const [form, setForm] = useState<Partial<Consultant & { password?: string; serviceIds?: string[] }>>({ serviceIds: [] })
   const [showPassword, setShowPassword] = useState(false)
+  const [services, setServices] = useState<Service[]>([])
 
   useEffect(() => {
     fetchConsultants()
+    fetchServices()
   }, [])
+
+  const fetchServices = async () => {
+    try {
+      const res = await fetch('/api/services')
+      const data = await res.json()
+      setServices(data)
+    } catch (error) {
+      console.error('Failed to fetch services:', error)
+    }
+  }
 
   const fetchConsultants = async () => {
     try {
@@ -49,13 +67,18 @@ export default function ConsultantsPage() {
     const body = editConsultant ? { id: editConsultant.id, ...form } : form
     
     try {
+      const payload = {
+        ...body,
+        serviceIds: form.serviceIds || []
+      }
+      
       const res = await fetch('/api/admin/consultants', {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(payload)
       })
       if (res.ok) {
-        setForm({})
+        setForm({ serviceIds: [] })
         setEditConsultant(null)
         fetchConsultants()
       }
@@ -101,13 +124,38 @@ export default function ConsultantsPage() {
             <Input placeholder="Hourly Rate" type="number" step="0.01" value={form.hourlyRate || ''} onChange={e => setForm({ ...form, hourlyRate: e.target.value })} />
             <Input placeholder="Image URL" value={form.imageUrl || ''} onChange={e => setForm({ ...form, imageUrl: e.target.value })} />
             <Textarea placeholder="Bio" rows={3} value={form.bio || ''} onChange={e => setForm({ ...form, bio: e.target.value })} />
-            <label className="flex items-center gap-2">
+            
+            <div className="space-y-2">
+              <label className="font-medium text-sm">Assigned Services</label>
+              <div className="flex flex-col gap-2 p-4 border rounded-md bg-gray-50 max-h-48 overflow-y-auto">
+                {services.map(service => (
+                  <label key={service.id} className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      checked={form.serviceIds?.includes(service.id) || false}
+                      onChange={(e) => {
+                        const currentIds = form.serviceIds || [];
+                        const newIds = e.target.checked
+                          ? [...currentIds, service.id]
+                          : currentIds.filter(id => id !== service.id);
+                        setForm({ ...form, serviceIds: newIds });
+                      }}
+                      className="rounded border-gray-300"
+                    />
+                    <span className="text-sm">{service.name}</span>
+                  </label>
+                ))}
+                {services.length === 0 && <span className="text-sm text-gray-500">No services available.</span>}
+              </div>
+            </div>
+
+            <label className="flex items-center gap-2 pt-2">
               <input type="checkbox" checked={form.isActive ?? true} onChange={e => setForm({ ...form, isActive: e.target.checked })} />
               <span>Active</span>
             </label>
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-4">
               <Button type="submit">{editConsultant ? 'Update' : 'Create'}</Button>
-              {editConsultant && <Button type="button" variant="outline" onClick={() => { setEditConsultant(null); setForm({}) }}>Cancel</Button>}
+              {editConsultant && <Button type="button" variant="outline" onClick={() => { setEditConsultant(null); setForm({ serviceIds: [] }) }}>Cancel</Button>}
             </div>
           </form>
         </Card>
@@ -126,9 +174,24 @@ export default function ConsultantsPage() {
                     <p className="text-sm text-gray-600">{consultant.email}</p>
                     {consultant.specialty && <p className="text-sm text-gray-600">Specialty: {consultant.specialty}</p>}
                     {consultant.hourlyRate && <p className="text-sm text-gray-600">Rate: ${consultant.hourlyRate}/hr</p>}
+                    {consultant.services && consultant.services.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {consultant.services.map(s => {
+                          const serviceName = services.find(srv => srv.id === s.id)?.name || 'Unknown Service';
+                          return (
+                            <Badge key={s.id} variant="outline" className="text-xs">
+                              {serviceName}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" onClick={() => { setEditConsultant(consultant); setForm(consultant) }}><Pencil size={16} /></Button>
+                  <div className="flex gap-2 ml-4">
+                    <Button size="sm" variant="outline" onClick={() => { 
+                      setEditConsultant(consultant); 
+                      setForm({ ...consultant, serviceIds: consultant.services?.map(s => s.id) || [] }) 
+                    }}><Pencil size={16} /></Button>
                     <Button size="sm" variant="destructive" onClick={() => deleteConsultant(consultant.id)}><Trash2 size={16} /></Button>
                   </div>
                 </div>

@@ -15,6 +15,9 @@ export async function GET() {
         imageUrl: true,
         isActive: true,
         createdAt: true,
+        services: {
+          select: { id: true }
+        }
       },
       orderBy: { createdAt: 'desc' },
     })
@@ -27,7 +30,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { email, password, name, specialty, hourlyRate, bio, imageUrl, isActive } = body
+    const { email, password, name, specialty, hourlyRate, bio, imageUrl, isActive, serviceIds } = body
     
     const hashedPassword = await bcrypt.hash(password, 10)
     
@@ -41,6 +44,9 @@ export async function POST(request: Request) {
         bio,
         imageUrl,
         isActive: isActive ?? true,
+        services: serviceIds ? {
+          connect: serviceIds.map((id: string) => ({ id }))
+        } : undefined,
       },
     })
     
@@ -53,7 +59,7 @@ export async function POST(request: Request) {
 export async function PUT(request: Request) {
   try {
     const body = await request.json()
-    const { id, email, name, specialty, hourlyRate, bio, imageUrl, isActive } = body
+    const { id, email, name, specialty, hourlyRate, bio, imageUrl, isActive, serviceIds } = body
     
     const consultant = await prisma.consultant.update({
       where: { id },
@@ -65,6 +71,9 @@ export async function PUT(request: Request) {
         bio,
         imageUrl,
         isActive,
+        services: serviceIds ? {
+          set: serviceIds.map((id: string) => ({ id }))
+        } : undefined,
       },
     })
     

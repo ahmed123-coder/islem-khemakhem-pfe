@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react'
 
 export default function ConsultantClients() {
-  const [activeTab, setActiveTab] = useState<'clients' | 'messages' | 'missions'>('clients')
+  const [activeTab, setActiveTab] = useState<'clients' | 'messages' | 'missions' | 'calls' | 'reservations'>('clients')
   const [clients, setClients] = useState<any[]>([])
   const [selectedClient, setSelectedClient] = useState<string | null>(null)
   const [messages, setMessages] = useState<any[]>([])
   const [missions, setMissions] = useState<any[]>([])
+  const [calls, setCalls] = useState<any[]>([])
+  const [reservations, setReservations] = useState<any[]>([])
   const [newMessage, setNewMessage] = useState('')
   const [loading, setLoading] = useState(true)
 
@@ -17,10 +19,23 @@ export default function ConsultantClients() {
 
   useEffect(() => {
     if (selectedClient) {
+      const clientData = clients.find(c => c.id === selectedClient)
       fetchMessages(selectedClient)
       fetchMissions(selectedClient)
+      fetchCalls(selectedClient)
+      if (clientData?.clientId) {
+        fetchReservations(clientData.clientId)
+      }
     }
-  }, [selectedClient])
+  }, [selectedClient, clients])
+
+  const canJoin = (reservation: any) => {
+    const now = new Date()
+    const start = new Date(reservation.startTime)
+    const end = new Date(reservation.endTime)
+    const earlyAccessMs = 15 * 60 * 1000 
+    return now.getTime() >= (start.getTime() - earlyAccessMs) && now.getTime() <= end.getTime()
+  }
 
   const fetchClients = async () => {
     try {
@@ -43,11 +58,31 @@ export default function ConsultantClients() {
     }
   }
 
+  const fetchCalls = async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/consultant/calls?orderId=${orderId}`)
+      const data = await res.json()
+      setCalls(data)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   const fetchMissions = async (orderId: string) => {
     try {
       const res = await fetch(`/api/consultant/missions?orderId=${orderId}`)
       const data = await res.json()
       setMissions(data)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const fetchReservations = async (clientId: string) => {
+    try {
+      const res = await fetch(`/api/consultant/reservations?clientId=${clientId}`)
+      const data = await res.json()
+      setReservations(data)
     } catch (error) {
       console.error(error)
     }
@@ -82,6 +117,69 @@ export default function ConsultantClients() {
         body: JSON.stringify({ orderId: selectedClient, title })
       })
       fetchMissions(selectedClient)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const createMilestone = async (missionId: string) => {
+    const title = prompt('Milestone title:')
+    if (!title) return
+    const description = prompt('Milestone description (optional):')
+
+    try {
+      await fetch('/api/consultant/milestones', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ missionId, title, description })
+      })
+      if (selectedClient) fetchMissions(selectedClient)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const updateMission = async (missionId: string) => {
+    const mission = missions.find(m => m.id === missionId)
+    if (!mission) return
+
+    const title = prompt('Mission title:', mission.title)
+    if (!title) return
+    const description = prompt('Mission description:', mission.description || '')
+    const status = prompt('Status (PENDING, IN_PROGRESS, COMPLETED):', mission.status)
+
+    try {
+      await fetch('/api/consultant/missions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ missionId, title, description, status })
+      })
+      if (selectedClient) fetchMissions(selectedClient)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const editMilestone = async (milestoneId: string) => {
+    // Find the milestone in all missions
+    let milestone: any = null
+    for (const m of missions) {
+      milestone = m.milestones.find((ms: any) => ms.id === milestoneId)
+      if (milestone) break
+    }
+    if (!milestone) return
+
+    const title = prompt('Milestone title:', milestone.title)
+    if (!title) return
+    const description = prompt('Milestone description:', milestone.description || '')
+
+    try {
+      await fetch('/api/consultant/milestones', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ milestoneId, title, description, status: milestone.status })
+      })
+      if (selectedClient) fetchMissions(selectedClient)
     } catch (error) {
       console.error(error)
     }
@@ -161,6 +259,18 @@ export default function ConsultantClients() {
                     >
                       Missions
                     </button>
+                    <button
+                      onClick={() => setActiveTab('calls')}
+                      className={`px-6 py-3 font-medium ${activeTab === 'calls' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+                    >
+                      Calls
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('reservations')}
+                      className={`px-6 py-3 font-medium ${activeTab === 'reservations' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
+                    >
+                      Reservations
+                    </button>
                   </div>
 
                   <div className="p-6">
@@ -200,19 +310,37 @@ export default function ConsultantClients() {
                           {missions.map(mission => (
                             <div key={mission.id} className="border rounded-lg p-4">
                               <div className="flex justify-between items-start mb-3">
-                                <h3 className="font-semibold text-lg">{mission.title}</h3>
-                                <span className={`px-3 py-1 rounded-full text-sm ${
-                                  mission.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                                  mission.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
-                                  'bg-gray-100 text-gray-700'
-                                }`}>
-                                  {mission.status}
-                                </span>
+                                <div className="flex-1">
+                                  <h3 className="font-semibold text-lg">{mission.title}</h3>
+                                  {mission.description && <p className="text-gray-600 mb-3">{mission.description}</p>}
+                                </div>
+                                <div className="flex flex-col items-end gap-2">
+                                  <span className={`px-3 py-1 rounded-full text-sm ${
+                                    mission.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                    mission.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
+                                    'bg-gray-100 text-gray-700'
+                                  }`}>
+                                    {mission.status}
+                                  </span>
+                                  <button 
+                                    onClick={() => updateMission(mission.id)}
+                                    className="text-xs text-blue-600 hover:underline"
+                                  >
+                                    Edit Mission
+                                  </button>
+                                </div>
                               </div>
-                              {mission.description && <p className="text-gray-600 mb-3">{mission.description}</p>}
                               
                               <div className="mt-4">
-                                <h4 className="font-medium mb-2">Tasks ({mission.milestones.length})</h4>
+                                <div className="flex justify-between items-center mb-2">
+                                  <h4 className="font-medium">Tasks ({mission.milestones.length})</h4>
+                                  <button 
+                                    onClick={() => createMilestone(mission.id)}
+                                    className="text-sm bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100"
+                                  >
+                                    + Add Task
+                                  </button>
+                                </div>
                                 <div className="space-y-2">
                                   {mission.milestones.map((milestone: any) => (
                                     <div key={milestone.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
@@ -226,10 +354,16 @@ export default function ConsultantClients() {
                                         <div className={milestone.status === 'COMPLETED' ? 'line-through text-gray-500' : ''}>
                                           {milestone.title}
                                         </div>
-                                        {milestone.dueDate && (
-                                          <div className="text-xs text-gray-500">Due: {new Date(milestone.dueDate).toLocaleDateString()}</div>
+                                        {milestone.description && (
+                                          <div className="text-xs text-gray-400">{milestone.description}</div>
                                         )}
                                       </div>
+                                      <button 
+                                        onClick={() => editMilestone(milestone.id)}
+                                        className="text-xs text-gray-400 hover:text-blue-500"
+                                      >
+                                        Edit
+                                      </button>
                                     </div>
                                   ))}
                                 </div>
@@ -237,6 +371,94 @@ export default function ConsultantClients() {
                             </div>
                           ))}
                         </div>
+                      </div>
+                    )}
+
+                    {activeTab === 'calls' && (
+                      <div>
+                        {calls.length === 0 ? (
+                          <div className="text-center py-12 text-gray-500">No calls recorded yet</div>
+                        ) : (
+                          <div className="space-y-4">
+                            {calls.map(call => (
+                              <div key={call.id} className="border rounded-lg p-4">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <div className="font-medium">{new Date(call.startedAt).toLocaleString()}</div>
+                                    <div className="text-sm text-gray-500 text-gray-500">Duration: {call.duration} minutes</div>
+                                  </div>
+                                  {call.recordingUrl && (
+                                    <a href={call.recordingUrl} target="_blank" className="text-blue-600 hover:underline text-sm">
+                                      🎧 Recording
+                                    </a>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {activeTab === 'reservations' && (
+                      <div>
+                        {reservations.length === 0 ? (
+                          <div className="text-center py-12 text-gray-500">No reservations found for this client</div>
+                        ) : (
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full divide-y divide-gray-200">
+                              <thead className="bg-gray-50">
+                                <tr>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zoom</th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-white divide-y divide-gray-200">
+                                {reservations.map(res => (
+                                  <tr key={res.id}>
+                                    <td className="px-4 py-3">
+                                      <div className="text-sm font-medium">{res.serviceTier.service.name}</div>
+                                      <div className="text-xs text-gray-500">{res.serviceTier.tierType}</div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <div className="text-sm">{new Date(res.startTime).toLocaleDateString()}</div>
+                                      <div className="text-xs text-gray-500">
+                                        {new Date(res.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                      </div>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                        res.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
+                                        res.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                                        res.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                                        'bg-gray-100 text-gray-700'
+                                      }`}>
+                                        {res.status}
+                                      </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                      {res.status === 'CONFIRMED' && res.zoomJoinUrl && canJoin(res) ? (
+                                        <a 
+                                          href={res.zoomJoinUrl} 
+                                          target="_blank" 
+                                          className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs inline-block"
+                                        >
+                                          Join
+                                        </a>
+                                      ) : res.status === 'CONFIRMED' && res.zoomJoinUrl ? (
+                                        <span className="text-xs text-gray-400 italic">Starting soon</span>
+                                      ) : (
+                                        <span className="text-xs text-gray-300">-</span>
+                                      )}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

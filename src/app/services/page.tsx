@@ -44,9 +44,14 @@ export default function Services() {
           {services.map((service: any, index: number) => (
             <div key={service.id} className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
               <div className={`${index % 2 === 1 ? 'lg:order-2' : ''}`}>
-                {service.category && (
+                {service.logo && (
                   <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
-                    <img src={service.category} alt={service.name} className="w-full h-full object-cover" />
+                    <img src={service.logo} alt={service.name} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                {service.category && (
+                  <div className="inline-block bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-medium mb-2">
+                    {service.category}
                   </div>
                 )}
                 <h2 className="text-3xl font-serif font-bold text-gray-900 mb-4">
@@ -66,8 +71,8 @@ export default function Services() {
                 </Link>
               </div>
               <div className={`bg-gray-200 rounded-2xl h-80 flex items-center justify-center ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
-                {service.category ? (
-                  <img src={service.category} alt={service.name} className="w-32 h-32 object-cover opacity-30" />
+                {service.logo ? (
+                  <img src={service.logo} alt={service.name} className="w-full h-full object-cover rounded-2xl" />
                 ) : (
                   <div className="text-8xl opacity-20">📊</div>
                 )}

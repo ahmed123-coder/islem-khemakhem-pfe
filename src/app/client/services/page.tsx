@@ -55,12 +55,15 @@ export default function ServicesPage() {
   }, [serviceId])
 
   useEffect(() => {
-    if (step === 3) {
+    console.log('Step 3 UseEffect triggered. step:', step, 'selectedTier:', selectedTier);
+    if (step === 3 && selectedTier) {
       const startDate = new Date().toISOString().split('T')[0]
-      fetch(`/api/consultants/schedule?startDate=${startDate}&days=7`)
+      const fetchUrl = `/api/consultants/schedule?startDate=${startDate}&days=7&serviceTierId=${selectedTier.id}`
+      console.log('Fetching schedule from URL:', fetchUrl);
+      fetch(fetchUrl)
         .then(r => r.json())
         .then(data => {
-          console.log('Schedule data:', data)
+          console.log('Schedule data received from API:', data)
           if (Array.isArray(data)) {
             setConsultants(data)
           } else {
