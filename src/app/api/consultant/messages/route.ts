@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { PrismaClient } from '@prisma/client'
+import { prisma } from '@/lib/prisma'
 import { getConsultantId } from '@/lib/auth'
 import { notifyNewMessage } from '@/lib/notification-service'
-
-const prisma = new PrismaClient()
 
 export async function GET(req: NextRequest) {
   const consultantId = await getConsultantId()
@@ -24,6 +22,7 @@ export async function GET(req: NextRequest) {
     })
     return NextResponse.json(messages)
   } catch (error) {
+    console.error('Error fetching consultant messages:', error)
     return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 })
   }
 }
@@ -33,10 +32,16 @@ export async function POST(req: NextRequest) {
   if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const { orderId, content } = await req.json()
+    const body = await req.json()
+    const { orderId, content } = body
+    
+    if (!orderId || !content) {
+      return NextResponse.json({ error: 'Order ID and content are required' }, { status: 400 })
+    }
+
     const order = await prisma.order.findUnique({ where: { id: orderId } })
     
-    if (!order?.consultantId) return NextResponse.json({ error: 'Invalid order' }, { status: 400 })
+    if (!order) return NextResponse.json({ error: 'Order not found' }, { status: 404 })
     if (order.consultantId !== consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
     if (order.status !== 'ACTIVE') return NextResponse.json({ error: 'Order must be active' }, { status: 400 })
 
@@ -48,9 +53,11 @@ export async function POST(req: NextRequest) {
         content
       }
     })
+    
     await notifyNewMessage(orderId, consultantId, 'CONSULTANT')
     return NextResponse.json(message)
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
+    console.error('Error sending consultant message:', error)
+    return NextResponse.json({ error: 'Failed to send message', details: error instanceof Error ? error.message : String(error) }, { status: 500 })
   }
 }

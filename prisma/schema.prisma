@@ -16,7 +16,7 @@ model User {
   role          Role           @default(CLIENT)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
-  messages      Message[]
+
   missionFiles  MissionFile[]
   notifications Notification[]
   orders        Order[]
@@ -84,6 +84,7 @@ model Order {
   calls           Call[]
   messages        Message[]
   missions        Mission[]
+  reservations    Reservation[]
   client          User        @relation(fields: [clientId], references: [id])
   consultant      Consultant? @relation(fields: [consultantId], references: [id])
   serviceTier     ServiceTier @relation(fields: [serviceTierId], references: [id])
@@ -101,7 +102,7 @@ model Message {
   content    String
   createdAt  DateTime   @default(now())
   order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  sender     User       @relation(fields: [senderId], references: [id])
+
 
   @@index([orderId])
 }
@@ -176,12 +177,15 @@ model Reservation {
   zoomJoinUrl   String?
   zoomPassword  String?
   createdAt     DateTime          @default(now())
+  orderId       String?
+  order         Order?            @relation(fields: [orderId], references: [id], onDelete: Cascade)
   client        User              @relation(fields: [clientId], references: [id])
   consultant    Consultant        @relation(fields: [consultantId], references: [id])
   serviceTier   ServiceTier       @relation(fields: [serviceTierId], references: [id])
 
   @@index([clientId])
   @@index([consultantId])
+  @@index([orderId])
 }
 
 model Notification {

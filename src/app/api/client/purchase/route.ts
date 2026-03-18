@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
     // Create reservation
     const reservation = await prisma.reservation.create({
       data: {
+        orderId: order.id,
         clientId: user.id,
         consultantId: consultantId,
         serviceTierId: serviceTierId,
