@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import LayoutWrapper from '@/components/LayoutWrapper'
+import NotificationProvider from '@/components/notifications/notification-provider'
 
 export const metadata: Metadata = {
   title: {
@@ -54,7 +55,9 @@ export default function RootLayout({
         <link rel="icon" href="/logo.jpeg" type="image/jpeg" />
       </head>
       <body className="min-h-screen flex flex-col">
-        <LayoutWrapper>{children}</LayoutWrapper>
+        <NotificationProvider>
+          <LayoutWrapper>{children}</LayoutWrapper>
+        </NotificationProvider>
       </body>
     </html>
   )

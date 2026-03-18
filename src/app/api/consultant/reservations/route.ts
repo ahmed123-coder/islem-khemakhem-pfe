@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { getConsultantId } from '@/lib/auth'
 import { createZoomMeeting } from '@/lib/zoom'
+import { notifyReservationUpdate } from '@/lib/notification-service'
 
 const prisma = new PrismaClient()
 
@@ -75,6 +76,7 @@ export async function PATCH(req: NextRequest) {
         zoomPassword
       }
     })
+    await notifyReservationUpdate(id, status)
     return NextResponse.json(updated)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update reservation' }, { status: 500 })

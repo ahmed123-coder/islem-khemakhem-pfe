@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PrismaClient } from '@prisma/client'
 import { getConsultantId } from '@/lib/auth'
+import { notifyNewMessage } from '@/lib/notification-service'
 
 const prisma = new PrismaClient()
 
@@ -47,6 +48,7 @@ export async function POST(req: NextRequest) {
         content
       }
     })
+    await notifyNewMessage(orderId, consultantId, 'CONSULTANT')
     return NextResponse.json(message)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
