@@ -47,6 +47,15 @@ async function main() {
       role: 'CLIENT',
     },
   });
+
+    const client2 = await prisma.user.create({
+    data: {
+      email: 'client2@consultpro.com',
+      password: hashedClientPassword,
+      name: 'Client User',
+      role: 'CLIENT',
+    },
+  });
   console.log('✅ Created client user:', client.email);
 
   // Create consultants
@@ -210,6 +219,7 @@ async function main() {
   console.log('\n📝 Test Credentials:');
   console.log('Admin: admin@consultpro.com / admin123');
   console.log('Client: client@consultpro.com / client123');
+  console.log('Client2: client2@consultpro.com / client123');
   console.log('Consultant: consultant@consultpro.com / consultant123');
 }
 
