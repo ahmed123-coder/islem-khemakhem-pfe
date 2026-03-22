@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { toast } from 'react-hot-toast'
 import { JoinZoomButton } from '@/components/JoinZoomButton'
+import { getSocket } from '@/lib/socket-client'
 
 export default function OrderDetails() {
   const params = useParams()
@@ -41,6 +42,29 @@ export default function OrderDetails() {
     fetchOrder()
     fetchReservations()
     fetchMessages()
+
+    // Real-time socket integration
+    const socket = getSocket()
+    if (socket) {
+      socket.emit('join:order', orderId)
+      
+      const handleNewMessage = (message: any) => {
+        if (message.orderId === orderId) {
+          setMessages(prev => {
+            // Avoid duplicate messages if already re-fetched
+            if (prev.some(m => m.id === message.id)) return prev
+            return [...prev, message]
+          })
+          // Also update order to reflect message usage if needed
+          fetchOrder()
+        }
+      }
+
+      socket.on('new_message', handleNewMessage)
+      return () => {
+        socket.off('new_message', handleNewMessage)
+      }
+    }
   }, [orderId])
 
   const fetchOrder = async () => {

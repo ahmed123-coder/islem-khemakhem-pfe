@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { getSocket } from '@/lib/socket-client'
 
 export default function ConsultantClients() {
   const [activeTab, setActiveTab] = useState<'clients' | 'messages' | 'missions' | 'calls' | 'reservations'>('clients')
@@ -25,6 +26,64 @@ export default function ConsultantClients() {
       fetchCalls(selectedClient)
       if (clientData?.clientId) {
         fetchReservations(clientData.clientId)
+      }
+
+      // Real-time socket integration
+      const socket = getSocket()
+      const room = `order:${selectedClient}`
+      
+      const handleNewMessage = (message: any) => {
+        // If it's for the selected client, add to messages list
+        if (message.orderId === selectedClient) {
+          setMessages(prev => {
+            if (prev.some(m => m.id === message.id)) return prev
+            return [...prev, message]
+          })
+        }
+        
+        // Always update the client's order stats in real-time
+        setClients(prev => prev.map(c => {
+          if (c.id === message.orderId) {
+            return {
+              ...c,
+              messagesUsed: c.messagesUsed + 1
+            }
+          }
+          return c
+        }))
+      }
+
+      if (socket) {
+        socket.emit('join:order', selectedClient)
+        socket.on('new_message', handleNewMessage)
+      }
+
+      // Also listen for re-fetch fallback
+      const handleGlobalNotification = (e: any) => {
+        const detail = e.detail
+        if (detail?.type === 'ORDER_MESSAGE' && detail?.orderId === selectedClient) {
+          fetchMessages(selectedClient)
+        }
+      }
+      window.addEventListener('notification', handleGlobalNotification)
+
+      const handleSocketReady = () => {
+        const s = getSocket()
+        if (s) {
+          s.emit('join:order', selectedClient)
+          s.on('new_message', handleNewMessage)
+        }
+      }
+      window.addEventListener('socket-ready', handleSocketReady)
+
+      return () => {
+        window.removeEventListener('notification', handleGlobalNotification)
+        window.removeEventListener('socket-ready', handleSocketReady)
+        if (socket) {
+          socket.off('new_message', handleNewMessage)
+          // We don't strictly need to leave the room since we filter, 
+          // but we do need to remove the local listener.
+        }
       }
     }
   }, [selectedClient, clients])

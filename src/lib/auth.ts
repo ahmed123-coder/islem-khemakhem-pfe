@@ -58,7 +58,19 @@ export async function getCurrentUser() {
     select: { id: true, email: true, name: true, role: true }
   })
 
-  return user
+  if (user) return user
+
+  // Check consultant table
+  const consultant = await prisma.consultant.findUnique({
+    where: { id: payload.userId },
+    select: { id: true, email: true, name: true }
+  })
+
+  if (consultant) {
+    return { ...consultant, role: 'CONSULTANT' }
+  }
+
+  return null
 }
 
 export async function getConsultantId(): Promise<string | null> {

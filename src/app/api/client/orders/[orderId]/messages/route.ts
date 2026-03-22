@@ -57,7 +57,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       where: { id: params.orderId },
       data: { messagesUsed: { increment: 1 } }
     })
-    await notifyNewMessage(params.orderId, user.id, 'CLIENT')
+    await notifyNewMessage(params.orderId, user.id, 'CLIENT', message)
     return NextResponse.json(message)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })

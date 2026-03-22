@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
       }
     })
     
-    await notifyNewMessage(orderId, consultantId, 'CONSULTANT')
+    await notifyNewMessage(orderId, consultantId, 'CONSULTANT', message)
     return NextResponse.json(message)
   } catch (error) {
     console.error('Error sending consultant message:', error)

@@ -28,7 +28,9 @@ export default function LoginPage() {
         role === 'ADMIN' ? '/admin' :
         role === 'CONSULTANT' ? '/consultant' :
         role === 'CLIENT' ? '/client' : '/dashboard'
-      
+
+      localStorage.setItem('userId', data.user.id)
+      localStorage.setItem('role', role)
       router.push(redirectPath)
       router.refresh()
     } else {

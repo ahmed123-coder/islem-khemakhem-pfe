@@ -1,20 +1,28 @@
 import { prisma } from '@/lib/prisma'
-import { emitNotification } from '@/lib/emit-notification'
+import { emitNotification, emitToRoom } from '@/lib/emit-notification'
 
-export async function notifyNewMessage(orderId: string, senderId: string, senderType: 'CLIENT' | 'CONSULTANT') {
+export async function notifyNewMessage(orderId: string, senderId: string, senderType: 'CLIENT' | 'CONSULTANT', message?: any) {
   const order = await prisma.order.findUnique({ where: { id: orderId } })
   if (!order) return
 
   const recipientId = senderType === 'CLIENT' ? order.consultantId : order.clientId
   const senderLabel = senderType === 'CLIENT' ? 'client' : 'consultant'
 
+  // Standard notification (for toasts)
   emitNotification(recipientId, {
     type: 'ORDER_MESSAGE',
     orderId,
     title: 'New Message',
     message: `You have a new message from your ${senderLabel}`,
+    data: { content: message?.content },
     timestamp: new Date().toISOString()
   })
+
+  // Real-time chat update for the order room
+  emitToRoom(`order:${orderId}`, 'new_message', message)
+
+  // Also send directly to the recipient's user room for extra reliability
+  emitToRoom(`user:${recipientId}`, 'new_message', message)
 }
 
 export async function notifyReservationUpdate(reservationId: string, status: string) {
