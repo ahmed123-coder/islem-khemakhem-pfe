@@ -34,11 +34,12 @@ model Consultant {
   imageUrl     String?
   isActive     Boolean       @default(true)
   createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  missions     Mission[]
-  orders       Order[]
-  reservations Reservation[]
-  services     Service[]
+  updatedAt     DateTime      @updatedAt
+  missions      Mission[]
+  orders        Order[]
+  reservations  Reservation[]
+  services      Service[]
+  notifications Notification[]
 }
 
 model Service {
@@ -189,16 +190,19 @@ model Reservation {
 }
 
 model Notification {
-  id        String           @id @default(cuid())
-  userId    String
-  type      NotificationType
-  title     String
-  message   String
-  isRead    Boolean          @default(false)
-  createdAt DateTime         @default(now())
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id           String           @id @default(cuid())
+  userId       String?
+  consultantId String?
+  type         NotificationType
+  title        String
+  message      String
+  isRead       Boolean          @default(false)
+  createdAt    DateTime         @default(now())
+  user         User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  consultant   Consultant?      @relation(fields: [consultantId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([consultantId])
   @@index([isRead])
 }
 
@@ -286,4 +290,5 @@ enum NotificationType {
   CALL
   MISSION
   SYSTEM
+  RESERVATION
 }
