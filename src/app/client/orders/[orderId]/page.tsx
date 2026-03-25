@@ -586,7 +586,7 @@ export default function OrderDetails() {
                     {order.missions.map((mission: any) => (
                       <div key={mission.id} className="border rounded-lg p-6 bg-white shadow-sm">
                         <div className="flex justify-between items-start mb-4">
-                          <div>
+                          <div className="flex-1">
                             <h3 className="text-xl font-bold text-gray-900">{mission.title}</h3>
                             {mission.description && <p className="text-gray-600 mt-1">{mission.description}</p>}
                           </div>
@@ -598,6 +598,31 @@ export default function OrderDetails() {
                             {mission.status}
                           </span>
                         </div>
+
+                        {/* Progress Bar Section */}
+                        {mission.milestones && mission.milestones.length > 0 && (
+                          <div className="mb-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Progress to Completion</span>
+                              <span className="text-sm font-black text-blue-600">
+                                {Math.round((mission.milestones.filter((m: any) => m.status === 'COMPLETED').length / mission.milestones.length) * 100)}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden shadow-inner">
+                              <div 
+                                className={`h-full transition-all duration-1000 ease-out rounded-full ${
+                                  Math.round((mission.milestones.filter((m: any) => m.status === 'COMPLETED').length / mission.milestones.length) * 100) === 100 
+                                  ? 'bg-green-500' : 'bg-blue-600'
+                                }`}
+                                style={{ width: `${Math.round((mission.milestones.filter((m: any) => m.status === 'COMPLETED').length / mission.milestones.length) * 100)}%` }}
+                              ></div>
+                            </div>
+                            <div className="mt-2 text-[10px] text-gray-400 font-bold uppercase flex justify-between">
+                              <span>{mission.milestones.filter((m: any) => m.status === 'COMPLETED').length} Tasks Done</span>
+                              <span>{mission.milestones.length} Total Tasks</span>
+                            </div>
+                          </div>
+                        )}
 
                         <div className="mt-6">
                           <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-4">

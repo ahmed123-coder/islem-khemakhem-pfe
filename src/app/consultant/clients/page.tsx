@@ -33,7 +33,6 @@ export default function ConsultantClients() {
       const room = `order:${selectedClient}`
       
       const handleNewMessage = (message: any) => {
-        // If it's for the selected client, add to messages list
         if (message.orderId === selectedClient) {
           setMessages(prev => {
             if (prev.some(m => m.id === message.id)) return prev
@@ -41,7 +40,6 @@ export default function ConsultantClients() {
           })
         }
         
-        // Always update the client's order stats in real-time
         setClients(prev => prev.map(c => {
           if (c.id === message.orderId) {
             return {
@@ -58,7 +56,6 @@ export default function ConsultantClients() {
         socket.on('new_message', handleNewMessage)
       }
 
-      // Also listen for re-fetch fallback
       const handleGlobalNotification = (e: any) => {
         const detail = e.detail
         if (detail?.orderId === selectedClient) {
@@ -74,22 +71,10 @@ export default function ConsultantClients() {
       }
       window.addEventListener('notification', handleGlobalNotification)
 
-      const handleSocketReady = () => {
-        const s = getSocket()
-        if (s) {
-          s.emit('join:order', selectedClient)
-          s.on('new_message', handleNewMessage)
-        }
-      }
-      window.addEventListener('socket-ready', handleSocketReady)
-
       return () => {
         window.removeEventListener('notification', handleGlobalNotification)
-        window.removeEventListener('socket-ready', handleSocketReady)
         if (socket) {
           socket.off('new_message', handleNewMessage)
-          // We don't strictly need to leave the room since we filter, 
-          // but we do need to remove the local listener.
         }
       }
     }
@@ -291,7 +276,6 @@ export default function ConsultantClients() {
   }
 
   const editMilestone = async (milestoneId: string) => {
-    // Find the milestone in all missions
     let milestone: any = null
     for (const m of missions) {
       milestone = m.milestones.find((ms: any) => ms.id === milestoneId)
@@ -406,14 +390,18 @@ export default function ConsultantClients() {
                   <div className="p-6">
                     {activeTab === 'messages' && (
                       <div>
-                        <div className="space-y-4 mb-4 max-h-96 overflow-y-auto">
-                          {messages.map(msg => (
-                            <div key={msg.id} className={`p-3 rounded-lg ${msg.senderType === 'CONSULTANT' ? 'bg-blue-100 ml-12' : 'bg-gray-100 mr-12'}`}>
-                              <div className="text-sm font-medium mb-1">{msg.senderType}</div>
-                              <div>{msg.content}</div>
-                              <div className="text-xs text-gray-500 mt-1">{new Date(msg.createdAt).toLocaleString()}</div>
-                            </div>
-                          ))}
+                        <div className="space-y-4 mb-4 max-h-96 overflow-y-auto p-2">
+                          {messages.length === 0 ? (
+                            <div className="text-center py-8 text-gray-500 italic">No messages yet.</div>
+                          ) : (
+                            messages.map(msg => (
+                              <div key={msg.id} className={`p-3 rounded-lg shadow-sm ${msg.senderType === 'CONSULTANT' ? 'bg-blue-50 ml-12 border-l-4 border-blue-500' : 'bg-gray-100 mr-12 border-l-4 border-gray-400'}`}>
+                                <div className="text-xs font-bold uppercase tracking-wider mb-1 text-gray-500">{msg.senderType}</div>
+                                <div className="text-sm text-gray-800 break-words">{msg.content}</div>
+                                <div className="text-[10px] text-gray-400 mt-2 text-right">{new Date(msg.createdAt).toLocaleString()}</div>
+                              </div>
+                            ))
+                          )}
                         </div>
                         <div className="flex gap-2">
                           <input
@@ -422,9 +410,9 @@ export default function ConsultantClients() {
                             onChange={(e) => setNewMessage(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                             placeholder="Type a message..."
-                            className="flex-1 border rounded-lg px-4 py-2"
+                            className="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                           />
-                          <button onClick={sendMessage} className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                          <button onClick={sendMessage} className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
                             Send
                           </button>
                         </div>
@@ -433,69 +421,104 @@ export default function ConsultantClients() {
 
                     {activeTab === 'missions' && (
                       <div>
-                        <button onClick={createMission} className="mb-4 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                          + New Mission
+                        <button onClick={createMission} className="mb-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2.5 rounded-xl hover:shadow-lg transition-all font-semibold flex items-center gap-2">
+                          <span className="text-xl">+</span> New Mission
                         </button>
-                        <div className="space-y-4">
-                          {missions.map(mission => (
-                            <div key={mission.id} className="border rounded-lg p-4 bg-white">
-                              <div className="flex justify-between items-start mb-4">
-                                <div className="flex-1">
-                                  <h3 className="font-semibold text-lg">{mission.title}</h3>
-                                  {mission.description && <p className="text-gray-600 text-sm mt-1">{mission.description}</p>}
-                                </div>
-                                <div className="flex flex-col items-end gap-2">
-                                  <select 
-                                    value={mission.status}
-                                    onChange={(e) => updateMissionStatus(mission.id, e.target.value)}
-                                    className={`px-3 py-1 rounded-full text-xs font-semibold border-none cursor-pointer outline-none ${
-                                      mission.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                                      mission.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
-                                      mission.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-                                      'bg-gray-100 text-gray-700'
-                                    }`}
-                                  >
-                                    <option value="PENDING" className="bg-white">Pending</option>
-                                    <option value="IN_PROGRESS" className="bg-white">In Progress</option>
-                                    <option value="COMPLETED" className="bg-white">Completed</option>
-                                    <option value="CANCELLED" className="bg-white">Cancelled</option>
-                                  </select>
-                                  <div className="flex gap-2">
-                                    <button onClick={() => updateMission(mission.id)} className="text-xs text-blue-600 hover:underline">Edit Content</button>
-                                    <button onClick={() => deleteMission(mission.id)} className="text-xs text-red-600 hover:underline">Delete</button>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              <div className="mt-4 border-t pt-4">
-                                <div className="flex justify-between items-center mb-3">
-                                  <h4 className="font-medium text-sm text-gray-700">Tasks ({mission.milestones.length})</h4>
-                                  <button onClick={() => createMilestone(mission.id)} className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100">+ Add Task</button>
-                                </div>
-                                <div className="space-y-2">
-                                  {mission.milestones.map((milestone: any) => (
-                                    <div key={milestone.id} className="flex items-center gap-3 p-2 bg-gray-50 rounded">
-                                      <input
-                                        type="checkbox"
-                                        checked={milestone.status === 'COMPLETED'}
-                                        onChange={(e) => updateMilestone(milestone.id, e.target.checked ? 'COMPLETED' : 'PENDING')}
-                                        className="w-4 h-4"
-                                      />
-                                      <div className="flex-1 min-w-0">
-                                        <div className={milestone.status === 'COMPLETED' ? 'line-through text-gray-400 text-sm' : 'text-sm font-medium'}>
-                                          {milestone.title}
-                                        </div>
-                                      </div>
-                                      <div className="flex gap-2">
-                                        <button onClick={() => editMilestone(milestone.id)} className="text-[10px] text-blue-600 hover:underline">Edit</button>
-                                        <button onClick={() => deleteMilestone(milestone.id)} className="text-[10px] text-red-600 hover:underline">Delete</button>
+                        <div className="space-y-6">
+                          {missions.length === 0 ? (
+                            <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400">
+                              No missions assigned yet.
+                            </div>
+                          ) : (
+                            missions.map(mission => {
+                              const done = mission.milestones.filter((m: any) => m.status === 'COMPLETED').length;
+                              const total = mission.milestones.length;
+                              const progress = total > 0 ? Math.round((done / total) * 100) : 0;
+
+                              return (
+                                <div key={mission.id} className="border border-gray-100 rounded-2xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow">
+                                  <div className="flex justify-between items-start mb-4">
+                                    <div className="flex-1">
+                                      <h3 className="font-bold text-gray-900 text-xl">{mission.title}</h3>
+                                      {mission.description && <p className="text-gray-500 text-sm mt-1">{mission.description}</p>}
+                                    </div>
+                                    <div className="flex flex-col items-end gap-3">
+                                      <select 
+                                        value={mission.status}
+                                        onChange={(e) => updateMissionStatus(mission.id, e.target.value)}
+                                        className={`px-4 py-1.5 rounded-full text-xs font-bold border-none cursor-pointer outline-none shadow-sm ${
+                                          mission.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                          mission.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
+                                          mission.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                                          'bg-gray-100 text-gray-600'
+                                        }`}
+                                      >
+                                        <option value="PENDING">Pending</option>
+                                        <option value="IN_PROGRESS">In Progress</option>
+                                        <option value="COMPLETED">Completed</option>
+                                        <option value="CANCELLED">Cancelled</option>
+                                      </select>
+                                      <div className="flex gap-4">
+                                        <button onClick={() => updateMission(mission.id)} className="text-xs font-medium text-blue-600 hover:text-blue-800 transition">Update</button>
+                                        <button onClick={() => deleteMission(mission.id)} className="text-xs font-medium text-red-500 hover:text-red-700 transition">Remove</button>
                                       </div>
                                     </div>
-                                  ))}
+                                  </div>
+
+                                  {/* Progress Bar Section */}
+                                  <div className="bg-gray-50 p-4 rounded-xl mb-6">
+                                    <div className="flex justify-between items-center mb-2">
+                                      <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Global Progress</span>
+                                      <span className="text-sm font-black text-blue-600">{progress}%</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                                      <div 
+                                        className={`h-full transition-all duration-700 ease-out rounded-full ${progress === 100 ? 'bg-green-500' : 'bg-blue-600'}`}
+                                        style={{ width: `${progress}%` }}
+                                      ></div>
+                                    </div>
+                                    <div className="mt-2 text-[10px] text-gray-400 text-right font-medium">
+                                      {done} of {total} tasks completed
+                                    </div>
+                                  </div>
+
+                                  <div className="border-t pt-4">
+                                    <div className="flex justify-between items-center mb-4">
+                                      <h4 className="font-bold text-sm text-gray-800 flex items-center gap-2">
+                                        📋 Tasks Checklist
+                                        <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-[10px]">{total}</span>
+                                      </h4>
+                                      <button onClick={() => createMilestone(mission.id)} className="text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition tracking-wide">
+                                        + ADD TASK
+                                      </button>
+                                    </div>
+                                    <div className="space-y-3">
+                                      {mission.milestones.map((milestone: any) => (
+                                        <div key={milestone.id} className="flex items-center gap-4 p-3 bg-white border border-gray-50 rounded-xl hover:border-gray-200 transition-colors group">
+                                          <input
+                                            type="checkbox"
+                                            checked={milestone.status === 'COMPLETED'}
+                                            onChange={(e) => updateMilestone(milestone.id, e.target.checked ? 'COMPLETED' : 'PENDING')}
+                                            className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                          />
+                                          <div className="flex-1 min-w-0">
+                                            <div className={`transition-all ${milestone.status === 'COMPLETED' ? 'line-through text-gray-400 text-sm' : 'text-sm font-semibold text-gray-700'}`}>
+                                              {milestone.title}
+                                            </div>
+                                            {milestone.description && <p className="text-[10px] text-gray-400 mt-0.5 truncate">{milestone.description}</p>}
+                                          </div>
+                                          <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <button onClick={() => editMilestone(milestone.id)} className="text-[10px] uppercase font-bold text-blue-600 hover:text-blue-800">Edit</button>
+                                            <button onClick={() => deleteMilestone(milestone.id)} className="text-[10px] uppercase font-bold text-red-500 hover:text-red-700">Delete</button>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
-                          ))}
+                              );
+                            })
+                          )}
                         </div>
                       </div>
                     )}
@@ -503,18 +526,27 @@ export default function ConsultantClients() {
                     {activeTab === 'calls' && (
                       <div>
                         {calls.length === 0 ? (
-                          <div className="text-center py-12 text-gray-500">No calls recorded yet</div>
+                          <div className="text-center py-12 text-gray-500">No calls recorded yet.</div>
                         ) : (
                           <div className="space-y-4">
                             {calls.map(call => (
-                              <div key={call.id} className="border rounded-lg p-4">
-                                <div className="flex justify-between items-start">
+                              <div key={call.id} className="border rounded-xl p-5 bg-white shadow-sm hover:shadow-md transition">
+                                <div className="flex justify-between items-center">
                                   <div>
-                                    <div className="font-medium">{new Date(call.startedAt).toLocaleString()}</div>
-                                    <div className="text-sm text-gray-400">Duration: {call.duration} minutes</div>
+                                    <div className="font-bold text-gray-800">{new Date(call.startedAt).toLocaleString()}</div>
+                                    <div className="text-sm text-gray-500 mt-1 flex items-center gap-2">
+                                      <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                                      Duration: {call.duration} minutes
+                                    </div>
                                   </div>
                                   {call.recordingUrl && (
-                                    <a href={call.recordingUrl} target="_blank" className="text-blue-600 hover:underline text-sm">🎧 Recording</a>
+                                    <a 
+                                      href={call.recordingUrl} 
+                                      target="_blank" 
+                                      className="bg-blue-50 text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-100 transition text-sm font-bold flex items-center gap-2"
+                                    >
+                                      🎧 Listen Recording
+                                    </a>
                                   )}
                                 </div>
                               </div>
@@ -527,43 +559,60 @@ export default function ConsultantClients() {
                     {activeTab === 'reservations' && (
                       <div>
                         {reservations.length === 0 ? (
-                          <div className="text-center py-12 text-gray-500">No reservations found for this client</div>
+                          <div className="text-center py-12 text-gray-500 italic">No reservations found for this client.</div>
                         ) : (
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
+                          <div className="overflow-hidden border border-gray-100 rounded-2xl">
+                            <table className="min-w-full divide-y divide-gray-100">
                               <thead className="bg-gray-50">
                                 <tr>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Service</th>
+                                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Schedule</th>
+                                  <th className="px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest">Status</th>
+                                  <th className="px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">Actions</th>
                                 </tr>
                               </thead>
-                              <tbody className="bg-white divide-y divide-gray-200">
+                              <tbody className="bg-white divide-y divide-gray-50">
                                 {reservations.map(res => (
-                                  <tr key={res.id}>
-                                    <td className="px-4 py-3 text-sm font-medium">{res.serviceTier.service.name}</td>
-                                    <td className="px-4 py-3 text-sm">
-                                      <div>{new Date(res.startTime).toLocaleDateString()}</div>
-                                      <div className="text-xs text-gray-400">{new Date(res.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                                  <tr key={res.id} className="hover:bg-gray-50 transition-colors">
+                                    <td className="px-6 py-4">
+                                      <div className="text-sm font-bold text-gray-800">{res.serviceTier.service.name}</div>
+                                      <div className="text-[10px] font-bold text-blue-500 uppercase tracking-wide mt-0.5">{res.serviceTier.tierType}</div>
                                     </td>
-                                    <td className="px-4 py-3">
-                                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                    <td className="px-6 py-4">
+                                      <div className="text-sm font-medium text-gray-700">{new Date(res.startTime).toLocaleDateString()}</div>
+                                      <div className="text-xs text-gray-400 font-medium">
+                                        {new Date(res.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                                      </div>
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${
                                         res.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
                                         res.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
                                         res.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
-                                        'bg-gray-100 text-gray-700'
+                                        'bg-gray-100 text-gray-500'
                                       }`}>
                                         {res.status}
                                       </span>
                                     </td>
-                                    <td className="px-4 py-3">
-                                      <div className="flex items-center gap-2">
-                                        {res.status === 'CONFIRMED' && res.zoomJoinUrl && canJoin(res) && (
-                                          <a href={res.zoomJoinUrl} target="_blank" className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs">Join</a>
-                                        )}
-                                        <button onClick={() => deleteReservation(res.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-full" title="Delete">
-                                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <td className="px-6 py-4 text-right">
+                                      <div className="flex items-center justify-end gap-3">
+                                        {res.status === 'CONFIRMED' && res.zoomJoinUrl && canJoin(res) ? (
+                                          <a 
+                                            href={res.zoomJoinUrl} 
+                                            target="_blank" 
+                                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition shadow-sm hover:shadow-md"
+                                          >
+                                            Start Call
+                                          </a>
+                                        ) : res.status === 'CONFIRMED' && res.zoomJoinUrl ? (
+                                          <span className="text-[10px] font-bold text-gray-400 italic">Ready {Math.round((new Date(res.startTime).getTime() - new Date().getTime()) / 60000)}m</span>
+                                        ) : null}
+                                        <button 
+                                          onClick={() => deleteReservation(res.id)}
+                                          className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition"
+                                          title="Delete Reservation"
+                                        >
+                                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                           </svg>
                                         </button>
@@ -581,8 +630,14 @@ export default function ConsultantClients() {
                 </div>
               </>
             ) : (
-              <div className="bg-white rounded-lg shadow p-12 text-center text-gray-500">
-                Select a client to view details
+              <div className="bg-white rounded-3xl shadow-xl p-20 text-center flex flex-col items-center justify-center border-2 border-dashed border-gray-100">
+                <div className="w-20 h-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-6">
+                  <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <h3 className="text-2xl font-black text-gray-900 mb-2">Select a Client</h3>
+                <p className="text-gray-500 max-w-xs">Pick a client from the list to manage their messages, missions, and reservations.</p>
               </div>
             )}
           </div>
