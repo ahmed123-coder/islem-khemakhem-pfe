@@ -31,6 +31,10 @@ export async function POST(req: NextRequest) {
         status: 'PENDING'
       }
     })
+
+    const { notifyMissionUpdate } = await import('@/lib/notification-service')
+    await notifyMissionUpdate(missionId, 'Task Added', `New task "${title}" added to mission "${mission.title}".`)
+
     return NextResponse.json(milestone)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create milestone' }, { status: 500 })
@@ -42,6 +46,7 @@ export async function PATCH(req: NextRequest) {
     const { milestoneId, status, title, description } = await req.json()
     const milestone = await prisma.milestone.update({
       where: { id: milestoneId },
+      include: { mission: true },
       data: { 
         status,
         title,
@@ -49,8 +54,28 @@ export async function PATCH(req: NextRequest) {
         completedAt: status === 'COMPLETED' ? new Date() : null
       }
     })
+
+    const { notifyMissionUpdate } = await import('@/lib/notification-service')
+    await notifyMissionUpdate(milestone.missionId, 'Task Updated', `Task "${milestone.title}" has been updated.`)
+
     return NextResponse.json(milestone)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update milestone' }, { status: 500 })
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { milestoneId } = await req.json()
+    const milestone = await prisma.milestone.findUnique({ where: { id: milestoneId } })
+    if (!milestone) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+    const { notifyMissionUpdate } = await import('@/lib/notification-service')
+    await notifyMissionUpdate(milestone.missionId, 'Task Removed', `Task "${milestone.title}" has been deleted.`)
+
+    await prisma.milestone.delete({ where: { id: milestoneId } })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    return NextResponse.json({ error: 'Failed' }, { status: 500 })
   }
 }

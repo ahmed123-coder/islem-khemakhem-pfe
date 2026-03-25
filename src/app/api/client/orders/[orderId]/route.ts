@@ -16,7 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
         consultant: { select: { id: true, name: true, specialty: true, email: true } },
         missions: { 
           where: { NOT: { status: 'PENDING' } },
-          include: { milestones: true } 
+          include: { milestones: { orderBy: { createdAt: 'asc' } } } 
         },
         calls: { orderBy: { startedAt: 'desc' } }
       }

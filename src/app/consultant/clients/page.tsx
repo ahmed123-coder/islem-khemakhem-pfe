@@ -226,6 +226,22 @@ export default function ConsultantClients() {
     }
   }
 
+  const updateMissionStatus = async (missionId: string, status: string) => {
+    try {
+      const mission = missions.find(m => m.id === missionId)
+      if (!mission) return
+
+      await fetch('/api/consultant/missions', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ missionId, title: mission.title, description: mission.description, status })
+      })
+      if (selectedClient) fetchMissions(selectedClient)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   const updateMission = async (missionId: string) => {
     const mission = missions.find(m => m.id === missionId)
     if (!mission) return
@@ -233,13 +249,40 @@ export default function ConsultantClients() {
     const title = prompt('Mission title:', mission.title)
     if (!title) return
     const description = prompt('Mission description:', mission.description || '')
-    const status = prompt('Status (PENDING, IN_PROGRESS, COMPLETED):', mission.status)
 
     try {
       await fetch('/api/consultant/missions', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ missionId, title, description, status })
+        body: JSON.stringify({ missionId, title, description, status: mission.status })
+      })
+      if (selectedClient) fetchMissions(selectedClient)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const deleteMission = async (missionId: string) => {
+    if (!confirm('Are you sure you want to delete this mission?')) return
+    try {
+      await fetch('/api/consultant/missions', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ missionId })
+      })
+      if (selectedClient) fetchMissions(selectedClient)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const deleteMilestone = async (milestoneId: string) => {
+    if (!confirm('Are you sure you want to delete this task?')) return
+    try {
+      await fetch('/api/consultant/milestones', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ milestoneId })
       })
       if (selectedClient) fetchMissions(selectedClient)
     } catch (error) {
@@ -395,38 +438,39 @@ export default function ConsultantClients() {
                         </button>
                         <div className="space-y-4">
                           {missions.map(mission => (
-                            <div key={mission.id} className="border rounded-lg p-4">
-                              <div className="flex justify-between items-start mb-3">
+                            <div key={mission.id} className="border rounded-lg p-4 bg-white">
+                              <div className="flex justify-between items-start mb-4">
                                 <div className="flex-1">
                                   <h3 className="font-semibold text-lg">{mission.title}</h3>
-                                  {mission.description && <p className="text-gray-600 mb-3">{mission.description}</p>}
+                                  {mission.description && <p className="text-gray-600 text-sm mt-1">{mission.description}</p>}
                                 </div>
                                 <div className="flex flex-col items-end gap-2">
-                                  <span className={`px-3 py-1 rounded-full text-sm ${
-                                    mission.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                                    mission.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
-                                    'bg-gray-100 text-gray-700'
-                                  }`}>
-                                    {mission.status}
-                                  </span>
-                                  <button 
-                                    onClick={() => updateMission(mission.id)}
-                                    className="text-xs text-blue-600 hover:underline"
+                                  <select 
+                                    value={mission.status}
+                                    onChange={(e) => updateMissionStatus(mission.id, e.target.value)}
+                                    className={`px-3 py-1 rounded-full text-xs font-semibold border-none cursor-pointer outline-none ${
+                                      mission.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                      mission.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
+                                      mission.status === 'CANCELLED' ? 'bg-red-100 text-red-700' :
+                                      'bg-gray-100 text-gray-700'
+                                    }`}
                                   >
-                                    Edit Mission
-                                  </button>
+                                    <option value="PENDING" className="bg-white">Pending</option>
+                                    <option value="IN_PROGRESS" className="bg-white">In Progress</option>
+                                    <option value="COMPLETED" className="bg-white">Completed</option>
+                                    <option value="CANCELLED" className="bg-white">Cancelled</option>
+                                  </select>
+                                  <div className="flex gap-2">
+                                    <button onClick={() => updateMission(mission.id)} className="text-xs text-blue-600 hover:underline">Edit Content</button>
+                                    <button onClick={() => deleteMission(mission.id)} className="text-xs text-red-600 hover:underline">Delete</button>
+                                  </div>
                                 </div>
                               </div>
                               
-                              <div className="mt-4">
-                                <div className="flex justify-between items-center mb-2">
-                                  <h4 className="font-medium">Tasks ({mission.milestones.length})</h4>
-                                  <button 
-                                    onClick={() => createMilestone(mission.id)}
-                                    className="text-sm bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100"
-                                  >
-                                    + Add Task
-                                  </button>
+                              <div className="mt-4 border-t pt-4">
+                                <div className="flex justify-between items-center mb-3">
+                                  <h4 className="font-medium text-sm text-gray-700">Tasks ({mission.milestones.length})</h4>
+                                  <button onClick={() => createMilestone(mission.id)} className="text-xs bg-blue-50 text-blue-600 px-2 py-1 rounded hover:bg-blue-100">+ Add Task</button>
                                 </div>
                                 <div className="space-y-2">
                                   {mission.milestones.map((milestone: any) => (
@@ -435,22 +479,17 @@ export default function ConsultantClients() {
                                         type="checkbox"
                                         checked={milestone.status === 'COMPLETED'}
                                         onChange={(e) => updateMilestone(milestone.id, e.target.checked ? 'COMPLETED' : 'PENDING')}
-                                        className="w-5 h-5"
+                                        className="w-4 h-4"
                                       />
-                                      <div className="flex-1">
-                                        <div className={milestone.status === 'COMPLETED' ? 'line-through text-gray-500' : ''}>
+                                      <div className="flex-1 min-w-0">
+                                        <div className={milestone.status === 'COMPLETED' ? 'line-through text-gray-400 text-sm' : 'text-sm font-medium'}>
                                           {milestone.title}
                                         </div>
-                                        {milestone.description && (
-                                          <div className="text-xs text-gray-400">{milestone.description}</div>
-                                        )}
                                       </div>
-                                      <button 
-                                        onClick={() => editMilestone(milestone.id)}
-                                        className="text-xs text-gray-400 hover:text-blue-500"
-                                      >
-                                        Edit
-                                      </button>
+                                      <div className="flex gap-2">
+                                        <button onClick={() => editMilestone(milestone.id)} className="text-[10px] text-blue-600 hover:underline">Edit</button>
+                                        <button onClick={() => deleteMilestone(milestone.id)} className="text-[10px] text-red-600 hover:underline">Delete</button>
+                                      </div>
                                     </div>
                                   ))}
                                 </div>
@@ -472,12 +511,10 @@ export default function ConsultantClients() {
                                 <div className="flex justify-between items-start">
                                   <div>
                                     <div className="font-medium">{new Date(call.startedAt).toLocaleString()}</div>
-                                    <div className="text-sm text-gray-500 text-gray-500">Duration: {call.duration} minutes</div>
+                                    <div className="text-sm text-gray-400">Duration: {call.duration} minutes</div>
                                   </div>
                                   {call.recordingUrl && (
-                                    <a href={call.recordingUrl} target="_blank" className="text-blue-600 hover:underline text-sm">
-                                      🎧 Recording
-                                    </a>
+                                    <a href={call.recordingUrl} target="_blank" className="text-blue-600 hover:underline text-sm">🎧 Recording</a>
                                   )}
                                 </div>
                               </div>
@@ -505,15 +542,10 @@ export default function ConsultantClients() {
                               <tbody className="bg-white divide-y divide-gray-200">
                                 {reservations.map(res => (
                                   <tr key={res.id}>
-                                    <td className="px-4 py-3">
-                                      <div className="text-sm font-medium">{res.serviceTier.service.name}</div>
-                                      <div className="text-xs text-gray-500">{res.serviceTier.tierType}</div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                      <div className="text-sm">{new Date(res.startTime).toLocaleDateString()}</div>
-                                      <div className="text-xs text-gray-500">
-                                        {new Date(res.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                      </div>
+                                    <td className="px-4 py-3 text-sm font-medium">{res.serviceTier.service.name}</td>
+                                    <td className="px-4 py-3 text-sm">
+                                      <div>{new Date(res.startTime).toLocaleDateString()}</div>
+                                      <div className="text-xs text-gray-400">{new Date(res.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
                                     </td>
                                     <td className="px-4 py-3">
                                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -527,24 +559,10 @@ export default function ConsultantClients() {
                                     </td>
                                     <td className="px-4 py-3">
                                       <div className="flex items-center gap-2">
-                                        {res.status === 'CONFIRMED' && res.zoomJoinUrl && canJoin(res) ? (
-                                          <a 
-                                            href={res.zoomJoinUrl} 
-                                            target="_blank" 
-                                            className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs inline-block"
-                                          >
-                                            Join
-                                          </a>
-                                        ) : res.status === 'CONFIRMED' && res.zoomJoinUrl ? (
-                                          <span className="text-xs text-gray-400 italic">Starting soon</span>
-                                        ) : (
-                                          <span className="text-xs text-gray-300">-</span>
+                                        {res.status === 'CONFIRMED' && res.zoomJoinUrl && canJoin(res) && (
+                                          <a href={res.zoomJoinUrl} target="_blank" className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs">Join</a>
                                         )}
-                                        <button 
-                                          onClick={() => deleteReservation(res.id)}
-                                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-full transition-colors"
-                                          title="Delete Reservation"
-                                        >
+                                        <button onClick={() => deleteReservation(res.id)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-full" title="Delete">
                                           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                           </svg>

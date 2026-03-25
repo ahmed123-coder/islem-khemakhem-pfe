@@ -49,6 +49,10 @@ export async function POST(req: NextRequest) {
         status: 'PENDING'
       }
     })
+
+    const { notifyMissionUpdate } = await import('@/lib/notification-service')
+    await notifyMissionUpdate(mission.id, 'New Mission', `A new mission "${title}" has been created for your order.`)
+
     return NextResponse.json(mission)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create mission' }, { status: 500 })
@@ -74,8 +78,35 @@ export async function PATCH(req: NextRequest) {
         status
       }
     })
+
+    const { notifyMissionUpdate } = await import('@/lib/notification-service')
+    await notifyMissionUpdate(missionId, 'Mission Updated', `Mission "${title || mission.title}" has been updated.`)
+
     return NextResponse.json(updatedMission)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update mission' }, { status: 500 })
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  const consultantId = await getConsultantId()
+  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  try {
+    const { missionId } = await req.json()
+    const mission = await prisma.mission.findUnique({ where: { id: missionId } })
+
+    if (!mission || mission.consultantId !== consultantId) {
+      return NextResponse.json({ error: 'Mission not found or unauthorized' }, { status: 403 })
+    }
+
+    const { notifyMissionUpdate } = await import('@/lib/notification-service')
+    await notifyMissionUpdate(missionId, 'Mission Deleted', `Mission "${mission.title}" has been removed.`)
+
+    await prisma.mission.delete({ where: { id: missionId } })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Delete mission error:', error)
+    return NextResponse.json({ error: 'Failed to delete mission' }, { status: 500 })
   }
 }
