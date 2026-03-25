@@ -192,6 +192,27 @@ export default function OrderDetails() {
     }
   }
 
+  const cancelReservation = async (id: string) => {
+    if (!confirm('Voulez-vous vraiment annuler cette session ?')) return
+    try {
+      const res = await fetch('/api/client/reservations', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      })
+      if (res.ok) {
+        toast.success('Réservation annulée')
+        fetchReservations()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de l\'annulation')
+      }
+    } catch (error) {
+      console.error(error)
+      toast.error('Une erreur est survenue')
+    }
+  }
+
   const getReservationAt = (date: Date, hour: number) => {
     return reservations.find(r => {
       const rStart = new Date(r.startTime)
@@ -354,9 +375,19 @@ export default function OrderDetails() {
                                 {reservation.zoomJoinUrl && reservation.status === 'CONFIRMED' && canJoin(reservation) ? (
                                   <JoinZoomButton joinUrl={reservation.zoomJoinUrl} />
                                 ) : (
-                                  <span className="text-xs text-gray-400 italic">
-                                    {reservation.status === 'CONFIRMED' ? 'Available 15m before' : 'Pending Confirmation'}
-                                  </span>
+                                  <div className="flex flex-col items-center gap-2">
+                                    <span className="text-xs text-gray-400 italic">
+                                      {reservation.status === 'CONFIRMED' ? 'Available 15m before' : 'Pending Confirmation'}
+                                    </span>
+                                    {reservation.status === 'PENDING' && (
+                                      <button 
+                                        onClick={() => cancelReservation(reservation.id)}
+                                        className="text-[10px] text-red-500 hover:text-red-700 font-bold uppercase tracking-wider underline"
+                                      >
+                                        Cancel Request
+                                      </button>
+                                    )}
+                                  </div>
                                 )}
                               </td>
                             </tr>

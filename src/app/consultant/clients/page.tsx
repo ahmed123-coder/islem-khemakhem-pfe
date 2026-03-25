@@ -154,6 +154,27 @@ export default function ConsultantClients() {
     }
   }
 
+  const deleteReservation = async (reservationId: string) => {
+    if (!confirm('Are you sure you want to delete this reservation?')) return
+    try {
+      const res = await fetch('/api/consultant/reservations', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: reservationId })
+      })
+      if (res.ok) {
+        if (selectedClient) {
+          const clientData = clients.find(c => c.id === selectedClient)
+          if (clientData?.clientId) {
+            fetchReservations(clientData.clientId)
+          }
+        }
+      }
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedClient) return
     
@@ -478,7 +499,7 @@ export default function ConsultantClients() {
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
                                   <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zoom</th>
+                                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                                 </tr>
                               </thead>
                               <tbody className="bg-white divide-y divide-gray-200">
@@ -505,19 +526,30 @@ export default function ConsultantClients() {
                                       </span>
                                     </td>
                                     <td className="px-4 py-3">
-                                      {res.status === 'CONFIRMED' && res.zoomJoinUrl && canJoin(res) ? (
-                                        <a 
-                                          href={res.zoomJoinUrl} 
-                                          target="_blank" 
-                                          className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs inline-block"
+                                      <div className="flex items-center gap-2">
+                                        {res.status === 'CONFIRMED' && res.zoomJoinUrl && canJoin(res) ? (
+                                          <a 
+                                            href={res.zoomJoinUrl} 
+                                            target="_blank" 
+                                            className="text-white bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-xs inline-block"
+                                          >
+                                            Join
+                                          </a>
+                                        ) : res.status === 'CONFIRMED' && res.zoomJoinUrl ? (
+                                          <span className="text-xs text-gray-400 italic">Starting soon</span>
+                                        ) : (
+                                          <span className="text-xs text-gray-300">-</span>
+                                        )}
+                                        <button 
+                                          onClick={() => deleteReservation(res.id)}
+                                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-full transition-colors"
+                                          title="Delete Reservation"
                                         >
-                                          Join
-                                        </a>
-                                      ) : res.status === 'CONFIRMED' && res.zoomJoinUrl ? (
-                                        <span className="text-xs text-gray-400 italic">Starting soon</span>
-                                      ) : (
-                                        <span className="text-xs text-gray-300">-</span>
-                                      )}
+                                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                          </svg>
+                                        </button>
+                                      </div>
                                     </td>
                                   </tr>
                                 ))}

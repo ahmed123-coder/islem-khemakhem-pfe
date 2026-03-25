@@ -82,3 +82,28 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to update reservation' }, { status: 500 })
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  const consultantId = await getConsultantId()
+  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+  try {
+    const { id } = await req.json()
+    const { notifyReservationDelete } = await import('@/lib/notification-service')
+    
+    // Check ownership
+    const reservation = await prisma.reservation.findUnique({ where: { id } })
+    if (!reservation || reservation.consultantId !== consultantId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+
+    // Send notification BEFORE deleting to fetch details
+    await notifyReservationDelete(id, 'CONSULTANT')
+
+    await prisma.reservation.delete({ where: { id } })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Delete error:', error)
+    return NextResponse.json({ error: 'Failed to delete reservation' }, { status: 500 })
+  }
+}

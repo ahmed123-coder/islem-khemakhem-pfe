@@ -80,6 +80,20 @@ export default function ConsultantReservations() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id, status })
       })
+      fetchReservations()
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const deleteReservation = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this reservation? This cannot be undone.')) return
+    try {
+      await fetch('/api/consultant/reservations', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      })
       setShowModal(false)
       setSelectedReservation(null)
       fetchReservations()
@@ -288,6 +302,15 @@ export default function ConsultantReservations() {
                     This reservation is finalized
                   </div>
                 )}
+              </div>
+
+              <div className="mt-4 pt-4 border-t">
+                <button
+                  onClick={() => deleteReservation(selectedReservation.id)}
+                  className="w-full bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 py-2 rounded-lg transition text-sm font-bold"
+                >
+                  🗑 Delete Recommendation
+                </button>
               </div>
             </div>
           </div>

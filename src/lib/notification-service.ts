@@ -119,3 +119,25 @@ export async function notifyNewReservation(reservationId: string) {
     reservation.orderId ?? undefined
   )
 }
+
+export async function notifyReservationDelete(reservationId: string, deletedBy: 'CLIENT' | 'CONSULTANT') {
+  const reservation = await prisma.reservation.findUnique({
+    where: { id: reservationId },
+    include: { client: true, order: true }
+  })
+  if (!reservation) return
+
+  const recipientId = deletedBy === 'CLIENT' ? reservation.consultantId : reservation.clientId
+  const recipientType = deletedBy === 'CLIENT' ? 'CONSULTANT' : 'CLIENT'
+  const senderLabel = deletedBy === 'CLIENT' ? 'client' : 'consultant'
+
+  await createNotification(
+    recipientId as string,
+    recipientType,
+    'RESERVATION',
+    'Reservation Cancelled',
+    `A reservation with your ${senderLabel} has been deleted.`,
+    reservation.orderId ?? undefined
+  )
+}
+
