@@ -1,4 +1,5 @@
 export interface NotificationPayload {
+  id?: string
   type: string
   title: string
   message: string

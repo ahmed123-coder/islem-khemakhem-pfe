@@ -14,11 +14,12 @@ async function createNotification(recipientId: string, recipientType: 'CLIENT' |
     })
 
     emitNotification(recipientId, {
+      id: notification.id,
       type,
       orderId,
       title,
       message,
-      timestamp: new Date().toISOString()
+      timestamp: notification.createdAt.toISOString()
     })
 
     return notification
@@ -101,4 +102,20 @@ export async function notifyMissionUpdate(missionId: string, title: string, mess
         message,
         mission.orderId
     )
+}
+export async function notifyNewReservation(reservationId: string) {
+  const reservation = await prisma.reservation.findUnique({ 
+    where: { id: reservationId },
+    include: { client: true, order: true }
+  })
+  if (!reservation || !reservation.consultantId) return
+
+  await createNotification(
+    reservation.consultantId,
+    'CONSULTANT',
+    'RESERVATION',
+    'New Reservation Request',
+    `New reservation from ${reservation.client.name || reservation.client.email} for ${new Date(reservation.startTime).toLocaleString()}`,
+    reservation.orderId ?? undefined
+  )
 }

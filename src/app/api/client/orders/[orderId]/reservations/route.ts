@@ -126,15 +126,9 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       console.error('Failed to create Zoom meeting:', zoomError)
     }
 
-    // Notify the consultant via socket
-    const { emitNotification } = await import('@/lib/emit-notification')
-    emitNotification(order.consultantId, {
-      type: 'NEW_RESERVATION',
-      orderId: order.id,
-      title: 'Nouvelle réservation',
-      message: `Le client ${user.name || user.email} a réservé un créneau pour le ${new Date(startTime).toLocaleDateString()} à ${new Date(startTime).toLocaleTimeString()}.`,
-      timestamp: new Date().toISOString()
-    })
+    // Notify the consultant
+    const { notifyNewReservation } = await import('@/lib/notification-service')
+    await notifyNewReservation(reservation.id)
 
     return NextResponse.json(reservation)
   } catch (error) {

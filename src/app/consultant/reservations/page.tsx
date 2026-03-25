@@ -26,6 +26,16 @@ export default function ConsultantReservations() {
 
   useEffect(() => {
     fetchReservations()
+
+    const handleNotification = (e: any) => {
+      const detail = e.detail
+      if (detail?.type === 'RESERVATION') {
+        fetchReservations()
+      }
+    }
+
+    window.addEventListener('notification', handleNotification)
+    return () => window.removeEventListener('notification', handleNotification)
   }, [])
 
   function getMonday(date: Date) {

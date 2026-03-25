@@ -61,8 +61,15 @@ export default function ConsultantClients() {
       // Also listen for re-fetch fallback
       const handleGlobalNotification = (e: any) => {
         const detail = e.detail
-        if (detail?.type === 'ORDER_MESSAGE' && detail?.orderId === selectedClient) {
-          fetchMessages(selectedClient)
+        if (detail?.orderId === selectedClient) {
+          if (detail?.type === 'ORDER_MESSAGE' || detail?.type === 'MESSAGE') {
+            fetchMessages(selectedClient)
+          } else if (detail?.type === 'RESERVATION') {
+            const clientData = clients.find(c => c.id === selectedClient)
+            if (clientData?.clientId) {
+              fetchReservations(clientData.clientId)
+            }
+          }
         }
       }
       window.addEventListener('notification', handleGlobalNotification)

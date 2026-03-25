@@ -61,8 +61,22 @@ export default function OrderDetails() {
       }
 
       socket.on('new_message', handleNewMessage)
+
+      const handleGlobalNotification = (e: any) => {
+        const detail = e.detail
+        if (detail?.orderId === orderId) {
+          if (detail?.type === 'RESERVATION') {
+            fetchReservations()
+          } else if (detail?.type === 'ORDER' || detail?.type === 'MISSION') {
+            fetchOrder()
+          }
+        }
+      }
+      window.addEventListener('notification', handleGlobalNotification)
+
       return () => {
         socket.off('new_message', handleNewMessage)
+        window.removeEventListener('notification', handleGlobalNotification)
       }
     }
   }, [orderId])

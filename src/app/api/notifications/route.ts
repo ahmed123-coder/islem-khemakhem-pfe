@@ -32,8 +32,17 @@ export async function PATCH(req: NextRequest) {
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const { id } = await req.json()
-    await prisma.notification.update({
-      where: { id },
+    if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+
+    // Use updateMany so it doesn't throw if not found
+    await prisma.notification.updateMany({
+      where: {
+        id,
+        OR: [
+          { userId: user.id },
+          { consultantId: user.id }
+        ]
+      },
       data: { isRead: true }
     })
 
