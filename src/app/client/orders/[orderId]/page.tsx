@@ -265,7 +265,7 @@ export default function OrderDetails() {
       case 'CONFIRMED': return 'bg-green-100 text-green-700'
       case 'COMPLETED': return 'bg-blue-100 text-blue-700'
       case 'CANCELLED': return 'bg-red-100 text-red-700'
-      case 'NO_SHOW': return 'bg-gray-100 text-gray-700'
+      case 'NO_SHOW': return 'bg-purple-100 text-purple-700'
       default: return 'bg-yellow-100 text-yellow-700'
     }
   }
@@ -446,6 +446,7 @@ export default function OrderDetails() {
                               const isPending = res?.status === 'PENDING'
                               const isCompleted = res?.status === 'COMPLETED'
                               const isCancelled = res?.status === 'CANCELLED'
+                              const isNoShow = res?.status === 'NO_SHOW'
                               const isOwn = res?.orderId === orderId
                               const isPast = new Date(day).setHours(hour) < new Date().getTime()
                               const isSelectable = !isConfirmed && !isPending && order.status === 'ACTIVE' && !isPast
@@ -456,6 +457,7 @@ export default function OrderDetails() {
                                 if (isPending) bgColor = 'bg-[#f59e0b]'
                                 if (isCompleted) bgColor = 'bg-[#3b82f6]'
                                 if (isCancelled) bgColor = 'bg-[#ef4444]'
+                                if (isNoShow) bgColor = 'bg-[#a855f7]'
                               }
 
                               return (
@@ -504,6 +506,10 @@ export default function OrderDetails() {
                     <div className="flex items-center gap-2">
                       <div className="w-3 h-3 rounded bg-[#ef4444]"></div>
                       <span className="text-sm font-medium text-gray-600">Cancelled</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded bg-[#a855f7]"></div>
+                      <span className="text-sm font-medium text-gray-600">No Show</span>
                     </div>
                   </div>
                 </div>

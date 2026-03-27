@@ -116,6 +116,7 @@ export default function ConsultantReservations() {
       case 'PENDING': return 'bg-yellow-500'
       case 'COMPLETED': return 'bg-blue-500'
       case 'CANCELLED': return 'bg-red-500'
+      case 'NO_SHOW': return 'bg-purple-500'
       default: return 'bg-gray-500'
     }
   }
@@ -206,6 +207,10 @@ export default function ConsultantReservations() {
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 bg-red-500 rounded"></div>
             <span>Cancelled</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 bg-purple-500 rounded"></div>
+            <span>No Show</span>
           </div>
         </div>
       </div>

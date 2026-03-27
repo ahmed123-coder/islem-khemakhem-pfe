@@ -12,7 +12,7 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
 
     const order = await prisma.order.findUnique({ 
       where: { id: params.orderId },
-      include: { consultant: true } 
+      include: { consultant: true }
     })
 
     if (!order || order.clientId !== user.id) {
