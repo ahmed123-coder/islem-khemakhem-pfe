@@ -19,6 +19,7 @@ export default function OrderDetails() {
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
   const [reserving, setReserving] = useState(false)
+  const [selectedRes, setSelectedRes] = useState<any>(null)
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const d = new Date()
     const day = d.getDay()
@@ -248,6 +249,11 @@ export default function OrderDetails() {
     return `${start.toLocaleDateString()} - ${end.toLocaleDateString()}`
   }
 
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text)
+    toast.success(`${label} copied!`)
+  }
+
   if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   if (!order) return <div className="flex items-center justify-center min-h-screen">Order not found</div>
 
@@ -461,23 +467,69 @@ export default function OrderDetails() {
                               }
 
                               return (
-                                <td key={hour} className="p-1 border-r border-gray-100 text-center min-w-[120px] h-20 relative">
+                                <td key={hour} className="p-1 border-r border-gray-100 text-center min-w-[120px] h-20 relative group">
                                   {res ? (
-                                    <div className={`${bgColor} text-white p-2 rounded-lg text-[10px] leading-tight flex flex-col justify-center h-full shadow-sm`}>
-                                      <div className="font-bold uppercase mb-1">
-                                        {isOwn ? 'Your Session' : 'Reserved'}
+                                    <>
+                                      <div 
+                                        onClick={() => isOwn && setSelectedRes(res)}
+                                        className={`${bgColor} text-white p-2 rounded-lg text-[10px] leading-tight flex flex-col justify-center h-full shadow-sm ${isOwn ? 'cursor-pointer' : 'cursor-help'} hover:opacity-90 transition-opacity`}
+                                      >
+                                        <div className="font-bold uppercase mb-1">
+                                          {isOwn ? 'Your Session' : 'Reserved'}
+                                        </div>
+                                        <div className="opacity-90">
+                                          {isOwn ? order.serviceTier.service.name : 'Occupied'}
+                                        </div>
                                       </div>
-                                      <div className="opacity-90">
-                                        {isOwn ? order.serviceTier.service.name : 'Occupied'}
+
+                                      {/* Hover Popover */}
+                                      <div className="hidden group-hover:block absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 bg-white border border-gray-200 rounded-xl shadow-2xl p-4 text-left animate-in fade-in slide-in-from-bottom-2 duration-200 pointer-events-none">
+                                        <div className="text-gray-900 font-bold mb-1 text-xs">
+                                          {isOwn ? 'Your Session' : 'Occupied Slot'}
+                                        </div>
+                                        {isOwn && (
+                                          <div className="text-gray-500 text-[10px] mb-2">{order.serviceTier.service.name}</div>
+                                        )}
+                                        
+                                        <div className="flex gap-2 items-center mb-2">
+                                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${getReservationStatusColor(res.status)}`}>
+                                            {res.status}
+                                          </span>
+                                          <span className="text-[9px] text-gray-500 font-semibold bg-gray-50 px-2 py-0.5 rounded border">
+                                            {hour}:00 - {hour + 1}:00
+                                          </span>
+                                        </div>
+                                        
+                                        {isOwn && res.status === 'CONFIRMED' && (
+                                          <div className="mt-2 pt-3 border-t border-gray-100 space-y-2">
+                                            <div>
+                                              <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest block mb-1">Zoom Meeting URL</span>
+                                              <div className="text-[9px] text-gray-400 break-all p-2 bg-blue-50/30 rounded border border-blue-100/30 font-mono">
+                                                {res.zoomJoinUrl || 'Link pending...'}
+                                              </div>
+                                            </div>
+                                            {res.zoomPassword && (
+                                              <div>
+                                                <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest block mb-1">Meeting Password</span>
+                                                <code className="text-[9px] text-gray-700 bg-gray-50 px-2 py-0.5 rounded border font-bold">
+                                                  {res.zoomPassword}
+                                                </code>
+                                              </div>
+                                            )}
+                                          </div>
+                                        )}
+
+                                        {/* Tooltip Arrow */}
+                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-white drop-shadow-sm"></div>
                                       </div>
-                                    </div>
+                                    </>
                                   ) : (
                                     <button
                                       onClick={() => isSelectable && bookReservation(day, hour)}
                                       disabled={!isSelectable || isPast || reserving}
-                                      className={`w-full h-full group flex items-center justify-center transition-all ${isPast ? 'cursor-not-allowed' : 'hover:bg-blue-50'}`}
+                                      className={`w-full h-full group/btn flex items-center justify-center transition-all ${isPast ? 'cursor-not-allowed' : 'hover:bg-blue-50'}`}
                                     >
-                                      <span className="text-gray-300 group-hover:text-blue-400 group-hover:scale-150 transition-all font-bold">-</span>
+                                      <span className="text-gray-300 group-hover/btn:text-blue-400 group-hover/btn:scale-150 transition-all font-bold">-</span>
                                     </button>
                                   )}
                                 </td>
@@ -675,6 +727,110 @@ export default function OrderDetails() {
           </div>
         </div>
       </div>
+
+      {/* Reservation Detail Modal */}
+      {selectedRes && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setSelectedRes(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className={`p-6 text-white ${selectedRes.status === 'CONFIRMED' ? 'bg-gradient-to-r from-green-500 to-emerald-600' : selectedRes.status === 'PENDING' ? 'bg-gradient-to-r from-yellow-500 to-amber-600' : selectedRes.status === 'COMPLETED' ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : selectedRes.status === 'CANCELLED' ? 'bg-gradient-to-r from-red-500 to-rose-600' : 'bg-gradient-to-r from-purple-500 to-violet-600'}`}>
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-xl font-bold">Reservation Details</h2>
+                  <p className="text-white/80 text-sm mt-1">{order.serviceTier.service.name}</p>
+                </div>
+                <button onClick={() => setSelectedRes(null)} className="text-white/70 hover:text-white text-2xl font-bold leading-none">&times;</button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4">
+              {/* Status & Time */}
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${getReservationStatusColor(selectedRes.status)}`}>
+                  {selectedRes.status}
+                </span>
+                <span className="text-sm text-gray-500">
+                  {new Date(selectedRes.startTime).toLocaleDateString()} · {new Date(selectedRes.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(selectedRes.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+
+              {/* Zoom Details for CONFIRMED */}
+              {selectedRes.status === 'CONFIRMED' && (
+                <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 space-y-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    <span className="text-sm font-bold text-blue-700">Zoom Meeting</span>
+                  </div>
+
+                  {/* Join URL */}
+                  {selectedRes.zoomJoinUrl ? (
+                    <div>
+                      <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest block mb-2">Meeting Link</label>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 text-xs text-gray-600 bg-white p-3 rounded-lg border border-blue-200 break-all font-mono truncate">
+                          {selectedRes.zoomJoinUrl}
+                        </div>
+                        <button
+                          onClick={() => copyToClipboard(selectedRes.zoomJoinUrl, 'Link')}
+                          className="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2.5 rounded-lg text-xs font-bold transition-colors"
+                          title="Copy Link"
+                        >
+                          📋 Copy
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-sm text-gray-400 italic">Link pending generation...</div>
+                  )}
+
+                  {/* Password */}
+                  {selectedRes.zoomPassword && (
+                    <div>
+                      <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest block mb-2">Meeting Password</label>
+                      <div className="flex items-center gap-2">
+                        <code className="flex-1 text-sm text-gray-800 bg-white p-3 rounded-lg border border-blue-200 font-bold tracking-wider">
+                          {selectedRes.zoomPassword}
+                        </code>
+                        <button
+                          onClick={() => copyToClipboard(selectedRes.zoomPassword, 'Password')}
+                          className="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2.5 rounded-lg text-xs font-bold transition-colors"
+                          title="Copy Password"
+                        >
+                          📋 Copy
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Join Button */}
+                  {selectedRes.zoomJoinUrl && canJoin(selectedRes) && (
+                    <JoinZoomButton joinUrl={selectedRes.zoomJoinUrl} className="w-full justify-center" />
+                  )}
+                </div>
+              )}
+
+              {/* Pending message */}
+              {selectedRes.status === 'PENDING' && (
+                <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-4 text-center">
+                  <p className="text-yellow-700 text-sm font-medium">⏳ Waiting for consultant confirmation</p>
+                  <p className="text-yellow-600 text-xs mt-1">Zoom details will appear once confirmed</p>
+                </div>
+              )}
+
+              {/* Cancel button for pending */}
+              {selectedRes.status === 'PENDING' && (
+                <button
+                  onClick={() => { cancelReservation(selectedRes.id); setSelectedRes(null) }}
+                  className="w-full bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 py-2.5 rounded-xl transition text-sm font-bold"
+                >
+                  ✗ Cancel this Reservation
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

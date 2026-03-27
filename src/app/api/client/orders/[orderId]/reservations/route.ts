@@ -33,7 +33,9 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
         startTime: true,
         endTime: true,
         status: true,
-        orderId: true
+        orderId: true,
+        zoomJoinUrl: true,
+        zoomPassword: true
       },
       orderBy: { startTime: 'asc' }
     })
@@ -105,26 +107,6 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         status: 'PENDING'
       }
     })
-
-    // Create Zoom Meeting
-    try {
-      const durationMinutes = Math.round((new Date(endTime).getTime() - new Date(startTime).getTime()) / 60000)
-      const zoomMeeting = await createZoomMeeting({
-        topic: `Consultation: ${order.serviceTier.service.name} - ${user.name || user.email}`,
-        startTime: new Date(startTime).toISOString(),
-        duration: durationMinutes > 0 ? durationMinutes : 60,
-      })
-
-      await prisma.reservation.update({
-        where: { id: reservation.id },
-        data: {
-          zoomJoinUrl: zoomMeeting.join_url,
-          zoomPassword: zoomMeeting.password,
-        }
-      })
-    } catch (zoomError) {
-      console.error('Failed to create Zoom meeting:', zoomError)
-    }
 
     // Notify the consultant
     const { notifyNewReservation } = await import('@/lib/notification-service')

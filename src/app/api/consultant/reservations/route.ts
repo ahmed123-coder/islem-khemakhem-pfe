@@ -37,7 +37,13 @@ export async function PATCH(req: NextRequest) {
 
   try {
     const { id, status } = await req.json()
-    const reservation = await prisma.reservation.findUnique({ where: { id } })
+    const reservation = await prisma.reservation.findUnique({ 
+      where: { id },
+      include: {
+        client: { select: { id: true, name: true, email: true } },
+        serviceTier: { include: { service: true } }
+      }
+    })
     
     if (!reservation || reservation.consultantId !== consultantId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
@@ -54,13 +60,13 @@ export async function PATCH(req: NextRequest) {
         )
         
         const meeting = await createZoomMeeting({
-          topic: 'Consultation Session',
+          topic: `Consultation: ${reservation.serviceTier.service.name} - ${reservation.client.name || reservation.client.email}`,
           startTime: new Date(reservation.startTime).toISOString(),
-          duration: durationMinutes > 0 ? durationMinutes : 60, // Default to 60 min if invalid
+          duration: durationMinutes > 0 ? durationMinutes : 60,
         })
 
         zoomJoinUrl = meeting.join_url
-        zoomPassword = meeting.password
+        zoomPassword = meeting.password ?? null
       } catch (zoomError) {
         console.error('Failed to create Zoom meeting:', zoomError)
         // We can either abort the confirmation or proceed without zoom. Let's proceed but maybe log it.
