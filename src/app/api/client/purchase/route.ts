@@ -75,31 +75,7 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Create Zoom Meeting
-    let zoomData = {}
-    try {
-      const zoomMeeting = await createZoomMeeting({
-        topic: `Consultation: ${serviceTier.service.name} - ${user.name || user.email}`,
-        startTime: new Date(startTime).toISOString(),
-        duration: serviceTier.maxCallDuration || 60,
-      })
-
-      zoomData = {
-        zoomMeetingId: zoomMeeting.id.toString(),
-        zoomJoinUrl: zoomMeeting.join_url,
-        zoomPassword: zoomMeeting.password,
-      }
-
-      // Update reservation with zoom details
-      await prisma.reservation.update({
-        where: { id: reservation.id },
-        data: zoomData
-      })
-    } catch (zoomError) {
-      console.error('Failed to create Zoom meeting:', zoomError)
-      // Note: We continue even if Zoom fails so the booking is not lost
-      // In a real app, you might want to queue a retry or notify admin
-    }
+    // Note: Zoom meeting will be created when consultant confirms the reservation
 
     // Create notification
     await prisma.notification.create({
