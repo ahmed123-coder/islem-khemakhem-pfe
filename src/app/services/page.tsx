@@ -11,6 +11,29 @@ export default function Services() {
   const [loading, setLoading] = useState(true)
   const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
 
+  // Auth modal state
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authTab, setAuthTab] = useState<'login' | 'register'>('login')
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [authName, setAuthName] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authError, setAuthError] = useState('')
+  const [pendingService, setPendingService] = useState<any>(null)
+  const [pendingTier, setPendingTier] = useState<any>(null)
+
+  // Payment modal state
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [paymentService, setPaymentService] = useState<any>(null)
+  const [paymentTier, setPaymentTier] = useState<any>(null)
+  const [cardNumber, setCardNumber] = useState('')
+  const [cardExpiry, setCardExpiry] = useState('')
+  const [cardCvc, setCardCvc] = useState('')
+  const [cardName, setCardName] = useState('')
+  const [paymentProcessing, setPaymentProcessing] = useState(false)
+  const [paymentSuccess, setPaymentSuccess] = useState(false)
+  const [isPaid, setIsPaid] = useState(false)
+
   // Booking flow state
   const [selectedService, setSelectedService] = useState<any>(null)
   const [selectedTier, setSelectedTier] = useState<any>(null)
@@ -40,9 +63,9 @@ export default function Services() {
       .catch(() => setIsLoggedIn(false))
   }, [])
 
-  // Fetch consultants when a tier is selected
+  // Fetch consultants only after payment is done
   useEffect(() => {
-    if (selectedTier) {
+    if (selectedTier && isPaid) {
       setLoadingConsultants(true)
       const startDate = new Date().toISOString().split('T')[0]
       fetch(`/api/consultants/schedule?startDate=${startDate}&days=7&serviceTierId=${selectedTier.id}`)
@@ -56,7 +79,7 @@ export default function Services() {
           setLoadingConsultants(false)
         })
     }
-  }, [selectedTier])
+  }, [selectedTier, isPaid])
 
   const hours = Array.from({ length: 9 }, (_, i) => i + 9)
   const dates = useMemo(() => Array.from({ length: 7 }, (_, i) => {
@@ -81,15 +104,119 @@ export default function Services() {
 
   const handleTierSelect = (service: any, tier: any) => {
     if (!isLoggedIn) {
-      router.push(`/login?redirect=/services`)
+      setPendingService(service)
+      setPendingTier(tier)
+      setAuthError('')
+      setAuthEmail('')
+      setAuthPassword('')
+      setAuthName('')
+      setShowAuthModal(true)
       return
     }
-    setSelectedService(service)
-    setSelectedTier(tier)
-    setSelectedConsultant('')
-    setSelectedDate(null)
-    setSelectedStartHour(null)
-    setSuccessOrder(null)
+    // Show payment modal
+    setPaymentService(service)
+    setPaymentTier(tier)
+    setCardNumber('')
+    setCardExpiry('')
+    setCardCvc('')
+    setCardName('')
+    setPaymentProcessing(false)
+    setPaymentSuccess(false)
+    setShowPaymentModal(true)
+  }
+
+  const formatCardNumber = (value: string) => {
+    const v = value.replace(/\D/g, '').slice(0, 16)
+    return v.replace(/(\d{4})(?=\d)/g, '$1 ')
+  }
+
+  const formatExpiry = (value: string) => {
+    const v = value.replace(/\D/g, '').slice(0, 4)
+    if (v.length >= 3) return v.slice(0, 2) + '/' + v.slice(2)
+    return v
+  }
+
+  const getCardBrand = (num: string) => {
+    const n = num.replace(/\s/g, '')
+    if (n.startsWith('4')) return { name: 'Visa', color: 'text-blue-600', icon: '💳' }
+    if (n.startsWith('5')) return { name: 'Mastercard', color: 'text-red-500', icon: '💳' }
+    if (n.startsWith('3')) return { name: 'Amex', color: 'text-green-600', icon: '💳' }
+    return null
+  }
+
+  const handlePayment = (e: React.FormEvent) => {
+    e.preventDefault()
+    setPaymentProcessing(true)
+
+    // Simulate payment processing
+    setTimeout(() => {
+      setPaymentProcessing(false)
+      setPaymentSuccess(true)
+
+      // After success animation, proceed to booking
+      setTimeout(() => {
+        setShowPaymentModal(false)
+        setIsPaid(true)
+        setSelectedService(paymentService)
+        setSelectedTier(paymentTier)
+        setSelectedConsultant('')
+        setSelectedDate(null)
+        setSelectedStartHour(null)
+        setSuccessOrder(null)
+        toast.success('Paiement effectué avec succès !')
+      }, 1500)
+    }, 2000)
+  }
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setAuthLoading(true)
+    setAuthError('')
+
+    try {
+      const endpoint = authTab === 'login' ? '/api/auth/login' : '/api/auth/register'
+      const body = authTab === 'login' 
+        ? { email: authEmail, password: authPassword }
+        : { email: authEmail, password: authPassword, name: authName }
+
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        setAuthError(data.error || 'Erreur d\'authentification')
+        setAuthLoading(false)
+        return
+      }
+
+      // Auth succeeded
+      setIsLoggedIn(true)
+      setShowAuthModal(false)
+      toast.success(authTab === 'login' ? 'Connexion réussie !' : 'Compte créé avec succès !')
+
+      // Resume the booking flow — show payment modal
+      if (pendingService && pendingTier) {
+        setPaymentService(pendingService)
+        setPaymentTier(pendingTier)
+        setCardNumber('')
+        setCardExpiry('')
+        setCardCvc('')
+        setCardName('')
+        setPaymentProcessing(false)
+        setPaymentSuccess(false)
+        setShowPaymentModal(true)
+        setPendingService(null)
+        setPendingTier(null)
+      }
+    } catch (err) {
+      setAuthError('Une erreur est survenue. Veuillez réessayer.')
+    } finally {
+      setAuthLoading(false)
+    }
   }
 
   const handlePurchase = async () => {
@@ -529,6 +656,274 @@ export default function Services() {
           </Link>
         </div>
       </section>
+
+      {/* Payment Modal */}
+      {showPaymentModal && paymentTier && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
+            <div className={`transition-all duration-500 ${paymentSuccess ? 'bg-green-500' : 'bg-[#2B5A8E]'} p-6 text-white`}>
+              {paymentSuccess ? (
+                <div className="text-center py-4">
+                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                    <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h2 className="text-2xl font-bold">Paiement Réussi !</h2>
+                  <p className="text-green-100 mt-2">Redirection vers le calendrier...</p>
+                </div>
+              ) : (
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h2 className="text-xl font-bold">Paiement Sécurisé</h2>
+                    <p className="text-blue-100 text-sm mt-1">Formule {paymentTier.tierType} — {Number(paymentTier.price).toFixed(0)}€</p>
+                  </div>
+                  <button onClick={() => setShowPaymentModal(false)} className="text-white/70 hover:text-white text-2xl font-bold leading-none">&times;</button>
+                </div>
+              )}
+            </div>
+
+            {!paymentSuccess && (
+              <form onSubmit={handlePayment} className="p-6">
+                <div className="mb-6">
+                  {/* Credit Card Graphic */}
+                  <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-5 text-white shadow-lg relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-xl"></div>
+                    <div className="flex justify-between items-center mb-6">
+                      <div className="w-10 h-8 bg-yellow-400/80 rounded flex items-center justify-center">
+                        <div className="w-6 h-4 border border-yellow-500/50 rounded-sm"></div>
+                      </div>
+                      <div className="text-xl">{cardNumber ? getCardBrand(cardNumber)?.icon || '💳' : '💳'}</div>
+                    </div>
+                    <div className="text-lg tracking-[0.2em] font-mono mb-4 min-h-[1.5rem] opacity-90">
+                      {cardNumber || '•••• •••• •••• ••••'}
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 font-mono">
+                      <div className="uppercase tracking-wider truncate max-w-[150px]">{cardName || 'NOM SUR LA CARTE'}</div>
+                      <div>{cardExpiry || 'MM/YY'}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5 flex justify-between">
+                      <span>Numéro de carte</span>
+                      <span className={`font-medium ${getCardBrand(cardNumber)?.color || 'text-gray-400'}`}>
+                        {getCardBrand(cardNumber)?.name || ''}
+                      </span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={cardNumber}
+                        onChange={e => setCardNumber(formatCardNumber(e.target.value))}
+                        placeholder="0000 0000 0000 0000"
+                        maxLength={19}
+                        required
+                        className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Expiration</label>
+                      <input
+                        type="text"
+                        value={cardExpiry}
+                        onChange={e => setCardExpiry(formatExpiry(e.target.value))}
+                        placeholder="MM/YY"
+                        maxLength={5}
+                        required
+                        className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono transition-all"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">CVC</label>
+                      <input
+                        type="text"
+                        value={cardCvc}
+                        onChange={e => setCardCvc(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                        placeholder="123"
+                        maxLength={3}
+                        required
+                        className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Nom sur la carte</label>
+                    <input
+                      type="text"
+                      value={cardName}
+                      onChange={e => setCardName(e.target.value.toUpperCase())}
+                      placeholder="Votre nom"
+                      required
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase transition-all"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={paymentProcessing}
+                    className="w-full bg-[#2B5A8E] hover:bg-[#234a73] disabled:opacity-50 text-white py-3 rounded-xl font-bold transition-all mt-4 relative overflow-hidden group"
+                  >
+                    {paymentProcessing ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Traitement en cours...
+                      </span>
+                    ) : (
+                      <>
+                        <span className="relative z-10 flex items-center justify-center gap-2">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                          Payer {Number(paymentTier.price).toFixed(0)}€
+                        </span>
+                        <div className="absolute inset-0 h-full w-full bg-blue-600 border-t-2 border-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
+                      </>
+                    )}
+                  </button>
+                  <p className="text-center text-xs text-gray-400 flex items-center justify-center gap-1 mt-2">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    Paiement 100% sécurisé (Test Mode)
+                  </p>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowAuthModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-[#2B5A8E] to-blue-600 p-6 text-white">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h2 className="text-xl font-bold">
+                    {authTab === 'login' ? 'Connexion' : 'Créer un compte'}
+                  </h2>
+                  <p className="text-blue-100 text-sm mt-1">
+                    Connectez-vous pour réserver votre créneau
+                  </p>
+                </div>
+                <button onClick={() => setShowAuthModal(false)} className="text-white/70 hover:text-white text-2xl font-bold leading-none">&times;</button>
+              </div>
+            </div>
+
+            {/* Tabs */}
+            <div className="flex border-b border-gray-200">
+              <button
+                onClick={() => { setAuthTab('login'); setAuthError('') }}
+                className={`flex-1 py-3 text-sm font-bold transition-all ${authTab === 'login' ? 'text-[#2B5A8E] border-b-2 border-[#2B5A8E] bg-blue-50/50' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Se connecter
+              </button>
+              <button
+                onClick={() => { setAuthTab('register'); setAuthError('') }}
+                className={`flex-1 py-3 text-sm font-bold transition-all ${authTab === 'register' ? 'text-[#2B5A8E] border-b-2 border-[#2B5A8E] bg-blue-50/50' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Créer un compte
+              </button>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleAuth} className="p-6 space-y-4">
+              {authError && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm font-medium">
+                  {authError}
+                </div>
+              )}
+
+              {authTab === 'register' && (
+                <div>
+                  <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Nom complet</label>
+                  <input
+                    type="text"
+                    value={authName}
+                    onChange={e => setAuthName(e.target.value)}
+                    placeholder="Votre nom"
+                    required
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Email</label>
+                <input
+                  type="email"
+                  value={authEmail}
+                  onChange={e => setAuthEmail(e.target.value)}
+                  placeholder="exemple@email.com"
+                  required
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Mot de passe</label>
+                <input
+                  type="password"
+                  value={authPassword}
+                  onChange={e => setAuthPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full bg-[#2B5A8E] hover:bg-[#234a73] disabled:opacity-50 text-white py-3 rounded-xl font-bold transition-all text-sm"
+              >
+                {authLoading 
+                  ? 'Chargement...' 
+                  : authTab === 'login' 
+                    ? 'Se connecter' 
+                    : 'Créer mon compte'
+                }
+              </button>
+
+              <p className="text-center text-xs text-gray-400 mt-3">
+                {authTab === 'login' 
+                  ? 'Pas encore de compte ? ' 
+                  : 'Déjà un compte ? '
+                }
+                <button
+                  type="button"
+                  onClick={() => { setAuthTab(authTab === 'login' ? 'register' : 'login'); setAuthError('') }}
+                  className="text-[#2B5A8E] font-bold hover:underline"
+                >
+                  {authTab === 'login' ? 'Créer un compte' : 'Se connecter'}
+                </button>
+              </p>
+
+              {/* Selected tier recap */}
+              {pendingTier && pendingService && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-xl border border-gray-200">
+                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Formule sélectionnée</div>
+                  <div className="text-sm font-bold text-gray-900">{pendingService.name} — {pendingTier.tierType}</div>
+                  <div className="text-xs text-gray-500">{Number(pendingTier.price).toFixed(0)}€</div>
+                </div>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
