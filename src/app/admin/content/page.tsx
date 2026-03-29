@@ -62,18 +62,16 @@ export default function ContentEditor() {
     formData.append('file', file)
     
     try {
-      const res = await fetch('/api/upload/icon', { method: 'POST', body: formData })
-      const data = await res.json()
-      
-      const addRes = await fetch('/api/admin/hero', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageUrl: data.url })
+      const res = await fetch('/api/admin/hero', { 
+        method: 'POST', 
+        body: formData 
       })
       
-      if (addRes.ok) {
+      if (res.ok) {
         loadHeroImages()
         alert('Image uploaded successfully!')
+      } else {
+        alert('Failed to add image')
       }
     } catch (error) {
       alert('Upload failed')

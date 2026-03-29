@@ -48,6 +48,8 @@ model Service {
   description String
   category    String?
   logo        String?
+  icon        String?
+  image       String?
   isActive    Boolean       @default(true)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
@@ -211,6 +213,8 @@ model Blog {
   title     String
   content   String
   excerpt   String?
+  icon      String?
+  image     String?
   published Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

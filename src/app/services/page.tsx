@@ -322,22 +322,23 @@ export default function Services() {
 
             return (
               <div key={service.id}>
-                <div className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
+                <div className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center group ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
                   <div className={`${index % 2 === 1 ? 'lg:order-2' : ''}`}>
-                    {service.logo && (
-                      <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 overflow-hidden">
-                        <img src={service.logo} alt={service.name} className="w-full h-full object-cover" />
+                    {(service.icon || service.logo) && (
+                      <div className="w-20 h-20 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 flex items-center justify-center mb-8 overflow-hidden group-hover:-translate-y-1 transition-transform duration-500 relative">
+                        <div className="absolute inset-0 bg-blue-50/50 group-hover:bg-blue-50/0 transition-colors duration-500"></div>
+                        <img src={service.icon || service.logo} alt={service.name} className="w-12 h-12 object-contain relative z-10 group-hover:scale-110 transition-transform duration-500" />
                       </div>
                     )}
                     {service.category && (
-                      <div className="inline-block bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-xs font-medium mb-2">
+                      <div className="inline-block bg-blue-50 text-blue-700 border border-blue-100 px-4 py-1.5 rounded-full text-xs font-bold tracking-wide uppercase mb-4 shadow-sm">
                         {service.category}
                       </div>
                     )}
-                    <h2 className="text-3xl font-serif font-bold text-gray-900 mb-4">
+                    <h2 className="text-4xl font-serif font-extrabold text-gray-900 mb-6 leading-tight group-hover:text-[#2B5A8E] transition-colors duration-300">
                       {service.name}
                     </h2>
-                    <p className="text-gray-600 mb-6 leading-relaxed">
+                    <p className="text-lg text-gray-600 mb-8 leading-relaxed">
                       {service.description}
                     </p>
                     <button 
@@ -350,23 +351,26 @@ export default function Services() {
                           setSuccessOrder(null)
                         }
                       }}
-                      className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+                      className={`inline-flex items-center gap-3 px-8 py-4 rounded-xl font-bold shadow-sm transition-all duration-300 ${
                         isExpanded 
-                          ? 'bg-gray-200 text-gray-700 hover:bg-gray-300' 
-                          : 'bg-[#2B5A8E] text-white hover:bg-[#234a73]'
+                          ? 'bg-gray-100 text-gray-800 hover:bg-gray-200 hover:shadow-md' 
+                          : 'bg-[#2B5A8E] text-white hover:bg-[#1d3d61] hover:shadow-lg hover:-translate-y-0.5'
                       }`}
                     >
                       {isExpanded ? 'Masquer les formules' : 'Voir les formules'}
-                      <svg className={`w-5 h-5 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      <svg className={`w-5 h-5 transition-transform duration-500 ${isExpanded ? 'rotate-180' : 'group-hover:translate-x-1'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                       </svg>
                     </button>
                   </div>
-                  <div className={`bg-gray-200 rounded-2xl h-80 flex items-center justify-center ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
-                    {service.logo ? (
-                      <img src={service.logo} alt={service.name} className="w-full h-full object-cover rounded-2xl" />
+                  <div className={`relative h-[300px] sm:h-[400px] w-full rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgb(0,0,0,0.1)] group-hover:shadow-[0_20px_50px_rgb(43,90,142,0.15)] transition-shadow duration-500 ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    {service.image || service.logo ? (
+                      <img src={service.image || service.logo} alt={service.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
                     ) : (
-                      <div className="text-8xl opacity-20">📊</div>
+                      <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                        <div className="text-8xl opacity-10 drop-shadow-sm">📊</div>
+                      </div>
                     )}
                   </div>
                 </div>

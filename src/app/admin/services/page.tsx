@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Upload, Image as ImageIcon, Plus, Trash2, Edit2, X } from 'lucide-react'
 
-type Service = { id: string; name: string; description: string; category?: string; logo?: string; isActive?: boolean }
+type Service = { id: string; name: string; description: string; category?: string; logo?: string; icon?: string; image?: string; isActive?: boolean }
 type Tier = { 
   id: string; 
   serviceId: string; 
@@ -24,7 +24,9 @@ export default function ServicesAdmin() {
   const [services, setServices] = useState<Service[]>([])
   const [editItem, setEditItem] = useState<Service | null>(null)
   const [form, setForm] = useState<Partial<Service>>({})
-  const [uploading, setUploading] = useState(false)
+  const [iconFile, setIconFile] = useState<File | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [submitting, setSubmitting] = useState(false)
   
   // Tier management state
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null)
@@ -71,33 +73,44 @@ export default function ServicesAdmin() {
     }
   }
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'icon' | 'image') => {
     const file = e.target.files?.[0]
-    if (!file) return
-    
-    setUploading(true)
-    const formData = new FormData()
-    formData.append('logo', file)
-    
-    try {
-      const res = await fetch('/api/upload/logo', { method: 'POST', body: formData })
-      const data = await res.json()
-      setForm({ ...form, logo: data.logoUrl })
-    } catch (error) {
-      console.error('Upload failed:', error)
-    } finally {
-      setUploading(false)
+    if (file) {
+      if (type === 'icon') setIconFile(file)
+      else setImageFile(file)
     }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSubmitting(true)
     const method = editItem ? 'PUT' : 'POST'
-    const body = editItem ? { id: editItem.id, ...form } : form
-    await fetch('/api/admin/services', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-    setForm({})
-    setEditItem(null)
-    loadData()
+    
+    // Create FormData instead of JSON
+    const formData = new FormData()
+    if (editItem) formData.append('id', editItem.id)
+    if (form.name) formData.append('name', form.name)
+    if (form.description) formData.append('description', form.description)
+    if (form.category) formData.append('category', form.category)
+    
+    // Append files
+    if (iconFile) formData.append('icon', iconFile)
+    if (imageFile) formData.append('image', imageFile)
+
+    try {
+      await fetch('/api/admin/services', { method, body: formData })
+      setForm({})
+      setIconFile(null)
+      setImageFile(null)
+      setEditItem(null)
+      loadData()
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleDelete = async (id: string) => {
@@ -157,22 +170,43 @@ export default function ServicesAdmin() {
               <Input placeholder="Category" value={form.category || ''} onChange={e => setForm({ ...form, category: e.target.value })} />
               <Textarea placeholder="Description" rows={3} value={form.description || ''} onChange={e => setForm({ ...form, description: e.target.value })} required />
               
-              <div className="space-y-2">
-                <label className="block text-sm font-medium">Service Logo</label>
-                <div className="flex gap-2">
-                  <Input placeholder="Logo URL" value={form.logo || ''} onChange={e => setForm({ ...form, logo: e.target.value })} />
-                  <label className="cursor-pointer">
-                    <Button type="button" variant="outline" disabled={uploading} asChild size="sm">
-                      <span>{uploading ? 'Uploading...' : <><Upload size={14} className="mr-2" />Upload</>}</span>
-                    </Button>
-                    <input type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
-                  </label>
+              <div className="space-y-4">
+
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">Service Icon</label>
+                  <div className="flex gap-2 items-center">
+                    {(iconFile || form.icon) && (
+                      <img src={iconFile ? URL.createObjectURL(iconFile) : form.icon} alt="Icon" className="h-8 object-contain" />
+                    )}
+                    <label className="cursor-pointer">
+                      <Button type="button" variant="outline" disabled={submitting} asChild size="sm">
+                        <span><Upload size={14} className="mr-2" />Select Icon</span>
+                      </Button>
+                      <input type="file" accept="image/*" onChange={e => handleFileChange(e, 'icon')} className="hidden" />
+                    </label>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium">Service Main Image</label>
+                  <div className="flex gap-2 items-center">
+                    {(imageFile || form.image) && (
+                      <img src={imageFile ? URL.createObjectURL(imageFile) : form.image} alt="Main Image" className="h-8 object-contain" />
+                    )}
+                    <label className="cursor-pointer">
+                      <Button type="button" variant="outline" disabled={submitting} asChild size="sm">
+                        <span><ImageIcon size={14} className="mr-2" />Select Image</span>
+                      </Button>
+                      <input type="file" accept="image/*" onChange={e => handleFileChange(e, 'image')} className="hidden" />
+                    </label>
+                  </div>
                 </div>
               </div>
               
-              <div className="flex gap-2">
-                <Button type="submit">{editItem ? 'Update' : 'Create'}</Button>
-                {editItem && <Button type="button" variant="outline" onClick={() => { setEditItem(null); setForm({}) }}>Cancel</Button>}
+              <div className="flex gap-2 mt-4">
+                <Button type="submit" disabled={submitting}>{submitting ? 'Saving...' : (editItem ? 'Update' : 'Create')}</Button>
+                {editItem && <Button type="button" variant="outline" onClick={() => { setEditItem(null); setForm({}); setIconFile(null); setImageFile(null) }}>Cancel</Button>}
               </div>
             </form>
           </Card>
@@ -182,7 +216,7 @@ export default function ServicesAdmin() {
             {services.map(service => (
               <Card key={service.id} className={`p-4 transition-all ${selectedServiceId === service.id ? 'ring-2 ring-primary border-primary' : ''}`}>
                 <div className="flex gap-3">
-                  {service.logo && <img src={service.logo} alt={service.name} className="w-12 h-12 object-cover rounded" />}
+                  {(service.icon || service.image || service.logo) && <img src={service.icon || service.image || service.logo} alt={service.name} className="w-12 h-12 object-cover rounded" />}
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <h3 className="font-bold">{service.name}</h3>
