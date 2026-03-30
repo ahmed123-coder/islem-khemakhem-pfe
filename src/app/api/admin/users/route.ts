@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { getCurrentUser } from '@/lib/auth'
 
 export async function GET() {
+  const user = await getCurrentUser()
+  if (!user || user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const users = await prisma.user.findMany({
       select: {
@@ -22,13 +28,18 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const user = await getCurrentUser()
+  if (!user || user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
     const { email, password, name, phone, role } = body
     
     const hashedPassword = await bcrypt.hash(password, 10)
     
-    const user = await prisma.user.create({
+    const newUser = await prisma.user.create({
       data: {
         email,
         password: hashedPassword,
@@ -38,18 +49,23 @@ export async function POST(request: Request) {
       },
     })
     
-    return NextResponse.json(user)
+    return NextResponse.json(newUser)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
   }
 }
 
 export async function PUT(request: Request) {
+  const user = await getCurrentUser()
+  if (!user || user.role !== 'ADMIN') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     const body = await request.json()
     const { id, email, name, phone, role } = body
     
-    const user = await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id },
       data: {
         email,
@@ -59,7 +75,7 @@ export async function PUT(request: Request) {
       },
     })
     
-    return NextResponse.json(user)
+    return NextResponse.json(updatedUser)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update user' }, { status: 500 })
   }

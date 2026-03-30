@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { getCurrentUser } from '@/lib/auth'
 
 export async function GET() {
+    const user = await getCurrentUser()
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+  
   try {
     const consultants = await prisma.consultant.findMany({
       select: {
@@ -28,6 +34,11 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+    const user = await getCurrentUser()
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+  
   try {
     const body = await request.json()
     const { email, password, name, specialty, hourlyRate, bio, imageUrl, isActive, serviceIds } = body
@@ -57,6 +68,11 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+    const user = await getCurrentUser()
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+  
   try {
     const body = await request.json()
     const { id, email, name, specialty, hourlyRate, bio, imageUrl, isActive, serviceIds } = body
