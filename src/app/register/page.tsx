@@ -5,27 +5,43 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 export default function RegisterPage() {
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [specialty, setSpecialty] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [role, setRole] = useState<'CLIENT' | 'CONSULTANT'>('CLIENT')
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
 
+    if (password !== confirmPassword) {
+      setError('Les mots de passe ne correspondent pas')
+      return
+    }
+
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password, name })
+      body: JSON.stringify({ email, password, name: `${firstName} ${lastName}`.trim(), phone, specialty, role })
     })
 
+    const data = await res.json()
+
     if (res.ok) {
-      router.push('/dashboard')
-      router.refresh()
+      if (role === 'CONSULTANT') {
+        setSuccess('Votre demande a été soumise. Un administrateur activera votre compte.')
+      } else {
+        router.push('/dashboard')
+        router.refresh()
+      }
     } else {
-      const data = await res.json()
       setError(data.error || 'Registration failed')
     }
   }
@@ -49,29 +65,81 @@ export default function RegisterPage() {
             <p className="text-gray-500">Rejoignez notre plateforme de conseil</p>
           </div>
 
-          {/* Error Message */}
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6">
-              {error}
-            </div>
+            <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6">{error}</div>
+          )}
+          {success && (
+            <div className="bg-green-50 text-green-700 p-3 rounded-lg mb-6">{success}</div>
           )}
 
-          {/* Register Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-900 mb-2">
-                Nom complet
-              </label>
+              <label className="block text-sm font-medium text-gray-900 mb-2">Type de compte</label>
+              <div className="flex gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" value="CLIENT" checked={role === 'CLIENT'} onChange={() => setRole('CLIENT')} />
+                  <span>Client</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" value="CONSULTANT" checked={role === 'CONSULTANT'} onChange={() => setRole('CONSULTANT')} />
+                  <span>Consultant</span>
+                </label>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-gray-900 mb-2">Prénom</label>
+                <input
+                  type="text"
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Jean"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-gray-900 mb-2">Nom</label>
+                <input
+                  type="text"
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Dupont"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-900 mb-2">Téléphone</label>
               <input
-                type="text"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Jean Dupont"
+                type="tel"
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+33 6 00 00 00 00"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
               />
             </div>
+
+            {role === 'CONSULTANT' && (
+              <div>
+                <label htmlFor="specialty" className="block text-sm font-medium text-gray-900 mb-2">Spécialité</label>
+                <input
+                  type="text"
+                  id="specialty"
+                  value={specialty}
+                  onChange={(e) => setSpecialty(e.target.value)}
+                  placeholder="Ex: Finance, RH, Stratégie..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
+                />
+              </div>
+            )}
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">
@@ -97,6 +165,21 @@ export default function RegisterPage() {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-900 mb-2">
+                Confirmer le mot de passe
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
