@@ -41,7 +41,8 @@ export default function Services() {
   const [selectedConsultant, setSelectedConsultant] = useState<string>('')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedStartHour, setSelectedStartHour] = useState<number | null>(null)
-  const [selectedDuration, setSelectedDuration] = useState<number>(1)
+  const [selectedEndHour, setSelectedEndHour] = useState<number | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [loadingConsultants, setLoadingConsultants] = useState(false)
   const [successOrder, setSuccessOrder] = useState<any>(null)
@@ -94,7 +95,7 @@ export default function Services() {
     const slotStart = new Date(date)
     slotStart.setHours(hour, 0, 0, 0)
     const slotEnd = new Date(slotStart)
-    slotEnd.setHours(hour + selectedDuration, 0, 0, 0)
+    slotEnd.setHours(hour + 1, 0, 0, 0)
     return consultant.reservations?.some((r: any) => {
       const resStart = new Date(r.startTime)
       const resEnd = new Date(r.endTime)
@@ -220,12 +221,12 @@ export default function Services() {
   }
 
   const handlePurchase = async () => {
-    if (!selectedTier || !selectedConsultant || !selectedDate || selectedStartHour === null || submitting) return
+    if (!selectedTier || !selectedConsultant || !selectedDate || selectedStartHour === null || selectedEndHour === null || submitting) return
 
     const startTime = new Date(selectedDate)
     startTime.setHours(selectedStartHour, 0, 0, 0)
     const endTime = new Date(startTime)
-    endTime.setHours(selectedStartHour + selectedDuration, 0, 0, 0)
+    endTime.setHours(selectedEndHour, 0, 0, 0)
 
     setSubmitting(true)
     try {
@@ -262,6 +263,7 @@ export default function Services() {
     setSelectedConsultant('')
     setSelectedDate(null)
     setSelectedStartHour(null)
+    setSelectedEndHour(null)
     setSuccessOrder(null)
   }
 
@@ -460,7 +462,7 @@ export default function Services() {
                           <div className="text-sm text-gray-500">{selectedTier.tierType} — {Number(selectedTier.price).toFixed(0)}€</div>
                         </div>
                       </div>
-                      <button onClick={() => { setSelectedTier(null); setSelectedConsultant(''); setSelectedDate(null); setSelectedStartHour(null) }} className="text-sm text-blue-600 hover:underline font-medium">
+                      <button onClick={() => { setSelectedTier(null); setSelectedConsultant(''); setSelectedDate(null); setSelectedStartHour(null); setSelectedEndHour(null) }} className="text-sm text-blue-600 hover:underline font-medium">
                         ← Changer de formule
                       </button>
                     </div>
@@ -471,22 +473,7 @@ export default function Services() {
                         ÉTAPE 2
                       </div>
                       <h3 className="text-2xl font-bold text-gray-900 mb-2">Sélectionnez votre créneau</h3>
-                      <p className="text-gray-500 text-sm">Choisissez un consultant et un créneau disponible</p>
-                    </div>
-
-                    {/* Duration */}
-                    <div className="mb-6 flex items-center justify-center gap-4">
-                      <label className="font-semibold text-gray-700">Durée :</label>
-                      <select 
-                        value={selectedDuration} 
-                        onChange={e => setSelectedDuration(parseInt(e.target.value))}
-                        className="border border-gray-300 rounded-lg px-4 py-2 bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value="1">1 heure</option>
-                        <option value="2">2 heures</option>
-                        <option value="3">3 heures</option>
-                        <option value="4">4 heures</option>
-                      </select>
+                      <p className="text-gray-500 text-sm">Cliquez et glissez sur les cellules pour sélectionner votre créneau.</p>
                     </div>
 
                     {loadingConsultants ? (
@@ -501,7 +488,7 @@ export default function Services() {
                             {consultant.specialty && <p className="text-sm text-gray-500 mb-4">{consultant.specialty}</p>}
                             
                             <div className="overflow-x-auto">
-                              <table className="w-full border-collapse">
+                              <table className="w-full border-collapse" onMouseLeave={() => setIsDragging(false)}>
                                 <thead>
                                   <tr className="bg-gradient-to-r from-[#2B5A8E] to-blue-600 text-white">
                                     <th className="border border-blue-400 p-3 text-left font-semibold text-sm">Date</th>
@@ -520,30 +507,38 @@ export default function Services() {
                                       {hours.map(hour => {
                                         const blocked = isSlotBlocked(consultant.id, date, hour)
                                         const isPast = new Date(date).setHours(hour) < new Date().getTime()
-                                        const isSelected = selectedConsultant === consultant.id && 
-                                                          selectedDate?.getDate() === date.getDate() && 
-                                                          selectedStartHour === hour
                                         const isDisabled = blocked || isPast
+                                        const isInRange = selectedConsultant === consultant.id &&
+                                          selectedDate?.toDateString() === date.toDateString() &&
+                                          selectedStartHour !== null && selectedEndHour !== null &&
+                                          hour >= selectedStartHour && hour < selectedEndHour
 
                                         return (
                                           <td
                                             key={hour}
-                                            onClick={() => {
-                                              if (!isDisabled) {
-                                                setSelectedConsultant(consultant.id)
-                                                setSelectedDate(date)
-                                                setSelectedStartHour(hour)
+                                            onMouseDown={() => {
+                                              if (isDisabled) return
+                                              setSelectedConsultant(consultant.id)
+                                              setSelectedDate(date)
+                                              setSelectedStartHour(hour)
+                                              setSelectedEndHour(hour + 1)
+                                              setIsDragging(true)
+                                            }}
+                                            onMouseEnter={() => {
+                                              if (isDragging && selectedConsultant === consultant.id && selectedDate?.toDateString() === date.toDateString() && selectedStartHour !== null && hour >= selectedStartHour) {
+                                                setSelectedEndHour(hour + 1)
                                               }
                                             }}
-                                            className={`border border-gray-200 p-2 text-center text-sm font-medium transition-all ${
-                                              isDisabled 
-                                                ? 'bg-red-50 text-red-300 cursor-not-allowed' 
-                                                : isSelected 
-                                                ? 'bg-green-500 text-white shadow-md scale-105 cursor-pointer ring-2 ring-green-300' 
+                                            onMouseUp={() => setIsDragging(false)}
+                                            className={`border border-gray-200 p-2 text-center text-sm font-medium transition-all select-none ${
+                                              isDisabled
+                                                ? 'bg-red-50 text-red-300 cursor-not-allowed'
+                                                : isInRange
+                                                ? 'bg-green-500 text-white cursor-pointer'
                                                 : 'bg-green-50 hover:bg-green-100 cursor-pointer hover:shadow-sm'
                                             }`}
                                           >
-                                            {isDisabled ? '✕' : isSelected ? '✓' : '○'}
+                                            {isDisabled ? '✕' : isInRange ? (hour === selectedStartHour ? '▶' : '—') : '○'}
                                           </td>
                                         )
                                       })}
@@ -558,13 +553,13 @@ export default function Services() {
                     )}
 
                     {/* Sticky Confirm Bar */}
-                    {selectedConsultant && selectedDate && selectedStartHour !== null && (
+                    {selectedConsultant && selectedDate && selectedStartHour !== null && selectedEndHour !== null && (
                       <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-green-500 p-4 shadow-2xl z-40">
                         <div className="max-w-7xl mx-auto flex items-center justify-between">
                           <div className="text-sm">
                             <span className="font-bold text-gray-900">Récapitulatif : </span>
                             <span className="text-gray-600">
-                              {service.name} ({selectedTier.tierType}) · {consultants.find(c => c.id === selectedConsultant)?.name} · {selectedDate.toLocaleDateString('fr-FR')} de {selectedStartHour}h à {selectedStartHour + selectedDuration}h
+                              {service.name} ({selectedTier.tierType}) · {consultants.find(c => c.id === selectedConsultant)?.name} · {selectedDate.toLocaleDateString('fr-FR')} de {selectedStartHour}h à {selectedEndHour}h ({selectedEndHour - selectedStartHour}h)
                             </span>
                           </div>
                           <button
