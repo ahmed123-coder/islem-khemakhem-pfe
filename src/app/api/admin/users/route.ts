@@ -17,7 +17,10 @@ export async function GET() {
         name: true,
         phone: true,
         role: true,
+        isActive: true,
         createdAt: true,
+        updatedAt: true,
+        _count: { select: { orders: true, reservations: true } }
       },
       orderBy: { createdAt: 'desc' },
     })
@@ -63,16 +66,11 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json()
-    const { id, email, name, phone, role } = body
+    const { id, email, name, phone, role, isActive } = body
     
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: {
-        email,
-        name,
-        phone,
-        role,
-      },
+      data: { email, name, phone, role, ...(isActive !== undefined && { isActive }) },
     })
     
     return NextResponse.json(updatedUser)

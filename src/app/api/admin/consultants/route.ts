@@ -19,11 +19,13 @@ export async function GET() {
         hourlyRate: true,
         bio: true,
         imageUrl: true,
+        cvUrl: true,
+        certifications: true,
         isActive: true,
         createdAt: true,
-        services: {
-          select: { id: true }
-        }
+        updatedAt: true,
+        services: { select: { id: true, name: true } },
+        _count: { select: { orders: true, reservations: true, missions: true } }
       },
       orderBy: { createdAt: 'desc' },
     })
@@ -76,22 +78,18 @@ export async function PUT(request: Request) {
   try {
     const body = await request.json()
     const { id, email, name, specialty, hourlyRate, bio, imageUrl, isActive, serviceIds } = body
+
+    const data: any = {}
+    if (email !== undefined) data.email = email
+    if (name !== undefined) data.name = name
+    if (specialty !== undefined) data.specialty = specialty
+    if (hourlyRate !== undefined) data.hourlyRate = hourlyRate ? parseFloat(hourlyRate) : null
+    if (bio !== undefined) data.bio = bio
+    if (imageUrl !== undefined) data.imageUrl = imageUrl
+    if (isActive !== undefined) data.isActive = isActive
+    if (serviceIds !== undefined) data.services = { set: serviceIds.map((id: string) => ({ id })) }
     
-    const consultant = await prisma.consultant.update({
-      where: { id },
-      data: {
-        email,
-        name,
-        specialty,
-        hourlyRate: hourlyRate ? parseFloat(hourlyRate) : null,
-        bio,
-        imageUrl,
-        isActive,
-        services: serviceIds ? {
-          set: serviceIds.map((id: string) => ({ id }))
-        } : undefined,
-      },
-    })
+    const consultant = await prisma.consultant.update({ where: { id }, data })
     
     return NextResponse.json(consultant)
   } catch (error) {
