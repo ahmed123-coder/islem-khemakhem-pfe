@@ -1,14 +1,24 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export default function LoginPage() {
+  const [tab, setTab] = useState<'CLIENT' | 'CONSULTANT'>('CLIENT')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [logoUrl, setLogoUrl] = useState('/logo.jpeg')
   const router = useRouter()
+
+  useEffect(() => {
+    fetch('/api/content/navbar')
+      .then(res => res.json())
+      .then(data => { if (data.value?.logoUrl) setLogoUrl(data.value.logoUrl) })
+      .catch(() => {})
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,16 +56,34 @@ export default function LoginPage() {
         <div className="max-w-md w-full">
           {/* Logo */}
           <div className="flex items-center gap-3 mb-12">
-            <div className="w-12 h-12 bg-blue-700 rounded-lg flex items-center justify-center">
-              <span className="text-white text-2xl font-bold">D</span>
-            </div>
-            <span className="text-2xl font-bold text-gray-900">DSL Conseil</span>
+            <Image src={logoUrl} alt="Logo" width={50} height={50} className="rounded-lg object-contain" />
           </div>
 
-          {/* Welcome Text */}
           <div className="mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-2">Bienvenue</h1>
             <p className="text-gray-500">Connectez-vous à votre espace</p>
+          </div>
+
+          {/* Role Tabs */}
+          <div className="flex rounded-lg border border-gray-200 p-1 mb-8 bg-white">
+            <button
+              type="button"
+              onClick={() => { setTab('CLIENT'); setError('') }}
+              className={`flex-1 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                tab === 'CLIENT' ? 'bg-blue-700 text-white' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Espace Client
+            </button>
+            <button
+              type="button"
+              onClick={() => { setTab('CONSULTANT'); setError('') }}
+              className={`flex-1 py-2.5 rounded-md text-sm font-medium transition-colors ${
+                tab === 'CONSULTANT' ? 'bg-blue-700 text-white' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Espace Consultant
+            </button>
           </div>
 
           {/* Error Message */}
@@ -83,14 +111,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-900">
-                  Mot de passe
-                </label>
-                <Link href="/forgot-password" className="text-sm text-blue-700 hover:text-blue-800">
-                  Mot de passe oublié ?
-                </Link>
-              </div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-2">Mot de passe</label>
               <input
                 type="password"
                 id="password"
@@ -110,10 +131,9 @@ export default function LoginPage() {
             </button>
           </form>
 
-          {/* Sign Up Link */}
           <p className="text-center text-gray-600 mt-6">
             Pas encore de compte ?{' '}
-            <Link href="/register" className="text-blue-700 hover:text-blue-800 font-medium">
+            <Link href={tab === 'CONSULTANT' ? '/register/consultant' : '/register/client'} className="text-blue-700 hover:text-blue-800 font-medium">
               S'inscrire
             </Link>
           </p>

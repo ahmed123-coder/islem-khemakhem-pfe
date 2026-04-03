@@ -19,6 +19,10 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
       }
 
+      if (!user.isActive) {
+        return NextResponse.json({ error: 'Votre compte a été désactivé. Veuillez contacter un administrateur.' }, { status: 403 })
+      }
+
       const token = createToken({ userId: user.id, email: user.email, role: user.role })
       await setAuthCookie(token)
 
@@ -33,6 +37,10 @@ export async function POST(request: Request) {
       const valid = await bcrypt.compare(password, consultant.password)
       if (!valid) {
         return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
+      }
+
+      if (!consultant.isActive) {
+        return NextResponse.json({ error: 'Votre compte est en attente de validation par un administrateur.' }, { status: 403 })
       }
 
       const token = createToken({ userId: consultant.id, email: consultant.email, role: 'CONSULTANT' })
