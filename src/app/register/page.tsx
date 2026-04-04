@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import ReCAPTCHA from 'react-google-recaptcha'
@@ -9,7 +8,6 @@ import ReCAPTCHA from 'react-google-recaptcha'
 export default function RegisterPage() {
   const [tab, setTab] = useState<'CLIENT' | 'CONSULTANT'>('CLIENT')
 
-  // Client fields
   const [cFirstName, setCFirstName] = useState('')
   const [cLastName, setCLastName] = useState('')
   const [cPhone, setCPhone] = useState('')
@@ -17,7 +15,6 @@ export default function RegisterPage() {
   const [cPassword, setCPassword] = useState('')
   const [cConfirm, setCConfirm] = useState('')
 
-  // Consultant fields
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
@@ -34,7 +31,6 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const [logoUrl, setLogoUrl] = useState('/logo.jpeg')
-  const router = useRouter()
 
   useEffect(() => {
     fetch('/api/content/navbar')
@@ -49,10 +45,39 @@ export default function RegisterPage() {
     setSuccess('')
   }
 
+  const isAlpha = (n: string) => /^[a-zA-Z\u00C0-\u024F\s\-']+$/.test(n.trim())
+  const isEmail = (e: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)
+  const isPhone = (p: string) => /^[+]?[\d\s\-().]{7,20}$/.test(p)
+  const isStrongPwd = (p: string) => p.length >= 8
+
+  const validateClient = (): string | null => {
+    if (!cFirstName.trim() || !isAlpha(cFirstName)) return 'Le prénom doit contenir uniquement des lettres alphabétiques'
+    if (!cLastName.trim() || !isAlpha(cLastName)) return 'Le nom doit contenir uniquement des lettres alphabétiques'
+    if (!isEmail(cEmail)) return 'Adresse email invalide (doit contenir @)'
+    if (cPhone && !isPhone(cPhone)) return 'Numéro de téléphone invalide (chiffres uniquement)'
+    if (!isStrongPwd(cPassword)) return 'Le mot de passe doit contenir au moins 8 caractères'
+    if (cPassword !== cConfirm) return 'Les mots de passe ne correspondent pas'
+    return null
+  }
+
+  const validateConsultant = (): string | null => {
+    if (!firstName.trim() || !isAlpha(firstName)) return 'Le prénom doit contenir uniquement des lettres alphabétiques'
+    if (!lastName.trim() || !isAlpha(lastName)) return 'Le nom doit contenir uniquement des lettres alphabétiques'
+    if (!isEmail(email)) return 'Adresse email invalide (doit contenir @)'
+    if (!phone.trim() || !isPhone(phone)) return 'Numéro de téléphone invalide (chiffres uniquement)'
+    if (!specialty.trim()) return 'Veuillez indiquer votre domaine de compétence'
+    if (!isStrongPwd(password)) return 'Le mot de passe doit contenir au moins 8 caractères'
+    if (password !== confirmPassword) return 'Les mots de passe ne correspondent pas'
+    if (!cvFile) return 'Veuillez joindre votre CV'
+    if (!captchaToken) return "Veuillez confirmer que vous n'êtes pas un robot"
+    return null
+  }
+
   const handleClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (cPassword !== cConfirm) { setError('Les mots de passe ne correspondent pas'); return }
+    const err = validateClient()
+    if (err) { setError(err); return }
 
     const res = await fetch('/api/auth/register', {
       method: 'POST',
@@ -67,14 +92,13 @@ export default function RegisterPage() {
   const handleConsultantSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (password !== confirmPassword) { setError('Les mots de passe ne correspondent pas'); return }
-    if (!cvFile) { setError('Veuillez joindre votre CV'); return }
-    if (!captchaToken) { setError("Veuillez confirmer que vous n'êtes pas un robot"); return }
+    const err = validateConsultant()
+    if (err) { setError(err); return }
 
     setLoading(true)
     try {
       const cvForm = new FormData()
-      cvForm.append('file', cvFile)
+      cvForm.append('file', cvFile!)
       cvForm.append('folder', 'consultant-cvs')
       const cvRes = await fetch('/api/upload/document', { method: 'POST', body: cvForm })
       if (!cvRes.ok) throw new Error('Échec du téléchargement du CV')
@@ -143,7 +167,6 @@ export default function RegisterPage() {
             <p className="text-gray-500">Rejoignez notre plateforme de conseil</p>
           </div>
 
-          {/* Tabs */}
           <div className="flex rounded-lg border border-gray-200 p-1 mb-8 bg-white">
             <button type="button" onClick={() => switchTab('CLIENT')}
               className={`flex-1 py-2.5 rounded-md text-sm font-medium transition-colors ${tab === 'CLIENT' ? 'bg-blue-700 text-white' : 'text-gray-600 hover:text-gray-900'}`}>
@@ -155,9 +178,8 @@ export default function RegisterPage() {
             </button>
           </div>
 
-          {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6">{error}</div>}
+          {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6 text-sm">{error}</div>}
 
-          {/* CLIENT FORM */}
           {tab === 'CLIENT' && (
             <form onSubmit={handleClientSubmit} className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
@@ -192,7 +214,6 @@ export default function RegisterPage() {
             </form>
           )}
 
-          {/* CONSULTANT FORM */}
           {tab === 'CONSULTANT' && (
             <form onSubmit={handleConsultantSubmit} className="space-y-5">
               <div className="grid grid-cols-2 gap-4">
