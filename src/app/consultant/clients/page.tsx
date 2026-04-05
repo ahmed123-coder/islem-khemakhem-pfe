@@ -314,6 +314,19 @@ export default function ConsultantClients() {
     }
   }
 
+  const onDragStart = (e: React.DragEvent, milestoneId: string) => {
+    e.dataTransfer.setData('milestoneId', milestoneId)
+  }
+
+  const onDrop = async (e: React.DragEvent, status: string) => {
+    e.preventDefault()
+    const milestoneId = e.dataTransfer.getData('milestoneId')
+    if (!milestoneId) return
+    await updateMilestone(milestoneId, status)
+  }
+
+  const onDragOver = (e: React.DragEvent) => e.preventDefault()
+
   if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
 
   const selectedClientData = clients.find(c => c.id === selectedClient)
@@ -426,26 +439,32 @@ export default function ConsultantClients() {
                         <button onClick={createMission} className="mb-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white px-5 py-2.5 rounded-xl hover:shadow-lg transition-all font-semibold flex items-center gap-2">
                           <span className="text-xl">+</span> New Mission
                         </button>
-                        <div className="space-y-6">
-                          {missions.length === 0 ? (
-                            <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400">
-                              No missions assigned yet.
-                            </div>
-                          ) : (
-                            missions.map(mission => {
-                              const done = mission.milestones.filter((m: any) => m.status === 'COMPLETED').length;
-                              const total = mission.milestones.length;
-                              const progress = total > 0 ? Math.round((done / total) * 100) : 0;
+                        {missions.length === 0 ? (
+                          <div className="text-center py-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200 text-gray-400">
+                            No missions assigned yet.
+                          </div>
+                        ) : (
+                          <div className="space-y-8">
+                            {missions.map(mission => {
+                              const done = mission.milestones.filter((m: any) => m.status === 'COMPLETED').length
+                              const total = mission.milestones.length
+                              const progress = total > 0 ? Math.round((done / total) * 100) : 0
+
+                              const columns = [
+                                { key: 'PENDING', label: 'Pending', color: 'bg-yellow-50 border-yellow-200', headerColor: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-400' },
+                                { key: 'IN_PROGRESS', label: 'In Progress', color: 'bg-blue-50 border-blue-200', headerColor: 'bg-blue-100 text-blue-700', dot: 'bg-blue-500' },
+                                { key: 'COMPLETED', label: 'Completed', color: 'bg-green-50 border-green-200', headerColor: 'bg-green-100 text-green-700', dot: 'bg-green-500' },
+                              ]
 
                               return (
-                                <div key={mission.id} className="border border-gray-100 rounded-2xl p-5 bg-white shadow-sm hover:shadow-md transition-shadow">
+                                <div key={mission.id} className="border border-gray-100 rounded-2xl p-5 bg-white shadow-sm">
                                   <div className="flex justify-between items-start mb-4">
                                     <div className="flex-1">
                                       <h3 className="font-bold text-gray-900 text-xl">{mission.title}</h3>
                                       {mission.description && <p className="text-gray-500 text-sm mt-1">{mission.description}</p>}
                                     </div>
                                     <div className="flex flex-col items-end gap-3">
-                                      <select 
+                                      <select
                                         value={mission.status}
                                         onChange={(e) => updateMissionStatus(mission.id, e.target.value)}
                                         className={`px-4 py-1.5 rounded-full text-xs font-bold border-none cursor-pointer outline-none shadow-sm ${
@@ -467,61 +486,75 @@ export default function ConsultantClients() {
                                     </div>
                                   </div>
 
-                                  {/* Progress Bar Section */}
-                                  <div className="bg-gray-50 p-4 rounded-xl mb-6">
+                                  {/* Progress Bar */}
+                                  <div className="bg-gray-50 p-4 rounded-xl mb-5">
                                     <div className="flex justify-between items-center mb-2">
                                       <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Global Progress</span>
                                       <span className="text-sm font-black text-blue-600">{progress}%</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
-                                      <div 
+                                      <div
                                         className={`h-full transition-all duration-700 ease-out rounded-full ${progress === 100 ? 'bg-green-500' : 'bg-blue-600'}`}
                                         style={{ width: `${progress}%` }}
-                                      ></div>
+                                      />
                                     </div>
-                                    <div className="mt-2 text-[10px] text-gray-400 text-right font-medium">
-                                      {done} of {total} tasks completed
-                                    </div>
+                                    <div className="mt-2 text-[10px] text-gray-400 text-right font-medium">{done} of {total} tasks completed</div>
                                   </div>
 
-                                  <div className="border-t pt-4">
-                                    <div className="flex justify-between items-center mb-4">
-                                      <h4 className="font-bold text-sm text-gray-800 flex items-center gap-2">
-                                        📋 Tasks Checklist
-                                        <span className="px-2 py-0.5 bg-gray-100 text-gray-500 rounded text-[10px]">{total}</span>
-                                      </h4>
-                                      <button onClick={() => createMilestone(mission.id)} className="text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition tracking-wide">
-                                        + ADD TASK
-                                      </button>
-                                    </div>
-                                    <div className="space-y-3">
-                                      {mission.milestones.map((milestone: any) => (
-                                        <div key={milestone.id} className="flex items-center gap-4 p-3 bg-white border border-gray-50 rounded-xl hover:border-gray-200 transition-colors group">
-                                          <input
-                                            type="checkbox"
-                                            checked={milestone.status === 'COMPLETED'}
-                                            onChange={(e) => updateMilestone(milestone.id, e.target.checked ? 'COMPLETED' : 'PENDING')}
-                                            className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
-                                          />
-                                          <div className="flex-1 min-w-0">
-                                            <div className={`transition-all ${milestone.status === 'COMPLETED' ? 'line-through text-gray-400 text-sm' : 'text-sm font-semibold text-gray-700'}`}>
-                                              {milestone.title}
-                                            </div>
-                                            {milestone.description && <p className="text-[10px] text-gray-400 mt-0.5 truncate">{milestone.description}</p>}
-                                          </div>
-                                          <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button onClick={() => editMilestone(milestone.id)} className="text-[10px] uppercase font-bold text-blue-600 hover:text-blue-800">Edit</button>
-                                            <button onClick={() => deleteMilestone(milestone.id)} className="text-[10px] uppercase font-bold text-red-500 hover:text-red-700">Delete</button>
-                                          </div>
+                                  {/* Kanban Board */}
+                                  <div className="flex justify-between items-center mb-3">
+                                    <h4 className="font-bold text-sm text-gray-800">📋 Tasks Board</h4>
+                                    <button onClick={() => createMilestone(mission.id)} className="text-[11px] font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition">
+                                      + ADD TASK
+                                    </button>
+                                  </div>
+                                  <div className="grid grid-cols-3 gap-3">
+                                    {columns.map(col => (
+                                      <div
+                                        key={col.key}
+                                        onDragOver={onDragOver}
+                                        onDrop={(e) => onDrop(e, col.key)}
+                                        className={`rounded-xl border-2 border-dashed ${col.color} min-h-[120px] p-2 transition-colors`}
+                                      >
+                                        <div className={`flex items-center gap-2 px-2 py-1.5 rounded-lg mb-2 ${col.headerColor}`}>
+                                          <span className={`w-2 h-2 rounded-full ${col.dot}`} />
+                                          <span className="text-xs font-bold uppercase tracking-wide">{col.label}</span>
+                                          <span className="ml-auto text-xs font-bold">
+                                            {mission.milestones.filter((m: any) => m.status === col.key).length}
+                                          </span>
                                         </div>
-                                      ))}
-                                    </div>
+                                        <div className="space-y-2">
+                                          {mission.milestones
+                                            .filter((m: any) => m.status === col.key)
+                                            .map((milestone: any) => (
+                                              <div
+                                                key={milestone.id}
+                                                draggable
+                                                onDragStart={(e) => onDragStart(e, milestone.id)}
+                                                className="bg-white rounded-lg p-3 shadow-sm border border-gray-100 cursor-grab active:cursor-grabbing group hover:shadow-md transition-shadow"
+                                              >
+                                                <div className="font-semibold text-sm text-gray-800 leading-snug">{milestone.title}</div>
+                                                {milestone.description && (
+                                                  <p className="text-[11px] text-gray-400 mt-1 line-clamp-2">{milestone.description}</p>
+                                                )}
+                                                {milestone.dueDate && (
+                                                  <div className="text-[10px] text-gray-400 mt-1.5">📅 {new Date(milestone.dueDate).toLocaleDateString()}</div>
+                                                )}
+                                                <div className="flex gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                  <button onClick={() => editMilestone(milestone.id)} className="text-[10px] font-bold text-blue-600 hover:text-blue-800">Edit</button>
+                                                  <button onClick={() => deleteMilestone(milestone.id)} className="text-[10px] font-bold text-red-500 hover:text-red-700">Delete</button>
+                                                </div>
+                                              </div>
+                                            ))}
+                                        </div>
+                                      </div>
+                                    ))}
                                   </div>
                                 </div>
-                              );
-                            })
-                          )}
-                        </div>
+                              )
+                            })}
+                          </div>
+                        )}
                       </div>
                     )}
 
