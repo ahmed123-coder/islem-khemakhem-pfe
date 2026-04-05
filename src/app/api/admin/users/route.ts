@@ -20,7 +20,22 @@ export async function GET() {
         isActive: true,
         createdAt: true,
         updatedAt: true,
-        _count: { select: { orders: true, reservations: true } }
+        _count: { select: { orders: true, reservations: true } },
+        orders: {
+          select: {
+            id: true,
+            status: true,
+            createdAt: true,
+            serviceTier: {
+              select: {
+                tierType: true,
+                price: true,
+                service: { select: { name: true } }
+              }
+            }
+          },
+          orderBy: { createdAt: 'desc' }
+        }
       },
       orderBy: { createdAt: 'desc' },
     })

@@ -71,7 +71,9 @@ export default function OrderDetails() {
         if (detail?.orderId === orderId) {
           if (detail?.type === 'RESERVATION') {
             fetchReservations()
-          } else if (detail?.type === 'ORDER' || detail?.type === 'MISSION') {
+          } else if (detail?.type === 'ORDER') {
+            fetchOrder()
+          } else if (detail?.type === 'MISSION') {
             fetchOrder()
           }
         }

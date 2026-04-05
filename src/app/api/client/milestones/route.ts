@@ -11,8 +11,8 @@ export async function PATCH(req: NextRequest) {
 
     const { milestoneId, status } = await req.json()
 
-    if (status === 'PENDING') {
-      return NextResponse.json({ error: 'Clients cannot set milestones to pending' }, { status: 400 })
+    if (!['PENDING', 'COMPLETED'].includes(status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
 
     // Verify the milestone belongs to a mission in an order owned by this client

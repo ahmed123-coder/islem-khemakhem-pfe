@@ -66,6 +66,8 @@ export default function ConsultantClients() {
             if (clientData?.clientId) {
               fetchReservations(clientData.clientId)
             }
+          } else if (detail?.type === 'MISSION') {
+            fetchMissions(selectedClient)
           }
         }
       }
