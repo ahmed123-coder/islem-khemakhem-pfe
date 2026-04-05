@@ -39,6 +39,9 @@ export async function PATCH(req: NextRequest) {
       }
     })
 
+    const { notifyConsultantMilestoneUpdate } = await import('@/lib/notification-service')
+    await notifyConsultantMilestoneUpdate(milestone.missionId, 'Task Updated', `Task "${milestone.title}" has been updated.`)
+
     return NextResponse.json(updatedMilestone)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to update milestone' }, { status: 500 })
