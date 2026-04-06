@@ -251,13 +251,27 @@ export default function ConsultantReservations() {
               {/* Status & Time */}
               <div className="flex items-center gap-3">
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusBadge(selectedReservation.status)}`}>{selectedReservation.status}</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  selectedReservation.meetingType === 'SUR_PLACE' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {selectedReservation.meetingType === 'SUR_PLACE' ? '🏢 Sur Place' : '🎥 Zoom'}
+                </span>
                 <span className="text-sm text-gray-500">
                   {new Date(selectedReservation.startTime).toLocaleDateString('fr-FR')} · {new Date(selectedReservation.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – {new Date(selectedReservation.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
 
-              {/* Zoom */}
+              {/* Meeting Info */}
               {selectedReservation.status === 'CONFIRMED' && (
+                selectedReservation.meetingType === 'SUR_PLACE' ? (
+                  <div className="bg-green-50 border border-green-100 rounded-xl p-4 flex items-center gap-3">
+                    <span className="text-2xl">🏢</span>
+                    <div>
+                      <div className="font-bold text-green-700 text-sm">Réunion Sur Place</div>
+                      <div className="text-xs text-green-600">Rencontre en présentiel avec le client</div>
+                    </div>
+                  </div>
+                ) : (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-3">
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
@@ -279,6 +293,7 @@ export default function ConsultantReservations() {
                     <JoinZoomButton joinUrl={selectedReservation.zoomJoinUrl} className="w-full justify-center" />
                   )}
                 </div>
+                )
               )}
 
               {/* Actions */}

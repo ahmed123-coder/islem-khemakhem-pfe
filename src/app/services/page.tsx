@@ -34,6 +34,10 @@ export default function Services() {
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   const [isPaid, setIsPaid] = useState(false)
 
+  // Meeting type modal state
+  const [showMeetingTypeModal, setShowMeetingTypeModal] = useState(false)
+  const [selectedMeetingType, setSelectedMeetingType] = useState<'ZOOM' | 'SUR_PLACE' | null>(null)
+
   // Booking flow state
   const [selectedService, setSelectedService] = useState<any>(null)
   const [selectedTier, setSelectedTier] = useState<any>(null)
@@ -114,9 +118,17 @@ export default function Services() {
       setShowAuthModal(true)
       return
     }
-    // Show payment modal
+    // Show meeting type modal first
     setPaymentService(service)
     setPaymentTier(tier)
+    setSelectedMeetingType(null)
+    setShowMeetingTypeModal(true)
+  }
+
+  const handleMeetingTypeConfirm = (type: 'ZOOM' | 'SUR_PLACE') => {
+    setSelectedMeetingType(type)
+    setShowMeetingTypeModal(false)
+    // Now show payment modal
     setCardNumber('')
     setCardExpiry('')
     setCardCvc('')
@@ -199,17 +211,12 @@ export default function Services() {
       setShowAuthModal(false)
       toast.success(authTab === 'login' ? 'Connexion réussie !' : 'Compte créé avec succès !')
 
-      // Resume the booking flow — show payment modal
+      // Resume the booking flow — show meeting type modal first
       if (pendingService && pendingTier) {
         setPaymentService(pendingService)
         setPaymentTier(pendingTier)
-        setCardNumber('')
-        setCardExpiry('')
-        setCardCvc('')
-        setCardName('')
-        setPaymentProcessing(false)
-        setPaymentSuccess(false)
-        setShowPaymentModal(true)
+        setSelectedMeetingType(null)
+        setShowMeetingTypeModal(true)
         setPendingService(null)
         setPendingTier(null)
       }
@@ -237,7 +244,8 @@ export default function Services() {
           serviceTierId: selectedTier.id,
           consultantId: selectedConsultant,
           startTime: startTime.toISOString(),
-          endTime: endTime.toISOString()
+          endTime: endTime.toISOString(),
+          meetingType: selectedMeetingType ?? 'ZOOM'
         })
       })
 
@@ -561,6 +569,11 @@ export default function Services() {
                             <span className="text-gray-600">
                               {service.name} ({selectedTier.tierType}) · {consultants.find(c => c.id === selectedConsultant)?.name} · {selectedDate.toLocaleDateString('fr-FR')} de {selectedStartHour}h à {selectedEndHour}h ({selectedEndHour - selectedStartHour}h)
                             </span>
+                            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-bold ${
+                              selectedMeetingType === 'SUR_PLACE' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                            }`}>
+                              {selectedMeetingType === 'SUR_PLACE' ? '🏢 Sur Place' : '🎥 Zoom'}
+                            </span>
                           </div>
                           <button
                             onClick={handlePurchase}
@@ -655,6 +668,37 @@ export default function Services() {
           </Link>
         </div>
       </section>
+
+      {/* Meeting Type Modal */}
+      {showMeetingTypeModal && paymentTier && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowMeetingTypeModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-6" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">Type de réunion</h2>
+            <p className="text-sm text-gray-500 mb-6">
+              {paymentService?.name} — {paymentTier?.tierType}
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => handleMeetingTypeConfirm('ZOOM')}
+                className="flex flex-col items-center gap-3 p-5 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
+              >
+                <span className="text-3xl">🎥</span>
+                <span className="font-bold text-gray-800 group-hover:text-blue-700">Zoom</span>
+                <span className="text-xs text-gray-400 text-center">Réunion en ligne</span>
+              </button>
+              <button
+                onClick={() => handleMeetingTypeConfirm('SUR_PLACE')}
+                className="flex flex-col items-center gap-3 p-5 border-2 border-green-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group"
+              >
+                <span className="text-3xl">🏢</span>
+                <span className="font-bold text-gray-800 group-hover:text-green-700">Sur Place</span>
+                <span className="text-xs text-gray-400 text-center">Réunion physique</span>
+              </button>
+            </div>
+            <button onClick={() => setShowMeetingTypeModal(false)} className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600">Annuler</button>
+          </div>
+        </div>
+      )}
 
       {/* Payment Modal */}
       {showPaymentModal && paymentTier && (

@@ -52,8 +52,8 @@ export async function PATCH(req: NextRequest) {
     let zoomJoinUrl = reservation.zoomJoinUrl
     let zoomPassword = reservation.zoomPassword
 
-    // If confirming the reservation and no zoom link exists, create one
-    if (status === 'CONFIRMED' && !zoomJoinUrl) {
+    // If confirming the reservation, only create Zoom if meetingType is ZOOM
+    if (status === 'CONFIRMED' && reservation.meetingType === 'ZOOM' && !zoomJoinUrl) {
       try {
         const durationMinutes = Math.round(
           (new Date(reservation.endTime).getTime() - new Date(reservation.startTime).getTime()) / 60000

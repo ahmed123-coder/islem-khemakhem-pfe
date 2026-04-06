@@ -44,6 +44,7 @@ export default function ServicesPage() {
   const [selectedStartHour, setSelectedStartHour] = useState<number | null>(null)
   const [selectedEndHour, setSelectedEndHour] = useState<number | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [showMeetingModal, setShowMeetingModal] = useState(false)
 
   useEffect(() => {
     fetch('/api/services/with-tiers').then(r => r.json()).then(data => {
@@ -103,7 +104,7 @@ export default function ServicesPage() {
     })
   }
 
-  const handlePurchase = async () => {
+  const handlePurchase = async (meetingType: 'ZOOM' | 'SUR_PLACE') => {
     if (!selectedTier || !selectedConsultant || !selectedDate || selectedStartHour === null || selectedEndHour === null) return
 
     const startTime = new Date(selectedDate)
@@ -118,11 +119,13 @@ export default function ServicesPage() {
         serviceTierId: selectedTier.id,
         consultantId: selectedConsultant,
         startTime: startTime.toISOString(),
-        endTime: endTime.toISOString()
+        endTime: endTime.toISOString(),
+        meetingType
       })
     })
 
     if (res.ok) {
+      setShowMeetingModal(false)
       alert('Commande créée avec succès!')
       setStep(1)
       setSelectedService(null)
@@ -276,7 +279,7 @@ export default function ServicesPage() {
                   <span className="font-semibold">Sélection:</span> {consultants.find(c => c.id === selectedConsultant)?.name} - {selectedDate.toLocaleDateString('fr-FR')} de {selectedStartHour}h à {selectedEndHour}h ({selectedEndHour - selectedStartHour}h)
                 </div>
                 <button
-                  onClick={handlePurchase}
+                  onClick={() => setShowMeetingModal(true)}
                   className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-semibold shadow-lg hover:shadow-xl transition-all"
                 >
                   Confirmer la réservation
@@ -284,6 +287,36 @@ export default function ServicesPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+      {/* Meeting Type Popup */}
+      {showMeetingModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowMeetingModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">Type de réunion</h2>
+            <p className="text-sm text-gray-500 mb-6">
+              {selectedDate?.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} · {selectedStartHour}h – {selectedEndHour}h
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => handlePurchase('ZOOM')}
+                className="flex flex-col items-center gap-3 p-5 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
+              >
+                <span className="text-3xl">🎥</span>
+                <span className="font-bold text-gray-800 group-hover:text-blue-700">Zoom</span>
+                <span className="text-xs text-gray-400 text-center">Réunion en ligne</span>
+              </button>
+              <button
+                onClick={() => handlePurchase('SUR_PLACE')}
+                className="flex flex-col items-center gap-3 p-5 border-2 border-green-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group"
+              >
+                <span className="text-3xl">🏢</span>
+                <span className="font-bold text-gray-800 group-hover:text-green-700">Sur Place</span>
+                <span className="text-xs text-gray-400 text-center">Réunion physique</span>
+              </button>
+            </div>
+            <button onClick={() => setShowMeetingModal(false)} className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600">Annuler</button>
+          </div>
         </div>
       )}
     </div>

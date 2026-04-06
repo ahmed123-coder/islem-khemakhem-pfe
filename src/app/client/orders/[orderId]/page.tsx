@@ -20,6 +20,7 @@ export default function OrderDetails() {
   const [sending, setSending] = useState(false)
   const [reserving, setReserving] = useState(false)
   const [selectedRes, setSelectedRes] = useState<any>(null)
+  const [pendingSlot, setPendingSlot] = useState<{ day: Date; startHour: number; endHour: number } | null>(null)
   const [dragStart, setDragStart] = useState<{ day: Date; hour: number } | null>(null)
   const [dragEnd, setDragEnd] = useState<{ day: Date; hour: number } | null>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -157,7 +158,7 @@ export default function OrderDetails() {
     }
   }
 
-  const bookReservation = async (date: Date, startHour: number, endHour: number) => {
+  const bookReservation = async (date: Date, startHour: number, endHour: number, meetingType: 'ZOOM' | 'SUR_PLACE') => {
     if (order.status !== 'ACTIVE' || reserving) return
 
     const startTime = new Date(date)
@@ -177,7 +178,8 @@ export default function OrderDetails() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           startTime: startTime.toISOString(), 
-          endTime: endTime.toISOString() 
+          endTime: endTime.toISOString(),
+          meetingType
         })
       })
       if (res.ok) {
@@ -363,6 +365,7 @@ export default function OrderDetails() {
                         <thead className="bg-gray-50">
                           <tr>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Date & Time</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase text-center">Meeting</th>
                           </tr>
@@ -375,6 +378,13 @@ export default function OrderDetails() {
                                 <div className="text-sm text-gray-500">
                                   {new Date(reservation.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(reservation.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                  reservation.meetingType === 'SUR_PLACE' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                                }`}>
+                                  {reservation.meetingType === 'SUR_PLACE' ? '🏢 Sur Place' : '🎥 Zoom'}
+                                </span>
                               </td>
                               <td className="px-6 py-4">
                                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getReservationStatusColor(reservation.status)}`}>
@@ -525,7 +535,7 @@ export default function OrderDetails() {
                                       }}
                                       onMouseUp={() => {
                                         if (isDragging && dragStart && dragEnd) {
-                                          bookReservation(dragStart.day, dragStart.hour, dragEnd.hour + 1)
+                                          setPendingSlot({ day: dragStart.day, startHour: dragStart.hour, endHour: dragEnd.hour + 1 })
                                         }
                                         setIsDragging(false)
                                         setDragStart(null)
@@ -745,6 +755,37 @@ export default function OrderDetails() {
         </div>
       </div>
 
+      {/* Meeting Type Selection Modal */}
+      {pendingSlot && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setPendingSlot(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">Type de réunion</h2>
+            <p className="text-sm text-gray-500 mb-6">
+              {pendingSlot.day.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} · {pendingSlot.startHour}h – {pendingSlot.endHour}h
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => { bookReservation(pendingSlot.day, pendingSlot.startHour, pendingSlot.endHour, 'ZOOM'); setPendingSlot(null) }}
+                className="flex flex-col items-center gap-3 p-5 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
+              >
+                <span className="text-3xl">🎥</span>
+                <span className="font-bold text-gray-800 group-hover:text-blue-700">Zoom</span>
+                <span className="text-xs text-gray-400 text-center">Réunion en ligne</span>
+              </button>
+              <button
+                onClick={() => { bookReservation(pendingSlot.day, pendingSlot.startHour, pendingSlot.endHour, 'SUR_PLACE'); setPendingSlot(null) }}
+                className="flex flex-col items-center gap-3 p-5 border-2 border-green-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group"
+              >
+                <span className="text-3xl">🏢</span>
+                <span className="font-bold text-gray-800 group-hover:text-green-700">Sur Place</span>
+                <span className="text-xs text-gray-400 text-center">Réunion physique</span>
+              </button>
+            </div>
+            <button onClick={() => setPendingSlot(null)} className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600">Annuler</button>
+          </div>
+        </div>
+      )}
+
       {/* Reservation Detail Modal */}
       {selectedRes && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setSelectedRes(null)}>
@@ -767,13 +808,18 @@ export default function OrderDetails() {
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${getReservationStatusColor(selectedRes.status)}`}>
                   {selectedRes.status}
                 </span>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  selectedRes.meetingType === 'SUR_PLACE' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {selectedRes.meetingType === 'SUR_PLACE' ? '🏢 Sur Place' : '🎥 Zoom'}
+                </span>
                 <span className="text-sm text-gray-500">
                   {new Date(selectedRes.startTime).toLocaleDateString()} · {new Date(selectedRes.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(selectedRes.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
 
               {/* Zoom Details for CONFIRMED */}
-              {selectedRes.status === 'CONFIRMED' && (
+              {selectedRes.status === 'CONFIRMED' && selectedRes.meetingType !== 'SUR_PLACE' && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 space-y-4">
                   <div className="flex items-center gap-2 mb-1">
                     <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
@@ -824,6 +870,15 @@ export default function OrderDetails() {
                   {selectedRes.zoomJoinUrl && canJoin(selectedRes) && (
                     <JoinZoomButton joinUrl={selectedRes.zoomJoinUrl} className="w-full justify-center" />
                   )}
+                </div>
+              )}
+
+              {/* Sur Place message for CONFIRMED */}
+              {selectedRes.status === 'CONFIRMED' && selectedRes.meetingType === 'SUR_PLACE' && (
+                <div className="bg-green-50 border border-green-100 rounded-xl p-5 text-center">
+                  <p className="text-2xl mb-2">🏢</p>
+                  <p className="text-green-700 font-semibold">Réunion en présentiel confirmée</p>
+                  <p className="text-green-600 text-sm mt-1">Contactez votre consultant pour les détails du lieu</p>
                 </div>
               )}
 
