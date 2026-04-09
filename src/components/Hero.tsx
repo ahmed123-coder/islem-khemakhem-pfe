@@ -31,65 +31,86 @@ export default function Hero() {
     }
   }, [images.length])
 
-  if (!content) return null
-
   return (
-    <section className="relative bg-[#2B5A8E] text-white overflow-hidden min-h-[600px]">
-      {images.length > 0 ? (
-        <div className="absolute inset-0">
-          {images.map((img, index) => (
-            <div
-              key={index}
-              className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ${
-                index === currentIndex ? 'opacity-30' : 'opacity-0'
-              }`}
-              style={{ backgroundImage: `url(${img})` }}
-            />
-          ))}
-        </div>
-      ) : (
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1600')] bg-cover bg-center opacity-30"></div>
-      )}
-      
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-        <div className="max-w-3xl">
-          <Badge className="mb-6 bg-[#F59E0B]/20 text-[#F59E0B] border-[#F59E0B]/30 hover:bg-[#F59E0B]/30">
-            Cabinet de Conseil & Accompagnement
-          </Badge>
-          <h1 className="text-5xl lg:text-6xl font-serif font-bold mb-6 leading-tight">
-            {content.title}
-          </h1>
-          <p className="text-xl mb-10 text-white/90 leading-relaxed">
-            {content.subtitle}
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link href={content.ctaLink}>
-              <Button className="bg-[#F59E0B] hover:bg-[#ea8c00] text-white rounded-lg px-6 py-6 text-base">
-                {content.ctaText} →
-              </Button>
-            </Link>
-            <Link href="/services">
-              <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-[#2B5A8E] rounded-lg px-6 py-6 text-base">
-                Découvrir nos services
-              </Button>
-            </Link>
+    <>
+      <section className="relative bg-[#2B4F8A] text-white overflow-hidden min-h-[500px]">
+        {images.length > 0 ? (
+          <div className="absolute inset-0">
+            {images.map((img, index) => (
+              <div
+                key={index}
+                className={`absolute inset-0 bg-cover transition-opacity duration-1000 ${
+                  index === currentIndex ? 'opacity-30' : 'opacity-0'
+                }`}
+                style={{ backgroundImage: `url(${img})`, backgroundPosition: 'center 30%' }}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="absolute inset-0 bg-cover opacity-30" style={{backgroundImage: 'url(https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1600)', backgroundPosition: 'center 30%'}}></div>
+        )}
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+          <div className="max-w-3xl">
+            <Badge className="mb-6 bg-[#7AB648]/20 text-[#7AB648] border-[#7AB648]/30 hover:bg-[#7AB648]/30">
+              Cabinet de Conseil & Accompagnement
+            </Badge>
+            <h1 className="text-5xl lg:text-6xl font-serif font-bold mb-6 leading-tight tracking-tight text-white">
+              Transformez vos défis<br />
+              en opportunités de<br />
+              performance durable !
+              <div className="w-22 h-1 bg-[#7AB648] rounded-full mt-4"></div>
+            </h1>
+            <p className="text-base mb-10 text-white/75 leading-relaxed border-l-4 border-[#7AB648] pl-4 italic">
+              Accédez à un réseau d’experts métier engagés et inspirants afin de favoriser la pérennité de votre entreprise.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link href="/contact">
+                <Button className="bg-[#7AB648] hover:bg-[#639a3a] text-white rounded-lg px-6 py-6 text-base font-semibold">
+                  Nous contacter 
+                </Button>
+              </Link>
+              <Link href="/services">
+                <Button className="bg-white text-[#7AB648] hover:bg-gray-100 rounded-lg px-6 py-6 text-base font-semibold border-2 border-white">
+                  Découvrir nos approches
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
 
-      {images.length > 1 && (
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
-          {images.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentIndex(index)}
-              className={`w-3 h-3 rounded-full transition-all ${
-                index === currentIndex ? 'bg-white w-8' : 'bg-white/50'
-              }`}
-            />
-          ))}
+        {images.length > 1 && (
+          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
+            {images.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentIndex(index)}
+                className={`w-3 h-3 rounded-full transition-all ${
+                  index === currentIndex ? 'bg-white w-8' : 'bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Vision & Mission Section */}
+      <section className="py-8 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid gap-6 sm:grid-cols-2">
+            <div className="rounded-3xl border border-[#7AB648]/20 bg-[#7AB648]/5 p-8">
+              <p className="text-sm uppercase tracking-[0.24em] text-[#1B3F7A] mb-4 font-bold">Vision</p>
+              <p className="text-gray-700 leading-relaxed text-lg">
+                Se placer comme le catalyseur de votre performance, pour un avenir ambitieux et durable.              </p>
+            </div>
+            <div className="rounded-3xl border border-[#1B3F7A]/20 bg-[#1B3F7A]/5 p-8">
+              <p className="text-sm uppercase tracking-[0.24em] text-[#1B3F7A] mb-4 font-bold">Mission</p>
+              <p className="text-gray-700 leading-relaxed text-lg">
+                Accompagner les entreprises dans la construction d’organisations plus performantes, plus humaines et plus agiles, en transformant les défis managériaux en leviers de croissance et de performance.              </p>
+            </div>
+          </div>
         </div>
-      )}
-    </section>
+      </section>
+    </>
   )
 }

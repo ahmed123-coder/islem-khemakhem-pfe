@@ -2,11 +2,12 @@ import type { Metadata } from 'next'
 import Hero from '@/components/Hero'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowRight, CheckCircle2, Target, GraduationCap, Award, TrendingUp, Briefcase, Users, Shield, BarChart3, Quote } from 'lucide-react'
+import { CheckCircle2, Briefcase, Users, Shield, BarChart3, Quote } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 export const metadata: Metadata = {
-  title: 'DSL Conseil - Cabinet de Conseil & Accompagnement',
+  title: 'DSL Consulting - Cabinet de Conseil & Accompagnement',
   description: 'Transformez votre entreprise avec l\'excellence. Conseil en management, RH, qualité et performance.',
 }
 
@@ -15,181 +16,245 @@ export default function Home() {
     <>
       <Hero />
       
-      {/* Service Cards - Overlapping Hero */}
-      <section className="-mt-20 relative z-10">
+      {/* DSL Values Section */}
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="text-center mb-14">
+            <span className="text-3xl">🥇</span>
+            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">Nos valeurs — Le sens de DSL</h2>
+            <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full"></div>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
             {[
-              { title: 'Management & Stratégie', desc: 'Pilotage stratégique et organisation' },
-              { title: 'Ressources Humaines', desc: 'Recrutement et gestion des talents' },
-              { title: 'Qualité & RSE', desc: 'Démarches qualité et certifications' },
-              { title: 'Performance', desc: 'KPIs et optimisation des processus' }
-            ].map((service, i) => (
-              <Card key={i} className="bg-white shadow-lg hover:shadow-xl transition-shadow">
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-lg mb-2">{service.title}</h3>
-                  <p className="text-sm text-[#64748B] mb-4">{service.desc}</p>
-                  <Link href="/services" className="text-[#2B5A8E] text-sm font-medium inline-flex items-center hover:gap-2 transition-all">
-                    En savoir plus <ArrowRight className="ml-1 h-4 w-4" />
-                  </Link>
-                </CardContent>
-              </Card>
+              {
+                letter: 'D',
+                title: 'Détermination',
+                desc: 'Nous avançons avec rigueur et engagement vers l\'atteinte des objectifs de nos clients. Chaque projet est porté par une volonté de réussir, ensemble.'
+              },
+              {
+                letter: 'S',
+                title: 'Succès',
+                desc: 'Le succès n\'est pas individuel : il naît de notre collaboration étroite avec nos clients. Il est le fruit d\'une détermination partagée et d\'actions concrètes orientées résultats.'
+              },
+              {
+                letter: 'L',
+                title: 'Loyauté',
+                desc: 'Nous plaçons la confiance et la fidélité au cœur de nos relations. Nous sommes dévoués à nos clients et nous construisons des partenariats durables basés sur le respect et l\'intégrité.'
+              }
+            ].map((val) => (
+              <div key={val.letter} className="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow text-center">
+                <div className="w-16 h-16 rounded-full bg-[#1B3F7A] flex items-center justify-center mx-auto mb-5">
+                  <span className="text-3xl font-bold text-white">{val.letter}</span>
+                </div>
+                <div className="w-10 h-1 bg-[#7AB648] mx-auto mb-4 rounded-full"></div>
+                <h3 className="text-xl font-bold text-[#1B3F7A] mb-3">{val.title}</h3>
+                <p className="text-gray-600 leading-relaxed text-sm">{val.desc}</p>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Why Choose Us */}
+      {/* Approches Section */}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <span className="text-3xl">🎯</span>
+            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">Nos approches</h2>
+            <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full mb-6"></div>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: '👥',
+                title: 'Coaching professionnel'
+              },
+              {
+                icon: '🔄',
+                title: 'Conduite du changement'
+              },
+              {
+                icon: '📚',
+                title: 'Formation & Sensibilisation'
+              }
+            ].map((approach, i) => (
+              <div key={i} className="bg-white rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
+                <div className="text-4xl mb-5">{approach.icon}</div>
+                <div className="w-10 h-1 bg-[#7AB648] mb-4 rounded-full"></div>
+                <h3 className="text-xl font-bold text-[#1B3F7A] mb-6">{approach.title}</h3>
+                <Link href="/services">
+                  <button className="text-[#7AB648] hover:text-[#639a3a] text-sm font-medium underline underline-offset-4 transition-colors">
+                    En savoir plus →
+                  </button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Nos Solutions Section */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <span className="text-3xl">💡</span>
+            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">Nos solutions</h2>
+            <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full mb-6"></div>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: '🎯',
+                title: 'Management de la performance cachée'
+              },
+              {
+                icon: '📊',
+                title: 'Gestion prévisionnelle des emplois et des compétences'
+              },
+              {
+                icon: '⭐',
+                title: 'Marque employeur'
+              }
+            ].map((solution, i) => (
+              <div key={i} className="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
+                <div className="text-4xl mb-5">{solution.icon}</div>
+                <div className="w-10 h-1 bg-[#7AB648] mb-4 rounded-full"></div>
+                <h3 className="text-xl font-bold text-[#1B3F7A] mb-6">{solution.title}</h3>
+                <Link href="/services">
+                  <button className="text-[#7AB648] hover:text-[#639a3a] text-sm font-medium underline underline-offset-4 transition-colors">
+                    En savoir plus →
+                  </button>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Why Choose DSL */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <p className="text-[#F59E0B] font-semibold text-sm uppercase tracking-wide mb-4">POURQUOI NOUS CHOISIR</p>
-              <h2 className="text-4xl font-serif font-bold mb-8">Un accompagnement d'excellence</h2>
-              <div className="space-y-4">
+              <div className="mb-10">
+                <h2 className="text-3xl font-serif font-bold text-[#1B3F7A] mb-3">🏆 Pourquoi choisir DSL</h2>
+                <div className="w-16 h-1 bg-[#7AB648] rounded-full"></div>
+              </div>
+              <p className="text-gray-700 leading-relaxed mb-8">
+                La différence entre une organisation qui évolue et celle qui stagne ne réside pas uniquement dans ses ressources, mais dans sa capacité à mobiliser les bonnes expertises au bon moment. C'est pour répondre à cette exigence que notre plateforme a été conçue, ça vous sera utile pour :
+              </p>
+              <div className="space-y-3 max-w-2xl">
                 {[
-                  'Diagnostics personnalisés et plans d\'action concrets',
-                  'Équipe de consultants seniors certifiés',
-                  'Plateforme digitale de suivi en temps réel',
-                  'Méthodologies éprouvées et innovantes',
-                  'Accompagnement de bout en bout'
+                  'Piloter votre performance avec plus de clarté et d\'efficacité',
+                  'Optimiser vos ressources et maîtriser vos défis et vos goulots',
+                  'Bénéficier de solutions concrètes, bien adaptées à vos enjeux',
+                  'Accéder rapidement à des experts rigoureusement sélectionnés'
                 ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-3">
-                    <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0 mt-0.5" />
-                    <p className="text-gray-700">{item}</p>
+                  <div key={i} className="flex items-center gap-3">
+                    <span className="text-[#7AB648] text-sm">✔️</span>
+                    <p className="text-gray-700 text-sm">{item}</p>
                   </div>
                 ))}
               </div>
-              <Button className="mt-8 bg-[#2B5A8E] hover:bg-[#234a73]">
-                Nous contacter
-              </Button>
             </div>
-            <div className="grid grid-cols-2 gap-6">
-              {[
-                { icon: Target, title: 'Diagnostic', desc: 'Audit complet' },
-                { icon: GraduationCap, title: 'Formation', desc: 'Ateliers pratiques' },
-                { icon: Award, title: 'Certification', desc: 'ISO & normes' },
-                { icon: TrendingUp, title: 'Performance', desc: 'KPIs & suivi' }
-              ].map((item, i) => (
-                <Card key={i} className="text-center">
-                  <CardContent className="p-6">
-                    <div className="w-12 h-12 rounded-full bg-[#F59E0B]/10 flex items-center justify-center mx-auto mb-4">
-                      <item.icon className="h-6 w-6 text-[#F59E0B]" />
-                    </div>
-                    <h3 className="font-semibold mb-1">{item.title}</h3>
-                    <p className="text-sm text-[#64748B]">{item.desc}</p>
-                  </CardContent>
-                </Card>
-              ))}
+            <div className="relative h-80 lg:h-96 rounded-2xl overflow-hidden shadow-lg">
+              <Image src="/pourquoi nous choisir.png" alt="Pourquoi choisir DSL" fill className="object-cover" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 bg-[#2B5A8E]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            {[
-              { value: '150+', label: 'Entreprises accompagnées' },
-              { value: '95%', label: 'Taux de satisfaction' },
-              { value: '12', label: 'Consultants experts' },
-              { value: '8 ans', label: 'D\'expérience' }
-            ].map((stat, i) => (
-              <Card key={i} className="bg-white text-center">
-                <CardContent className="p-6">
-                  <div className="text-4xl font-serif font-bold text-[#2B5A8E] mb-2">{stat.value}</div>
-                  <div className="text-[#64748B]">{stat.label}</div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Expertise Section */}
+      {/* Testimonials Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <p className="text-[#F59E0B] font-semibold text-sm uppercase tracking-wide mb-4">NOS EXPERTISES</p>
-            <h2 className="text-4xl font-serif font-bold mb-4">Des solutions sur mesure</h2>
-            <p className="text-[#64748B] max-w-3xl mx-auto">
-              Nous intervenons sur quatre domaines clés pour optimiser la performance globale de votre entreprise.
-            </p>
+          <div className="text-center mb-14">
+            <span className="text-3xl">⭐</span>
+            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">Ce que nos clients disent</h2>
+            <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full"></div>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-3 gap-8">
             {[
-              { icon: Briefcase, title: 'Management & Stratégie', desc: 'Pilotage stratégique, organisation et transformation' },
-              { icon: Users, title: 'Ressources Humaines', desc: 'Recrutement, formation, GPEC et développement RH' },
-              { icon: Shield, title: 'Qualité & RSE', desc: 'Démarches qualité, certifications ISO, RSE et conformité' },
-              { icon: BarChart3, title: 'Performance', desc: 'KPIs, tableaux de bord, optimisation des processus' }
-            ].map((item, i) => (
-              <Card key={i} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="w-14 h-14 rounded-xl bg-[#2B5A8E]/10 flex items-center justify-center mb-4">
-                    <item.icon className="h-7 w-7 text-[#2B5A8E]" />
-                  </div>
-                  <h3 className="text-xl font-serif font-bold mb-3">{item.title}</h3>
-                  <p className="text-[#64748B] text-sm">{item.desc}</p>
-                </CardContent>
-              </Card>
+              {
+                name: 'Ahmed Khalil',
+                role: 'Directeur Général, Groupe Industriel',
+                testimonial: 'DSL a transformé notre approche du management. En 6 mois, nous avons identifié et résolu les dysfonctionnements invisibles qui freinaient notre croissance. Un partenariat stratégique vrai.',
+                rating: 5
+              },
+              {
+                name: 'Fatima Ben Ali',
+                role: 'RH Manager, Entreprise Technologique',
+                testimonial: 'L\'expertise en gestion des talents et conduite du changement de DSL a été déterminante pour notre transformation digitale. Les équipes sont plus engagées que jamais.',
+                rating: 5
+              },
+              {
+                name: 'Mohamed Zahra',
+                role: 'Directeur Planning, PME Services',
+                testimonial: 'Les solutions personnalisées et l\'accompagnement opérationnel de DSL ont dépassé nos attentes. Nos KPIs ont augmenté de 40% en 12 mois. Fortement recommandé.',
+                rating: 5
+              }
+            ].map((testimonial, i) => (
+              <div key={i} className="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
+                <div className="flex gap-1 mb-4">
+                  {[...Array(testimonial.rating)].map((_, j) => (
+                    <span key={j} className="text-[#7AB648] text-lg">★</span>
+                  ))}
+                </div>
+                <p className="text-gray-700 italic leading-relaxed mb-6 text-sm">
+                  "{testimonial.testimonial}"
+                </p>
+                <div className="border-t border-gray-200 pt-4">
+                  <p className="text-sm font-bold text-[#1B3F7A]">{testimonial.name}</p>
+                  <p className="text-xs text-gray-500">{testimonial.role}</p>
+                </div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-[#2B5A8E] text-white text-center">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-serif font-bold mb-6">
-            Prêt à transformer votre entreprise ?
+      <section className="relative py-24 overflow-hidden" style={{background: 'linear-gradient(135deg, #1B3F7A 0%, #1a6b6b 100%)'}}>
+        <div className="absolute inset-0 opacity-20">
+          <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <pattern id="dots" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="1.5" fill="white" />
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#dots)" />
+          </svg>
+        </div>
+        <div className="absolute inset-0 flex items-center justify-center opacity-5">
+          <span className="text-white font-bold" style={{fontSize: '20rem', letterSpacing: '-0.05em'}}>DSL</span>
+        </div>
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl lg:text-4xl font-serif font-bold text-white mb-6 whitespace-nowrap">
+            Accédez directement à nos approches spécialisés.
           </h2>
-          <p className="text-xl mb-10 text-white/90">
-            Réservez un diagnostic gratuit avec l'un de nos consultants experts.
+          <p className="text-lg text-white/80 mb-10 max-w-2xl mx-auto">
+            Choisissez la solution adaptée à vos besoins uniques ou connectez-vous pour un accompagnement sur mesure.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button className="bg-[#F59E0B] hover:bg-[#ea8c00] text-white px-8 py-6 text-base">
-              Réserver un diagnostic gratuit
-            </Button>
-            <Button variant="outline" className="border-2 border-white text-white hover:bg-white hover:text-[#2B5A8E] px-8 py-6 text-base">
-              Nous contacter
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link href="/register">
+              <Button className="bg-white hover:bg-gray-100 text-[#1B3F7A] rounded-full px-8 py-6 text-base font-bold">
+                Créer un Compte
+              </Button>
+            </Link>
+            <Link href="/services">
+              <Button className="bg-[#7AB648] hover:bg-[#639a3a] text-white rounded-full px-8 py-6 text-base font-bold">
+                Consulter nos domaines →
+              </Button>
+            </Link>
+            
+            <Link href="/contact" className="text-white/70 hover:text-white underline underline-offset-4 text-base font-medium transition-colors">
+              Nous contacter →
+            </Link>
           </div>
         </div>
+
       </section>
 
-      {/* Testimonials */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <p className="text-[#F59E0B] font-semibold text-sm uppercase tracking-wide mb-4">TÉMOIGNAGES</p>
-            <h2 className="text-4xl font-serif font-bold">Ils nous font confiance</h2>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { quote: 'DSL Conseil a transformé notre approche RH. Les résultats sont au-delà de nos attentes.', name: 'Marie Dupont', role: 'DRH, TechCorp' },
-              { quote: 'Un accompagnement stratégique remarquable qui nous a permis de doubler notre chiffre d\'affaires.', name: 'Jean Martin', role: 'Dirigeant, PME Solutions' },
-              { quote: 'Certification ISO obtenue en 6 mois grâce à leur méthodologie structurée et efficace.', name: 'Sophie Bernard', role: 'Responsable Qualité, IndusFrance' }
-            ].map((testimonial, i) => (
-              <Card key={i}>
-                <CardContent className="p-6">
-                  <Quote className="h-10 w-10 text-[#F59E0B]/30 mb-4" />
-                  <p className="text-gray-700 mb-6 italic">"{testimonial.quote}"</p>
-                  <div className="flex text-[#F59E0B] mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <svg key={i} className="w-5 h-5 fill-current" viewBox="0 0 20 20">
-                        <path d="M10 15l-5.878 3.09 1.123-6.545L.489 6.91l6.572-.955L10 0l2.939 5.955 6.572.955-4.756 4.635 1.123 6.545z" />
-                      </svg>
-                    ))}
-                  </div>
-                  <div className="font-semibold">{testimonial.name}</div>
-                  <div className="text-sm text-[#64748B]">{testimonial.role}</div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+
     </>
   )
 }

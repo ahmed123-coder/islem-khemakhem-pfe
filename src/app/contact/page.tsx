@@ -50,73 +50,86 @@ export default function Contact() {
 
   return (
     <div>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-blue-700 to-blue-900 text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="inline-block bg-orange-500 text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
-            Contact
+      {/* Hero Section - Styled like home page */}
+      <section className="relative bg-[#2B4F8A] text-white overflow-hidden min-h-[300px]">
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1600')] bg-cover bg-center opacity-30"></div>
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="max-w-4xl">
+            <div className="inline-block bg-[#7AB648] text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
+              Contact
+            </div>
+            <h1 className="text-5xl lg:text-6xl font-serif font-bold mb-6 leading-tight text-white">
+              Parlons de votre projet
+              <div className="w-22 h-1 bg-[#7AB648] rounded-full mt-4"></div>
+            </h1>
+            <p className="text-base text-white/75 leading-relaxed border-l-4 border-[#7AB648] pl-4 italic">
+              Notre équipe vous répond sous 24 heures. Contactez-nous pour transformer vos défis en opportunités de croissance.
+            </p>
           </div>
-          <h1 className="text-5xl font-bold mb-4">Parlons de votre projet</h1>
-          <p className="text-xl text-blue-100">Notre équipe vous répond sous 24 heures.</p>
         </div>
       </section>
 
       {/* Main Content */}
-      <section className="py-16 bg-gray-50">
+      <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
             {/* Contact Info - Left Side */}
             <div className="lg:col-span-2 space-y-6">
-              <h2 className="text-3xl font-bold text-gray-900 mb-8">Nos coordonnées</h2>
+              <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mb-3">Nos coordonnées</h2>
+              <div className="w-16 h-1 bg-[#7AB648] rounded-full mb-8"></div>
               
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card className="hover:shadow-lg transition-shadow border-gray-100">
                 <CardContent className="p-6 flex items-start space-x-4">
-                  <div className="bg-blue-100 p-3 rounded-lg">
-                    <Mail className="w-6 h-6 text-blue-700" />
+                  <div className="bg-[#7AB648]/10 p-3 rounded-lg">
+                    <Mail className="w-6 h-6 text-[#7AB648]" />
                   </div>
                   <div>
                     <h3 className="text-sm text-gray-500 mb-1">Email</h3>
-                    <a href="mailto:contact@dsl-conseil.com" className="text-gray-900 font-medium hover:text-blue-700">
+                    <a href="mailto:contact@dsl-conseil.com" className="text-[#1B3F7A] font-medium hover:text-[#7AB648]">
                       contact@dsl-conseil.com
                     </a>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card className="hover:shadow-lg transition-shadow border-gray-100">
                 <CardContent className="p-6 flex items-start space-x-4">
-                  <div className="bg-blue-100 p-3 rounded-lg">
-                    <Phone className="w-6 h-6 text-blue-700" />
+                  <div className="bg-[#7AB648]/10 p-3 rounded-lg">
+                    <Phone className="w-6 h-6 text-[#7AB648]" />
                   </div>
                   <div>
                     <h3 className="text-sm text-gray-500 mb-1">Téléphone</h3>
-                    <a href="tel:+33123456789" className="text-gray-900 font-medium hover:text-blue-700">
-                      +33 1 23 45 67 89
+                    <a href="tel:25307534" className="text-[#1B3F7A] font-medium hover:text-[#7AB648]">
+                      25 307 534
                     </a>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card className="hover:shadow-lg transition-shadow border-gray-100">
                 <CardContent className="p-6 flex items-start space-x-4">
-                  <div className="bg-blue-100 p-3 rounded-lg">
-                    <MapPin className="w-6 h-6 text-blue-700" />
+                  <div className="bg-[#7AB648]/10 p-3 rounded-lg">
+                    <MapPin className="w-6 h-6 text-[#7AB648]" />
                   </div>
                   <div>
                     <h3 className="text-sm text-gray-500 mb-1">Adresse</h3>
-                    <p className="text-gray-900 font-medium">12 rue de la Performance, 75008 Paris</p>
+                    <p className="text-[#1B3F7A] font-medium">
+                      Route l'Ain km 0.5<br />
+                      Immeuble Henda
+                    </p>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="hover:shadow-lg transition-shadow">
+              <Card className="hover:shadow-lg transition-shadow border-gray-100">
                 <CardContent className="p-6 flex items-start space-x-4">
-                  <div className="bg-blue-100 p-3 rounded-lg">
-                    <Clock className="w-6 h-6 text-blue-700" />
+                  <div className="bg-[#7AB648]/10 p-3 rounded-lg">
+                    <Clock className="w-6 h-6 text-[#7AB648]" />
                   </div>
                   <div>
                     <h3 className="text-sm text-gray-500 mb-1">Horaires</h3>
-                    <p className="text-gray-900 font-medium">Lun-Ven : 9h00 - 18h00</p>
+                    <p className="text-[#1B3F7A] font-medium">Lun-Ven : 9h00 - 18h00</p>
                   </div>
                 </CardContent>
               </Card>
@@ -124,14 +137,15 @@ export default function Contact() {
 
             {/* Contact Form - Right Side */}
             <div className="lg:col-span-3">
-              <Card className="shadow-lg">
+              <Card className="shadow-lg border-gray-100">
                 <CardContent className="p-8">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-8">Envoyez-nous un message</h2>
+                  <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mb-3">Envoyez-nous un message</h2>
+                  <div className="w-16 h-1 bg-[#7AB648] rounded-full mb-8"></div>
                   
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {submitStatus === 'success' && (
-                      <div className="p-4 bg-green-50 border border-green-200 rounded-md">
-                        <p className="text-green-800">Merci ! Votre message a été envoyé avec succès.</p>
+                      <div className="p-4 bg-[#7AB648]/10 border border-[#7AB648]/20 rounded-md">
+                        <p className="text-[#1B3F7A]">Merci ! Votre message a été envoyé avec succès.</p>
                       </div>
                     )}
                     {submitStatus === 'error' && (
@@ -142,7 +156,7 @@ export default function Contact() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label htmlFor="name" className="text-sm font-medium text-gray-700">Nom complet</label>
+                        <label htmlFor="name" className="text-sm font-medium text-[#1B3F7A]">Nom complet</label>
                         <Input
                           type="text"
                           id="name"
@@ -151,11 +165,11 @@ export default function Contact() {
                           onChange={handleChange}
                           placeholder="Jean Dupont"
                           required
-                          className="bg-gray-50"
+                          className="bg-gray-50 border-gray-200 focus:border-[#7AB648]"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label htmlFor="email" className="text-sm font-medium text-gray-700">Email</label>
+                        <label htmlFor="email" className="text-sm font-medium text-[#1B3F7A]">Email</label>
                         <Input
                           type="email"
                           id="email"
@@ -164,14 +178,14 @@ export default function Contact() {
                           onChange={handleChange}
                           placeholder="jean@entreprise.com"
                           required
-                          className="bg-gray-50"
+                          className="bg-gray-50 border-gray-200 focus:border-[#7AB648]"
                         />
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label htmlFor="company" className="text-sm font-medium text-gray-700">Entreprise</label>
+                        <label htmlFor="company" className="text-sm font-medium text-[#1B3F7A]">Entreprise</label>
                         <Input
                           type="text"
                           id="company"
@@ -179,25 +193,25 @@ export default function Contact() {
                           value={formData.company}
                           onChange={handleChange}
                           placeholder="Votre entreprise"
-                          className="bg-gray-50"
+                          className="bg-gray-50 border-gray-200 focus:border-[#7AB648]"
                         />
                       </div>
                       <div className="space-y-2">
-                        <label htmlFor="phone" className="text-sm font-medium text-gray-700">Téléphone</label>
+                        <label htmlFor="phone" className="text-sm font-medium text-[#1B3F7A]">Téléphone</label>
                         <Input
                           type="tel"
                           id="phone"
                           name="phone"
                           value={formData.phone}
                           onChange={handleChange}
-                          placeholder="+33 6 12 34 56 78"
-                          className="bg-gray-50"
+                          placeholder="25 307 534"
+                          className="bg-gray-50 border-gray-200 focus:border-[#7AB648]"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <label htmlFor="subject" className="text-sm font-medium text-gray-700">Sujet</label>
+                      <label htmlFor="subject" className="text-sm font-medium text-[#1B3F7A]">Sujet</label>
                       <Input
                         type="text"
                         id="subject"
@@ -205,12 +219,12 @@ export default function Contact() {
                         value={formData.subject}
                         onChange={handleChange}
                         placeholder="Objet de votre demande"
-                        className="bg-gray-50"
+                        className="bg-gray-50 border-gray-200 focus:border-[#7AB648]"
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label htmlFor="message" className="text-sm font-medium text-gray-700">Message</label>
+                      <label htmlFor="message" className="text-sm font-medium text-[#1B3F7A]">Message</label>
                       <Textarea
                         id="message"
                         name="message"
@@ -219,14 +233,14 @@ export default function Contact() {
                         onChange={handleChange}
                         required
                         placeholder="Décrivez votre projet ou votre besoin..."
-                        className="bg-gray-50"
+                        className="bg-gray-50 border-gray-200 focus:border-[#7AB648]"
                       />
                     </div>
 
                     <Button
                       type="submit"
                       disabled={isSubmitting}
-                      className="bg-blue-700 hover:bg-blue-800 text-white px-8 py-6 text-lg font-medium rounded-lg flex items-center gap-2"
+                      className="bg-[#7AB648] hover:bg-[#639a3a] text-white px-8 py-6 text-lg font-medium rounded-lg flex items-center gap-2"
                     >
                       {isSubmitting ? 'Envoi...' : 'Envoyer'}
                       <Send className="w-5 h-5" />

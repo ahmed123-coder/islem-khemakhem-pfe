@@ -1,28 +1,21 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
 export default function LoginPage() {
-  const [tab, setTab] = useState<'CLIENT' | 'CONSULTANT'>('CLIENT')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [logoUrl, setLogoUrl] = useState('/logo.jpeg')
+  const [loading, setLoading] = useState(false)
   const router = useRouter()
-
-  useEffect(() => {
-    fetch('/api/content/navbar')
-      .then(res => res.json())
-      .then(data => { if (data.value?.logoUrl) setLogoUrl(data.value.logoUrl) })
-      .catch(() => {})
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
+    setLoading(true)
 
     const res = await fetch('/api/auth/login', {
       method: 'POST',
@@ -30,11 +23,12 @@ export default function LoginPage() {
       body: JSON.stringify({ email, password })
     })
 
+    setLoading(false)
+
     if (res.ok) {
       const data = await res.json()
       const role = data.user.role
-      
-      const redirectPath = 
+      const redirectPath =
         role === 'ADMIN' ? '/admin' :
         role === 'CONSULTANT' ? '/consultant' :
         role === 'CLIENT' ? '/client' : '/dashboard'
@@ -50,123 +44,79 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Side - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 px-8 py-12">
-        <div className="max-w-md w-full">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-12">
-            <Image src={logoUrl} alt="Logo" width={50} height={50} className="rounded-lg object-contain" />
-          </div>
+    <div
+      className="min-h-screen flex items-center justify-center relative"
+      style={{ backgroundImage: "url('/fond.png')", backgroundSize: 'cover', backgroundPosition: 'center' }}
+    >
+      <div className="absolute inset-0 bg-[#1B3F7A]/70 backdrop-blur-sm" />
 
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Bienvenue</h1>
-            <p className="text-gray-500">Connectez-vous à votre espace</p>
-          </div>
+      <button onClick={() => router.back()} className="absolute top-6 left-6 z-20 flex items-center gap-2 text-white/80 hover:text-white text-sm transition-colors">
+        ← Retour
+      </button>
 
-          {/* Role Tabs */}
-          <div className="flex rounded-lg border border-gray-200 p-1 mb-8 bg-white">
-            <button
-              type="button"
-              onClick={() => { setTab('CLIENT'); setError('') }}
-              className={`flex-1 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                tab === 'CLIENT' ? 'bg-blue-700 text-white' : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Espace Client
-            </button>
-            <button
-              type="button"
-              onClick={() => { setTab('CONSULTANT'); setError('') }}
-              className={`flex-1 py-2.5 rounded-md text-sm font-medium transition-colors ${
-                tab === 'CONSULTANT' ? 'bg-blue-700 text-white' : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              Espace Consultant
-            </button>
-          </div>
+      <div className="relative z-10 w-full max-w-md mx-4">
+        <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden">
+          <div className="h-1.5 w-full bg-gradient-to-r from-[#1B3F7A] via-[#7AB648] to-[#1B3F7A]" />
 
-          {/* Error Message */}
-          {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6">
-              {error}
-            </div>
-          )}
-
-          {/* Login Form */}
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="jean@entreprise.com"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
+          <div className="px-8 py-10">
+            <div className="flex justify-center mb-8">
+              <Image src="/logo-1772242356501-removebg-preview.png" alt="DSL Consulting" width={140} height={70} className="object-contain" />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-2">Mot de passe</label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
+            <h1 className="text-2xl font-bold text-[#1B3F7A] text-center mb-2">Bienvenue</h1>
+            <p className="text-gray-400 text-center text-sm mb-8">Connectez-vous à votre espace</p>
 
-            <button
-              type="submit"
-              className="w-full bg-blue-700 hover:bg-blue-800 text-white font-medium py-3 px-4 rounded-lg transition-colors"
-            >
-              Se connecter
-            </button>
-          </form>
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl mb-5 text-sm">
+                {error}
+              </div>
+            )}
 
-          <p className="text-center text-gray-600 mt-6">
-            Pas encore de compte ?{' '}
-            <Link href={tab === 'CONSULTANT' ? '/register/consultant' : '/register/client'} className="text-blue-700 hover:text-blue-800 font-medium">
-              S'inscrire
-            </Link>
-          </p>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="jean@entreprise.com"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1B3F7A] focus:border-transparent text-sm bg-gray-50"
+                  required
+                />
+              </div>
+              <div>
+                <div className="flex justify-between mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700">Mot de passe</label>
+                  <Link href="/forgot-password" className="text-xs text-[#7AB648] hover:underline">Mot de passe oublié ?</Link>
+                </div>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1B3F7A] focus:border-transparent text-sm bg-gray-50"
+                  required
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#1B3F7A] hover:bg-[#152f5c] disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-all hover:shadow-lg"
+              >
+                {loading ? 'Connexion...' : 'Se connecter'}
+              </button>
+            </form>
+
+            <p className="text-center text-gray-500 text-sm mt-6">
+              Pas encore de compte ?{' '}
+              <Link href="/register" className="text-[#7AB648] hover:text-[#639a3a] font-semibold">S&apos;inscrire</Link>
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Right Side - Blue Section */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-700 to-blue-900 items-center justify-center p-12">
-        <div className="max-w-lg text-white">
-          <h2 className="text-4xl font-bold mb-6">Votre espace de conseil digital</h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Accédez à vos missions, suivez vos indicateurs de performance
-            et collaborez avec vos consultants en temps réel.
-          </p>
-          <ul className="space-y-4">
-            <li className="flex items-start gap-3">
-              <span className="text-orange-400 text-xl">•</span>
-              <span className="text-lg">Suivi des missions en temps réel</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-orange-400 text-xl">•</span>
-              <span className="text-lg">Accès aux livrables et rapports</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-orange-400 text-xl">•</span>
-              <span className="text-lg">Messagerie sécurisée</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="text-orange-400 text-xl">•</span>
-              <span className="text-lg">Tableaux de bord personnalisés</span>
-            </li>
-          </ul>
-        </div>
+        <p className="text-center text-white/60 text-xs mt-4">
+          DSL Consulting — Cabinet de conseil et d&apos;accompagnement
+        </p>
       </div>
     </div>
   )

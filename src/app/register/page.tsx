@@ -1,311 +1,312 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import ReCAPTCHA from 'react-google-recaptcha'
+
+const inputCls = 'w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1B3F7A] focus:border-transparent text-sm bg-gray-50'
+const labelCls = 'block text-sm font-medium text-gray-700 mb-1.5'
+
+const SECTORS = ['Agriculture', 'Agroalimentaire', 'Banque & Finance', 'BTP & Immobilier', 'Commerce & Distribution', 'Éducation & Formation', 'Énergie', 'Hôtellerie & Tourisme', 'Industrie manufacturière', 'Informatique & Télécoms', 'Logistique & Transport', 'Santé & Pharmaceutique', 'Services aux entreprises', 'Textile & Habillement', 'Autre']
+
+function useCaptcha() {
+  const [a] = useState(() => Math.floor(Math.random() * 9) + 1)
+  const [b] = useState(() => Math.floor(Math.random() * 9) + 1)
+  const [answer, setAnswer] = useState('')
+  const isValid = parseInt(answer) === a + b
+  return { question: `${a} + ${b} = ?`, answer, setAnswer, isValid }
+}
 
 export default function RegisterPage() {
-  const [tab, setTab] = useState<'CLIENT' | 'CONSULTANT'>('CLIENT')
-
-  // Client fields
-  const [cFirstName, setCFirstName] = useState('')
-  const [cLastName, setCLastName] = useState('')
-  const [cPhone, setCPhone] = useState('')
-  const [cEmail, setCEmail] = useState('')
-  const [cPassword, setCPassword] = useState('')
-  const [cConfirm, setCConfirm] = useState('')
-
-  // Consultant fields
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [email, setEmail] = useState('')
-  const [phone, setPhone] = useState('')
-  const [specialty, setSpecialty] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [cvFile, setCvFile] = useState<File | null>(null)
-  const [certFiles, setCertFiles] = useState<File[]>([])
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
-  const recaptchaRef = useRef<ReCAPTCHA>(null)
-
+  const [step, setStep] = useState<'CHOOSE' | 'CLIENT' | 'CONSULTANT'>('CHOOSE')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
-  const [logoUrl, setLogoUrl] = useState('/logo.jpeg')
   const router = useRouter()
 
-  useEffect(() => {
-    fetch('/api/content/navbar')
-      .then(res => res.json())
-      .then(data => { if (data.value?.logoUrl) setLogoUrl(data.value.logoUrl) })
-      .catch(() => {})
-  }, [])
+  const [client, setClient] = useState({ lastName: '', firstName: '', email: '', phone: '', company: '', sector: '', address: '', needs: '', password: '', confirm: '', privacy: false })
+  const [consultant, setConsultant] = useState({ lastName: '', firstName: '', email: '', phone: '', competences: '', password: '', confirm: '', privacy: false })
+  const [cvFile, setCvFile] = useState<File | null>(null)
+  const [certFiles, setCertFiles] = useState<File[]>([])
+  const cvRef = useRef<HTMLInputElement>(null)
+  const certRef = useRef<HTMLInputElement>(null)
 
-  const switchTab = (t: 'CLIENT' | 'CONSULTANT') => {
-    setTab(t)
-    setError('')
-    setSuccess('')
-  }
+  const clientCaptcha = useCaptcha()
+  const consultantCaptcha = useCaptcha()
 
   const handleClientSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (cPassword !== cConfirm) { setError('Les mots de passe ne correspondent pas'); return }
-
+    if (client.password !== client.confirm) return setError('Les mots de passe ne correspondent pas.')
+    if (!client.privacy) return setError('Veuillez accepter la politique de confidentialité.')
+    if (!clientCaptcha.isValid) return setError('Réponse au captcha incorrecte.')
     const res = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: cEmail, password: cPassword, name: `${cFirstName} ${cLastName}`.trim(), phone: cPhone, role: 'CLIENT' })
+      body: JSON.stringify({ type: 'CLIENT', name: client.lastName, firstName: client.firstName, email: client.email, phone: client.phone, company: client.company, sector: client.sector, address: client.address, needs: client.needs, password: client.password })
     })
-    const data = await res.json()
-    if (res.ok) setSuccess('Votre compte a été créé. Un administrateur doit valider votre accès avant que vous puissiez vous connecter.')
-    else setError(data.error || 'Inscription échouée')
+    if (res.ok) setSuccess('Votre compte a été créé avec succès !')
+    else { const d = await res.json(); setError(d.error || 'Erreur inscription') }
   }
 
   const handleConsultantSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (password !== confirmPassword) { setError('Les mots de passe ne correspondent pas'); return }
-    if (!cvFile) { setError('Veuillez joindre votre CV'); return }
-    if (!captchaToken) { setError("Veuillez confirmer que vous n'êtes pas un robot"); return }
-
+    if (consultant.password !== consultant.confirm) return setError('Les mots de passe ne correspondent pas.')
+    if (!consultant.privacy) return setError('Veuillez accepter la politique de confidentialité.')
+    if (!consultantCaptcha.isValid) return setError('Réponse au captcha incorrecte.')
+    if (!cvFile) return setError('Veuillez joindre votre CV.')
     setLoading(true)
     try {
-      const cvForm = new FormData()
-      cvForm.append('file', cvFile)
-      cvForm.append('folder', 'consultant-cvs')
-      const cvRes = await fetch('/api/upload/document', { method: 'POST', body: cvForm })
-      if (!cvRes.ok) throw new Error('Échec du téléchargement du CV')
+      const fd = new FormData(); fd.append('file', cvFile)
+      const cvRes = await fetch('/api/upload/document', { method: 'POST', body: fd })
       const { url: cvUrl } = await cvRes.json()
-
-      const certUrls: string[] = []
-      for (const cert of certFiles) {
-        const certForm = new FormData()
-        certForm.append('file', cert)
-        certForm.append('folder', 'consultant-certifications')
-        const certRes = await fetch('/api/upload/document', { method: 'POST', body: certForm })
-        if (!certRes.ok) throw new Error("Échec du téléchargement d'une certification")
-        const { url } = await certRes.json()
-        certUrls.push(url)
-      }
-
+      const certUrls = await Promise.all(certFiles.map(async f => {
+        const fd2 = new FormData(); fd2.append('file', f)
+        const r = await fetch('/api/upload/document', { method: 'POST', body: fd2 })
+        const d = await r.json(); return d.url
+      }))
       const res = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role: 'CONSULTANT', name: `${firstName} ${lastName}`.trim(), email, phone, specialty, password, cvUrl, certificationUrls: certUrls })
+        body: JSON.stringify({ type: 'CONSULTANT', name: consultant.lastName, firstName: consultant.firstName, email: consultant.email, phone: consultant.phone, competences: consultant.competences, cvUrl, certUrls, password: consultant.password })
       })
-      const data = await res.json()
-      if (res.ok) setSuccess('Votre demande a été soumise. Un administrateur examinera votre dossier et activera votre compte.')
-      else { setError(data.error || 'Inscription échouée'); recaptchaRef.current?.reset(); setCaptchaToken(null) }
-    } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue')
-      recaptchaRef.current?.reset()
-      setCaptchaToken(null)
-    } finally {
-      setLoading(false)
-    }
+      if (res.ok) setSuccess('Votre candidature a été soumise avec succès !')
+      else { const d = await res.json(); setError(d.error || 'Erreur inscription') }
+    } finally { setLoading(false) }
   }
 
-  const inputCls = 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent'
-  const labelCls = 'block text-sm font-medium text-gray-900 mb-2'
+  const bgStyle = { backgroundImage: "url('/fond.png')", backgroundSize: 'cover', backgroundPosition: 'center' }
 
-  if (success) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-8">
-        <div className="max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-3">Demande envoyée !</h2>
-          <p className="text-gray-600 mb-6">{success}</p>
-          <Link href="/login" className="bg-blue-700 text-white px-6 py-3 rounded-lg hover:bg-blue-800 transition-colors">
-            Retour à la connexion
-          </Link>
+  // Popup modal
+  const SuccessModal = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div className="relative z-10 bg-white rounded-3xl shadow-2xl p-8 max-w-sm mx-4 text-center">
+        <div className="w-16 h-16 bg-[#7AB648]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-[#7AB648]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+          </svg>
         </div>
+        <h2 className="text-xl font-bold text-[#1B3F7A] mb-3">Demande envoyée !</h2>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
+          <p className="text-amber-700 text-sm font-medium">⏳ Compte en cours de validation</p>
+          <p className="text-amber-600 text-xs mt-1">Votre demande a bien été reçue. Un administrateur examinera votre dossier et activera votre compte dans les plus brefs délais.</p>
+        </div>
+        <p className="text-gray-400 text-xs mb-5">Vous recevrez une notification dès que votre compte sera activé.</p>
+        <Link href="/login" className="block w-full bg-[#1B3F7A] text-white px-6 py-3 rounded-xl hover:bg-[#152f5c] transition-colors text-sm font-semibold">
+          Retour à la connexion
+        </Link>
       </div>
-    )
-  }
+    </div>
+  )
 
   return (
-    <div className="min-h-screen flex">
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 px-8 py-12 overflow-y-auto">
-        <div className="max-w-md w-full">
-          <div className="flex items-center gap-3 mb-10">
-            <Image src={logoUrl} alt="Logo" width={50} height={50} className="rounded-lg object-contain" />
-          </div>
+    <div className="min-h-screen flex items-center justify-center relative py-8" style={bgStyle}>
+      {success && <SuccessModal />}
+      <div className="absolute inset-0 bg-[#1B3F7A]/70 backdrop-blur-sm" />
+      <button onClick={() => step === 'CHOOSE' ? router.back() : setStep('CHOOSE')}
+        className="absolute top-6 left-6 z-20 flex items-center gap-2 text-white/80 hover:text-white text-sm transition-colors">← Retour</button>
 
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">Créer un compte</h1>
-            <p className="text-gray-500">Rejoignez notre plateforme de conseil</p>
-          </div>
+      <div className="relative z-10 w-full max-w-lg mx-4">
+        <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl overflow-hidden">
+          <div className="h-1.5 w-full bg-gradient-to-r from-[#1B3F7A] via-[#7AB648] to-[#1B3F7A]" />
+          <div className="px-8 py-8 overflow-y-auto max-h-[88vh]">
+            <div className="flex justify-center mb-6">
+              <Image src="/logo-1772242356501-removebg-preview.png" alt="DSL Consulting" width={130} height={65} className="object-contain" />
+            </div>
 
-          {/* Tabs */}
-          <div className="flex rounded-lg border border-gray-200 p-1 mb-8 bg-white">
-            <button type="button" onClick={() => switchTab('CLIENT')}
-              className={`flex-1 py-2.5 rounded-md text-sm font-medium transition-colors ${tab === 'CLIENT' ? 'bg-blue-700 text-white' : 'text-gray-600 hover:text-gray-900'}`}>
-              Espace Client
-            </button>
-            <button type="button" onClick={() => switchTab('CONSULTANT')}
-              className={`flex-1 py-2.5 rounded-md text-sm font-medium transition-colors ${tab === 'CONSULTANT' ? 'bg-blue-700 text-white' : 'text-gray-600 hover:text-gray-900'}`}>
-              Espace Consultant
-            </button>
-          </div>
-
-          {error && <div className="bg-red-50 text-red-600 p-3 rounded-lg mb-6">{error}</div>}
-
-          {/* CLIENT FORM */}
-          {tab === 'CLIENT' && (
-            <form onSubmit={handleClientSubmit} className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelCls}>Prénom</label>
-                  <input type="text" value={cFirstName} onChange={e => setCFirstName(e.target.value)} placeholder="Jean" required className={inputCls} />
+            {/* CHOOSE */}
+            {step === 'CHOOSE' && (
+              <>
+                <h1 className="text-2xl font-bold text-[#1B3F7A] text-center mb-2">Créer un compte</h1>
+                <p className="text-gray-400 text-center text-sm mb-8">Choisissez votre espace</p>
+                <div className="space-y-4">
+                  <button onClick={() => setStep('CLIENT')} className="w-full flex items-center justify-between bg-[#1B3F7A] hover:bg-[#152f5c] text-white font-medium py-4 px-6 rounded-xl transition-all hover:shadow-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center text-xl">👤</div>
+                      <div className="text-left"><div className="font-semibold">Espace Client</div><div className="text-xs text-white/70">Accédez aux services de conseil</div></div>
+                    </div>
+                    <span className="text-white/70">→</span>
+                  </button>
+                  <button onClick={() => setStep('CONSULTANT')} className="w-full flex items-center justify-between bg-white hover:bg-gray-50 text-[#1B3F7A] font-medium py-4 px-6 rounded-xl transition-all border-2 border-[#1B3F7A] hover:shadow-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#1B3F7A]/10 rounded-lg flex items-center justify-center text-xl">💼</div>
+                      <div className="text-left"><div className="font-semibold">Espace Consultant</div><div className="text-xs text-gray-500">Proposez vos expertises</div></div>
+                    </div>
+                    <span className="text-[#1B3F7A]/50">→</span>
+                  </button>
                 </div>
-                <div>
-                  <label className={labelCls}>Nom</label>
-                  <input type="text" value={cLastName} onChange={e => setCLastName(e.target.value)} placeholder="Dupont" required className={inputCls} />
-                </div>
-              </div>
-              <div>
-                <label className={labelCls}>Numéro de téléphone</label>
-                <input type="tel" value={cPhone} onChange={e => setCPhone(e.target.value)} placeholder="+33 6 00 00 00 00" className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Email</label>
-                <input type="email" value={cEmail} onChange={e => setCEmail(e.target.value)} placeholder="jean@entreprise.com" required className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Mot de passe</label>
-                <input type="password" value={cPassword} onChange={e => setCPassword(e.target.value)} placeholder="••••••••" required className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Confirmer le mot de passe</label>
-                <input type="password" value={cConfirm} onChange={e => setCConfirm(e.target.value)} placeholder="••••••••" required className={inputCls} />
-              </div>
-              <button type="submit" className="w-full bg-blue-700 hover:bg-blue-800 text-white font-medium py-3 px-4 rounded-lg transition-colors">
-                S'inscrire
-              </button>
-            </form>
-          )}
+                <p className="text-center text-gray-500 text-sm mt-8">Déjà un compte ?{' '}<Link href="/login" className="text-[#7AB648] font-semibold">Se connecter</Link></p>
+              </>
+            )}
 
-          {/* CONSULTANT FORM */}
-          {tab === 'CONSULTANT' && (
-            <form onSubmit={handleConsultantSubmit} className="space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className={labelCls}>Prénom</label>
-                  <input type="text" value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Jean" required className={inputCls} />
-                </div>
-                <div>
-                  <label className={labelCls}>Nom</label>
-                  <input type="text" value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Dupont" required className={inputCls} />
-                </div>
-              </div>
-              <div>
-                <label className={labelCls}>Adresse email</label>
-                <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="jean@entreprise.com" required className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Numéro de téléphone</label>
-                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+33 6 00 00 00 00" required className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Domaine de compétence</label>
-                <input type="text" value={specialty} onChange={e => setSpecialty(e.target.value)} placeholder="Ex: Finance, RH, Stratégie, IT..." required className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>CV <span className="text-gray-400 font-normal">(PDF uniquement)</span></label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors">
-                  <input type="file" accept=".pdf" onChange={e => setCvFile(e.target.files?.[0] || null)} className="hidden" id="cv-upload" />
-                  <label htmlFor="cv-upload" className="flex flex-col items-center cursor-pointer">
-                    <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    {cvFile
-                      ? <span className="text-sm text-blue-700 font-medium">{cvFile.name}</span>
-                      : <span className="text-sm text-gray-500">Cliquez pour joindre votre CV</span>}
+            {/* CLIENT FORM */}
+            {step === 'CLIENT' && (
+              <>
+                <h1 className="text-xl font-bold text-[#1B3F7A] mb-1">👤 Espace Client</h1>
+                <p className="text-gray-400 text-xs mb-5">Tous les champs sont obligatoires sauf mention contraire</p>
+                {error && <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl mb-4 text-sm">{error}</div>}
+                <form onSubmit={handleClientSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelCls}>Nom <span className="text-red-500">*</span></label>
+                      <input type="text" value={client.lastName} onChange={e => setClient({...client, lastName: e.target.value})} placeholder="Dupont" className={inputCls} pattern="[A-Za-zÀ-ÿ\s\-]+" title="Lettres uniquement" required />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Prénom <span className="text-red-500">*</span></label>
+                      <input type="text" value={client.firstName} onChange={e => setClient({...client, firstName: e.target.value})} placeholder="Jean" className={inputCls} pattern="[A-Za-zÀ-ÿ\s\-]+" title="Lettres uniquement" required />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Adresse e-mail <span className="text-red-500">*</span></label>
+                    <input type="email" value={client.email} onChange={e => setClient({...client, email: e.target.value})} placeholder="jean@entreprise.com" className={inputCls} required />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Numéro de téléphone <span className="text-red-500">*</span></label>
+                    <div className="flex">
+                      <span className="inline-flex items-center px-3 border border-r-0 border-gray-200 rounded-l-xl bg-gray-100 text-gray-600 text-sm">🇹🇳 +216</span>
+                      <input type="tel" value={client.phone} onChange={e => setClient({...client, phone: e.target.value.replace(/\D/g, '')})} placeholder="XX XXX XXX" className={`${inputCls} rounded-l-none`} pattern="[0-9]{8}" maxLength={8} title="8 chiffres requis" required />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Nom de l&apos;entreprise <span className="text-red-500">*</span></label>
+                    <input type="text" value={client.company} onChange={e => setClient({...client, company: e.target.value})} placeholder="Mon Entreprise SARL" className={inputCls} required />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Secteur d&apos;activité <span className="text-red-500">*</span></label>
+                    <select value={client.sector} onChange={e => setClient({...client, sector: e.target.value})} className={inputCls} required>
+                      <option value="">Sélectionnez un secteur</option>
+                      {SECTORS.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Adresse <span className="text-red-500">*</span></label>
+                    <input type="text" value={client.address} onChange={e => setClient({...client, address: e.target.value})} placeholder="Rue, Ville, Gouvernorat" className={inputCls} required />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Besoins / Attentes <span className="text-gray-400 text-xs font-normal">(facultatif)</span></label>
+                    <textarea value={client.needs} onChange={e => setClient({...client, needs: e.target.value})} placeholder="Décrivez vos besoins..." className={`${inputCls} resize-none`} rows={3} maxLength={500} />
+                    <p className="text-xs text-gray-400 mt-1">{client.needs.length}/500 caractères</p>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Mot de passe <span className="text-red-500">*</span></label>
+                    <input type="password" value={client.password} onChange={e => setClient({...client, password: e.target.value})} placeholder="••••••••" className={inputCls} minLength={8} title="Minimum 8 caractères" required />
+                    <p className="text-xs text-gray-400 mt-1">Minimum 8 caractères</p>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Confirmer le mot de passe <span className="text-red-500">*</span></label>
+                    <input type="password" value={client.confirm} onChange={e => setClient({...client, confirm: e.target.value})} placeholder="••••••••" className={inputCls} required />
+                  </div>
+
+                  {/* Captcha */}
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <p className="text-sm font-medium text-gray-700 mb-3">🤖 Vérification anti-robot</p>
+                    <div className="flex items-center gap-3">
+                      <span className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-semibold text-gray-800">{clientCaptcha.question}</span>
+                      <input type="number" value={clientCaptcha.answer} onChange={e => clientCaptcha.setAnswer(e.target.value)} placeholder="?" className="w-20 px-3 py-2 border border-gray-200 rounded-lg text-center text-sm focus:ring-2 focus:ring-[#1B3F7A]" required />
+                      {clientCaptcha.answer && <span className={clientCaptcha.isValid ? 'text-[#7AB648] text-lg' : 'text-red-500 text-lg'}>{clientCaptcha.isValid ? '✓' : '✗'}</span>}
+                    </div>
+                  </div>
+
+                  {/* Privacy */}
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" checked={client.privacy} onChange={e => setClient({...client, privacy: e.target.checked})} className="mt-1 w-4 h-4 text-[#1B3F7A] border-gray-300 rounded" required />
+                    <span className="text-sm text-gray-600">J&apos;accepte la <Link href="/privacy" className="text-[#7AB648] hover:underline">politique de confidentialité</Link> et les <Link href="/terms" className="text-[#7AB648] hover:underline">conditions d&apos;utilisation</Link> <span className="text-red-500">*</span></span>
                   </label>
-                </div>
-              </div>
-              <div>
-                <label className={labelCls}>Certifications <span className="text-gray-400 font-normal">(JPG, PNG, PDF — optionnel)</span></label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 hover:border-blue-400 transition-colors">
-                  <input type="file" accept=".jpg,.jpeg,.png,.pdf" multiple onChange={e => setCertFiles(Array.from(e.target.files || []))} className="hidden" id="cert-upload" />
-                  <label htmlFor="cert-upload" className="flex flex-col items-center cursor-pointer">
-                    <svg className="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {certFiles.length > 0
-                      ? <span className="text-sm text-blue-700 font-medium">{certFiles.length} fichier(s) sélectionné(s)</span>
-                      : <span className="text-sm text-gray-500">Cliquez pour joindre vos certifications</span>}
+
+                  <button type="submit" className="w-full bg-[#1B3F7A] hover:bg-[#152f5c] text-white font-semibold py-3 rounded-xl transition-all">S&apos;inscrire</button>
+                </form>
+              </>
+            )}
+
+            {/* CONSULTANT FORM */}
+            {step === 'CONSULTANT' && (
+              <>
+                <h1 className="text-xl font-bold text-[#1B3F7A] mb-1">💼 Espace Consultant</h1>
+                <p className="text-gray-400 text-xs mb-5">Tous les champs sont obligatoires sauf mention contraire</p>
+                {error && <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl mb-4 text-sm">{error}</div>}
+                <form onSubmit={handleConsultantSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className={labelCls}>Nom <span className="text-red-500">*</span></label>
+                      <input type="text" value={consultant.lastName} onChange={e => setConsultant({...consultant, lastName: e.target.value})} placeholder="Mohamed" className={inputCls} pattern="[A-Za-zÀ-ÿ\s\-]+" required />
+                    </div>
+                    <div>
+                      <label className={labelCls}>Prénom <span className="text-red-500">*</span></label>
+                      <input type="text" value={consultant.firstName} onChange={e => setConsultant({...consultant, firstName: e.target.value})} placeholder="Ahmed" className={inputCls} pattern="[A-Za-zÀ-ÿ\s\-]+" required />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Adresse e-mail <span className="text-red-500">*</span></label>
+                    <input type="email" value={consultant.email} onChange={e => setConsultant({...consultant, email: e.target.value})} placeholder="ahmed@consultpro.com" className={inputCls} required />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Numéro de téléphone <span className="text-red-500">*</span></label>
+                    <div className="flex">
+                      <span className="inline-flex items-center px-3 border border-r-0 border-gray-200 rounded-l-xl bg-gray-100 text-gray-600 text-sm">🇹🇳 +216</span>
+                      <input type="tel" value={consultant.phone} onChange={e => setConsultant({...consultant, phone: e.target.value.replace(/\D/g, '')})} placeholder="XX XXX XXX" className={`${inputCls} rounded-l-none`} pattern="[0-9]{8}" maxLength={8} required />
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>CV <span className="text-red-500">*</span> <span className="text-gray-400 font-normal text-xs">(PDF, DOC)</span></label>
+                    <div onClick={() => cvRef.current?.click()} className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-[#1B3F7A] transition-colors">
+                      {cvFile ? <span className="text-sm text-[#1B3F7A] font-medium">📄 {cvFile.name}</span> : <span className="text-sm text-gray-400">Cliquez pour joindre votre CV</span>}
+                    </div>
+                    <input ref={cvRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={e => setCvFile(e.target.files?.[0] || null)} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Certifications <span className="text-gray-400 font-normal text-xs">(facultatif — PDF, JPG, PNG)</span></label>
+                    <div onClick={() => certRef.current?.click()} className="border-2 border-dashed border-gray-200 rounded-xl p-4 text-center cursor-pointer hover:border-[#1B3F7A] transition-colors">
+                      {certFiles.length > 0 ? (
+                        <div className="space-y-1">
+                          {certFiles.map((f, i) => <div key={i} className="flex items-center justify-between text-sm text-[#1B3F7A]"><span>📎 {f.name}</span><button type="button" onClick={e => { e.stopPropagation(); setCertFiles(certFiles.filter((_, j) => j !== i)) }} className="text-red-400 text-xs ml-2">✕</button></div>)}
+                          <p className="text-xs text-[#7AB648] mt-1">+ Ajouter d&apos;autres</p>
+                        </div>
+                      ) : <span className="text-sm text-gray-400">Cliquez pour joindre vos certifications</span>}
+                    </div>
+                    <input ref={certRef} type="file" accept=".pdf,.jpg,.jpeg,.png" multiple className="hidden" onChange={e => setCertFiles(prev => [...prev, ...Array.from(e.target.files || [])])} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Domaine de compétence <span className="text-gray-400 font-normal text-xs">(facultatif)</span></label>
+                    <textarea value={consultant.competences} onChange={e => setConsultant({...consultant, competences: e.target.value})} placeholder="Ex: Management, RH, Finance, Qualité..." className={`${inputCls} resize-none`} rows={2} maxLength={300} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Mot de passe <span className="text-red-500">*</span></label>
+                    <input type="password" value={consultant.password} onChange={e => setConsultant({...consultant, password: e.target.value})} placeholder="••••••••" className={inputCls} minLength={8} required />
+                    <p className="text-xs text-gray-400 mt-1">Minimum 8 caractères</p>
+                  </div>
+                  <div>
+                    <label className={labelCls}>Confirmer le mot de passe <span className="text-red-500">*</span></label>
+                    <input type="password" value={consultant.confirm} onChange={e => setConsultant({...consultant, confirm: e.target.value})} placeholder="••••••••" className={inputCls} required />
+                  </div>
+
+                  {/* Captcha */}
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                    <p className="text-sm font-medium text-gray-700 mb-3">🤖 Vérification anti-robot</p>
+                    <div className="flex items-center gap-3">
+                      <span className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-semibold text-gray-800">{consultantCaptcha.question}</span>
+                      <input type="number" value={consultantCaptcha.answer} onChange={e => consultantCaptcha.setAnswer(e.target.value)} placeholder="?" className="w-20 px-3 py-2 border border-gray-200 rounded-lg text-center text-sm focus:ring-2 focus:ring-[#1B3F7A]" required />
+                      {consultantCaptcha.answer && <span className={consultantCaptcha.isValid ? 'text-[#7AB648] text-lg' : 'text-red-500 text-lg'}>{consultantCaptcha.isValid ? '✓' : '✗'}</span>}
+                    </div>
+                  </div>
+
+                  {/* Privacy */}
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" checked={consultant.privacy} onChange={e => setConsultant({...consultant, privacy: e.target.checked})} className="mt-1 w-4 h-4 text-[#1B3F7A] border-gray-300 rounded" required />
+                    <span className="text-sm text-gray-600">J&apos;accepte la <Link href="/privacy" className="text-[#7AB648] hover:underline">politique de confidentialité</Link> et les <Link href="/terms" className="text-[#7AB648] hover:underline">conditions d&apos;utilisation</Link> <span className="text-red-500">*</span></span>
                   </label>
-                </div>
-                {certFiles.length > 0 && (
-                  <ul className="mt-2 space-y-1">
-                    {certFiles.map((f, i) => (
-                      <li key={i} className="text-xs text-gray-500 flex items-center gap-1"><span className="text-green-500">✓</span> {f.name}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <div>
-                <label className={labelCls}>Mot de passe</label>
-                <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required className={inputCls} />
-              </div>
-              <div>
-                <label className={labelCls}>Confirmer le mot de passe</label>
-                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="••••••••" required className={inputCls} />
-              </div>
-              <div>
-                <ReCAPTCHA
-                  ref={recaptchaRef}
-                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI'}
-                  onChange={token => setCaptchaToken(token)}
-                  onExpired={() => setCaptchaToken(null)}
-                />
-              </div>
-              <button type="submit" disabled={loading}
-                className="w-full bg-blue-700 hover:bg-blue-800 disabled:opacity-60 text-white font-medium py-3 px-4 rounded-lg transition-colors">
-                {loading ? 'Envoi en cours...' : 'Soumettre ma candidature'}
-              </button>
-            </form>
-          )}
 
-          <p className="text-center text-gray-600 mt-6">
-            Déjà un compte ?{' '}
-            <Link href="/login" className="text-blue-700 hover:text-blue-800 font-medium">Se connecter</Link>
-          </p>
+                  <button type="submit" disabled={loading} className="w-full bg-[#1B3F7A] hover:bg-[#152f5c] disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-all">
+                    {loading ? 'Envoi en cours...' : 'Soumettre ma candidature'}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
         </div>
-      </div>
-
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-700 to-blue-900 items-center justify-center p-12">
-        <div className="max-w-lg text-white">
-          {tab === 'CLIENT' ? (
-            <>
-              <h2 className="text-4xl font-bold mb-6">Votre espace de conseil digital</h2>
-              <p className="text-xl text-blue-100 mb-8">Accédez à vos missions, suivez vos indicateurs de performance et collaborez avec vos consultants en temps réel.</p>
-              <ul className="space-y-4">
-                {['Suivi des missions en temps réel', 'Accès aux livrables et rapports', 'Messagerie sécurisée', 'Tableaux de bord personnalisés'].map(item => (
-                  <li key={item} className="flex items-start gap-3"><span className="text-orange-400 text-xl">•</span><span className="text-lg">{item}</span></li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <>
-              <h2 className="text-4xl font-bold mb-6">Rejoignez notre réseau d'experts</h2>
-              <p className="text-xl text-blue-100 mb-8">Partagez votre expertise, développez votre clientèle et gérez vos missions en toute simplicité.</p>
-              <ul className="space-y-4">
-                {['Gestion des missions simplifiée', 'Accès à une clientèle qualifiée', 'Outils de collaboration intégrés', 'Suivi des paiements en temps réel'].map(item => (
-                  <li key={item} className="flex items-start gap-3"><span className="text-orange-400 text-xl">•</span><span className="text-lg">{item}</span></li>
-                ))}
-              </ul>
-            </>
-          )}
-        </div>
+        <p className="text-center text-white/60 text-xs mt-4">DSL Consulting — Cabinet de conseil et d&apos;accompagnement</p>
       </div>
     </div>
   )

@@ -181,12 +181,12 @@ async function main() {
       {
         key: 'navbar',
         value: {
-          logo: 'DSL Conseil',
+          logo: 'DSL Consulting',
           logoUrl: '/logo.jpeg',
           links: [
             { label: 'Accueil', href: '/' },
-            { label: 'Services', href: '/services' },
-            { label: 'Blog', href: '/blog' },
+            { label: 'Approches', href: '/approches' },
+            { label: 'Solutions', href: '/solutions' },
             { label: 'Contact', href: '/contact' },
           ],
         },
