@@ -180,6 +180,7 @@ model Reservation {
   startTime     DateTime
   endTime       DateTime
   status        ReservationStatus @default(PENDING)
+  meetingType   MeetingType       @default(ZOOM)
   zoomJoinUrl   String?
   zoomPassword  String?
   createdAt     DateTime          @default(now())
@@ -289,6 +290,11 @@ enum ReservationStatus {
   COMPLETED
   CANCELLED
   NO_SHOW
+}
+
+enum MeetingType {
+  ZOOM
+  SUR_PLACE
 }
 
 enum NotificationType {

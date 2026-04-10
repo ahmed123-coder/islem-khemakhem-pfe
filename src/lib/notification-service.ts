@@ -103,6 +103,23 @@ export async function notifyMissionUpdate(missionId: string, title: string, mess
         mission.orderId
     )
 }
+
+export async function notifyConsultantMilestoneUpdate(missionId: string, title: string, message: string) {
+    const mission = await prisma.mission.findUnique({ 
+        where: { id: missionId },
+        include: { order: true }
+    })
+    if (!mission || !mission.consultantId) return
+
+    await createNotification(
+        mission.consultantId,
+        'CONSULTANT',
+        'MISSION',
+        title,
+        message,
+        mission.orderId
+    )
+}
 export async function notifyNewReservation(reservationId: string) {
   const reservation = await prisma.reservation.findUnique({ 
     where: { id: reservationId },

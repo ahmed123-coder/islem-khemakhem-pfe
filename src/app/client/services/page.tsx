@@ -42,7 +42,9 @@ export default function ServicesPage() {
   const [selectedConsultant, setSelectedConsultant] = useState<string>('')
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedStartHour, setSelectedStartHour] = useState<number | null>(null)
-  const [selectedDuration, setSelectedDuration] = useState<number>(1)
+  const [selectedEndHour, setSelectedEndHour] = useState<number | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [showMeetingModal, setShowMeetingModal] = useState(false)
 
   useEffect(() => {
     fetch('/api/services/with-tiers').then(r => r.json()).then(data => {
@@ -102,13 +104,13 @@ export default function ServicesPage() {
     })
   }
 
-  const handlePurchase = async () => {
-    if (!selectedTier || !selectedConsultant || !selectedDate || selectedStartHour === null) return
+  const handlePurchase = async (meetingType: 'ZOOM' | 'SUR_PLACE') => {
+    if (!selectedTier || !selectedConsultant || !selectedDate || selectedStartHour === null || selectedEndHour === null) return
 
     const startTime = new Date(selectedDate)
     startTime.setHours(selectedStartHour, 0, 0, 0)
     const endTime = new Date(startTime)
-    endTime.setHours(selectedStartHour + selectedDuration, 0, 0, 0)
+    endTime.setHours(selectedEndHour, 0, 0, 0)
 
     const res = await fetch('/api/client/purchase', {
       method: 'POST',
@@ -117,11 +119,13 @@ export default function ServicesPage() {
         serviceTierId: selectedTier.id,
         consultantId: selectedConsultant,
         startTime: startTime.toISOString(),
-        endTime: endTime.toISOString()
+        endTime: endTime.toISOString(),
+        meetingType
       })
     })
 
     if (res.ok) {
+      setShowMeetingModal(false)
       alert('Commande créée avec succès!')
       setStep(1)
       setSelectedService(null)
@@ -129,7 +133,7 @@ export default function ServicesPage() {
       setSelectedConsultant('')
       setSelectedDate(null)
       setSelectedStartHour(null)
-      setSelectedDuration(1)
+      setSelectedEndHour(null)
     }
   }
 
@@ -194,19 +198,7 @@ export default function ServicesPage() {
           <button onClick={() => setStep(2)} className="mb-6 text-blue-600 hover:underline">← Retour</button>
           <h2 className="text-2xl font-bold mb-4">Sélectionnez votre créneau</h2>
           
-          <div className="mb-6 flex items-center gap-4">
-            <label className="font-semibold">Durée:</label>
-            <select 
-              value={selectedDuration} 
-              onChange={e => setSelectedDuration(parseInt(e.target.value))}
-              className="border rounded px-4 py-2"
-            >
-              <option value="1">1 heure</option>
-              <option value="2">2 heures</option>
-              <option value="3">3 heures</option>
-              <option value="4">4 heures</option>
-            </select>
-          </div>
+          <div className="mb-4 text-sm text-gray-500">Cliquez sur une cellule de début puis glissez ou cliquez sur une cellule de fin pour sélectionner la durée.</div>
           
           <div className="grid gap-8">
             {Array.isArray(consultants) && consultants.map(consultant => (
@@ -214,7 +206,7 @@ export default function ServicesPage() {
                 <h3 className="text-xl font-bold mb-4 text-blue-600">{consultant.name}</h3>
                 
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
+                <table className="w-full border-collapse" onMouseLeave={() => setIsDragging(false)}>
                     <thead>
                       <tr className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
                         <th className="border border-blue-400 p-3 text-left font-semibold">Date</th>
@@ -233,30 +225,41 @@ export default function ServicesPage() {
                             <div className="text-xs text-gray-600">{date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
                           </td>
                           {hours.map(hour => {
-                            const blocked = isSlotBlocked(consultant.id, date, hour, selectedDuration)
-                            const isSelected = selectedConsultant === consultant.id && 
-                                             selectedDate?.getDate() === date.getDate() && 
-                                             selectedStartHour === hour
-                            
+                            const blocked = isSlotBlocked(consultant.id, date, hour, 1)
+                            const isStart = selectedConsultant === consultant.id &&
+                              selectedDate?.toDateString() === date.toDateString() &&
+                              selectedStartHour === hour
+                            const isInRange = selectedConsultant === consultant.id &&
+                              selectedDate?.toDateString() === date.toDateString() &&
+                              selectedStartHour !== null && selectedEndHour !== null &&
+                              hour >= selectedStartHour && hour < selectedEndHour
+
                             return (
                               <td
                                 key={hour}
-                                onClick={() => {
-                                  if (!blocked) {
-                                    setSelectedConsultant(consultant.id)
-                                    setSelectedDate(date)
-                                    setSelectedStartHour(hour)
+                                onMouseDown={() => {
+                                  if (blocked) return
+                                  setSelectedConsultant(consultant.id)
+                                  setSelectedDate(date)
+                                  setSelectedStartHour(hour)
+                                  setSelectedEndHour(hour + 1)
+                                  setIsDragging(true)
+                                }}
+                                onMouseEnter={() => {
+                                  if (isDragging && selectedConsultant === consultant.id && selectedDate?.toDateString() === date.toDateString() && selectedStartHour !== null && hour >= selectedStartHour) {
+                                    setSelectedEndHour(hour + 1)
                                   }
                                 }}
-                                className={`border border-gray-300 p-2 text-center text-sm font-medium transition-all ${
-                                  blocked 
-                                    ? 'bg-red-100 text-red-700 cursor-not-allowed' 
-                                    : isSelected 
-                                    ? 'bg-green-500 text-white shadow-md scale-105 cursor-pointer' 
-                                    : 'bg-green-50 hover:bg-green-100 cursor-pointer hover:shadow-sm'
+                                onMouseUp={() => setIsDragging(false)}
+                                className={`border border-gray-300 p-2 text-center text-sm font-medium transition-all select-none ${
+                                  blocked
+                                    ? 'bg-red-100 text-red-700 cursor-not-allowed'
+                                    : isInRange
+                                    ? 'bg-green-500 text-white cursor-pointer'
+                                    : 'bg-green-50 hover:bg-green-200 cursor-pointer'
                                 }`}
                               >
-                                {blocked ? '✕' : isSelected ? '✓' : '○'}
+                                {blocked ? '✕' : isInRange ? (isStart ? '▶' : '—') : '○'}
                               </td>
                             )
                           })}
@@ -269,14 +272,14 @@ export default function ServicesPage() {
             ))}
           </div>
 
-          {selectedConsultant && selectedDate && selectedStartHour !== null && (
+          {selectedConsultant && selectedDate && selectedStartHour !== null && selectedEndHour !== null && (
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-green-500 p-4 shadow-2xl">
               <div className="max-w-7xl mx-auto flex items-center justify-between">
                 <div className="text-sm">
-                  <span className="font-semibold">Sélection:</span> {consultants.find(c => c.id === selectedConsultant)?.name} - {selectedDate.toLocaleDateString('fr-FR')} de {selectedStartHour}h à {selectedStartHour + selectedDuration}h
+                  <span className="font-semibold">Sélection:</span> {consultants.find(c => c.id === selectedConsultant)?.name} - {selectedDate.toLocaleDateString('fr-FR')} de {selectedStartHour}h à {selectedEndHour}h ({selectedEndHour - selectedStartHour}h)
                 </div>
                 <button
-                  onClick={handlePurchase}
+                  onClick={() => setShowMeetingModal(true)}
                   className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-semibold shadow-lg hover:shadow-xl transition-all"
                 >
                   Confirmer la réservation
@@ -284,6 +287,36 @@ export default function ServicesPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+      {/* Meeting Type Popup */}
+      {showMeetingModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowMeetingModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6" onClick={e => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">Type de réunion</h2>
+            <p className="text-sm text-gray-500 mb-6">
+              {selectedDate?.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} · {selectedStartHour}h – {selectedEndHour}h
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => handlePurchase('ZOOM')}
+                className="flex flex-col items-center gap-3 p-5 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
+              >
+                <span className="text-3xl">🎥</span>
+                <span className="font-bold text-gray-800 group-hover:text-blue-700">Zoom</span>
+                <span className="text-xs text-gray-400 text-center">Réunion en ligne</span>
+              </button>
+              <button
+                onClick={() => handlePurchase('SUR_PLACE')}
+                className="flex flex-col items-center gap-3 p-5 border-2 border-green-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group"
+              >
+                <span className="text-3xl">🏢</span>
+                <span className="font-bold text-gray-800 group-hover:text-green-700">Sur Place</span>
+                <span className="text-xs text-gray-400 text-center">Réunion physique</span>
+              </button>
+            </div>
+            <button onClick={() => setShowMeetingModal(false)} className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600">Annuler</button>
+          </div>
         </div>
       )}
     </div>

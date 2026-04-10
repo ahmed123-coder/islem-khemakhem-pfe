@@ -20,6 +20,10 @@ export default function OrderDetails() {
   const [sending, setSending] = useState(false)
   const [reserving, setReserving] = useState(false)
   const [selectedRes, setSelectedRes] = useState<any>(null)
+  const [pendingSlot, setPendingSlot] = useState<{ day: Date; startHour: number; endHour: number } | null>(null)
+  const [dragStart, setDragStart] = useState<{ day: Date; hour: number } | null>(null)
+  const [dragEnd, setDragEnd] = useState<{ day: Date; hour: number } | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
   const [currentWeekStart, setCurrentWeekStart] = useState(() => {
     const d = new Date()
     const day = d.getDay()
@@ -68,7 +72,9 @@ export default function OrderDetails() {
         if (detail?.orderId === orderId) {
           if (detail?.type === 'RESERVATION') {
             fetchReservations()
-          } else if (detail?.type === 'ORDER' || detail?.type === 'MISSION') {
+          } else if (detail?.type === 'ORDER') {
+            fetchOrder()
+          } else if (detail?.type === 'MISSION') {
             fetchOrder()
           }
         }
@@ -152,16 +158,14 @@ export default function OrderDetails() {
     }
   }
 
-  const bookReservation = async (date: Date, hour: number) => {
+  const bookReservation = async (date: Date, startHour: number, endHour: number, meetingType: 'ZOOM' | 'SUR_PLACE') => {
     if (order.status !== 'ACTIVE' || reserving) return
 
     const startTime = new Date(date)
-    startTime.setHours(hour, 0, 0, 0)
-    
-    const endTime = new Date(startTime)
-    endTime.setHours(hour + 1, 0, 0, 0)
+    startTime.setHours(startHour, 0, 0, 0)
+    const endTime = new Date(date)
+    endTime.setHours(endHour, 0, 0, 0)
 
-    // Basic client-side check if slot is in the past
     if (startTime < new Date()) {
       toast.error('Vous ne pouvez pas réserver un créneau dans le passé')
       return
@@ -174,10 +178,10 @@ export default function OrderDetails() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           startTime: startTime.toISOString(), 
-          endTime: endTime.toISOString() 
+          endTime: endTime.toISOString(),
+          meetingType
         })
       })
-      
       if (res.ok) {
         toast.success('Réservation demandée au consultant !')
         fetchReservations()
@@ -186,7 +190,6 @@ export default function OrderDetails() {
         toast.error(data.error || 'Erreur lors de la réservation')
       }
     } catch (error) {
-      console.error(error)
       toast.error('Une erreur est survenue')
     } finally {
       setReserving(false)
@@ -217,10 +220,13 @@ export default function OrderDetails() {
   const getReservationAt = (date: Date, hour: number) => {
     return reservations.find(r => {
       const rStart = new Date(r.startTime)
-      return rStart.getDate() === date.getDate() && 
-             rStart.getMonth() === date.getMonth() && 
-             rStart.getFullYear() === date.getFullYear() &&
-             rStart.getHours() === hour
+      const rEnd = new Date(r.endTime)
+      const cellStart = new Date(date)
+      cellStart.setHours(hour, 0, 0, 0)
+      const cellEnd = new Date(date)
+      cellEnd.setHours(hour + 1, 0, 0, 0)
+      return rStart.toDateString() === date.toDateString() &&
+             cellStart < rEnd && cellEnd > rStart
     })
   }
 
@@ -359,6 +365,7 @@ export default function OrderDetails() {
                         <thead className="bg-gray-50">
                           <tr>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Date & Time</th>
+                            <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Type</th>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
                             <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase text-center">Meeting</th>
                           </tr>
@@ -371,6 +378,13 @@ export default function OrderDetails() {
                                 <div className="text-sm text-gray-500">
                                   {new Date(reservation.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(reservation.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </div>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                  reservation.meetingType === 'SUR_PLACE' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                                }`}>
+                                  {reservation.meetingType === 'SUR_PLACE' ? '🏢 Sur Place' : '🎥 Zoom'}
+                                </span>
                               </td>
                               <td className="px-6 py-4">
                                 <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getReservationStatusColor(reservation.status)}`}>
@@ -428,13 +442,13 @@ export default function OrderDetails() {
                   </div>
 
                   <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white">
-                    <table className="min-w-full border-collapse">
+                    <table className="min-w-full border-collapse" onMouseLeave={() => setIsDragging(false)}>
                       <thead>
                         <tr className="bg-gray-50 border-b">
                           <th className="p-4 text-gray-500 font-semibold text-left text-sm border-r">Day</th>
                           {HOURS.map(hour => (
                             <th key={hour} className="p-4 text-gray-500 font-semibold text-center text-sm border-r">
-                              {hour}:00-{(hour + 1)}:00
+                              {hour}:00
                             </th>
                           ))}
                         </tr>
@@ -442,99 +456,112 @@ export default function OrderDetails() {
                       <tbody>
                         {DAYS.map((day, dayIndex) => (
                           <tr key={dayIndex} className="border-b">
-                            <td className="p-4 border-r border-gray-200 bg-gray-50/50">
-                              <div className="font-bold text-gray-900">{day.toLocaleDateString('en-US', { weekday: 'long' })}</div>
-                              <div className="text-xs text-gray-400">{day.toLocaleDateString()}</div>
+                            <td className="p-4 border-r border-gray-200 bg-gray-50/50 min-w-[120px]">
+                              <div className="font-bold text-gray-900 text-sm">{day.toLocaleDateString('fr-FR', { weekday: 'short' }).toUpperCase()}</div>
+                              <div className="text-xs text-gray-400">{day.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
                             </td>
-                            {HOURS.map(hour => {
-                              const res = getReservationAt(day, hour)
-                              const isConfirmed = res?.status === 'CONFIRMED'
-                              const isPending = res?.status === 'PENDING'
-                              const isCompleted = res?.status === 'COMPLETED'
-                              const isCancelled = res?.status === 'CANCELLED'
-                              const isNoShow = res?.status === 'NO_SHOW'
-                              const isOwn = res?.orderId === orderId
-                              const isPast = new Date(day).setHours(hour) < new Date().getTime()
-                              const isSelectable = !isConfirmed && !isPending && order.status === 'ACTIVE' && !isPast
+                            {(() => {
+                              const cells = []
+                              let i = 0
+                              while (i < HOURS.length) {
+                                const hour = HOURS[i]
+                                const res = getReservationAt(day, hour)
+                                const isPast = new Date(day).setHours(hour) < new Date().getTime()
+                                const isSelectable = !res && order.status === 'ACTIVE' && !isPast
+                                const isSameDay = dragStart && dragStart.day.toDateString() === day.toDateString()
+                                const isInDrag = isSameDay && dragStart && dragEnd && hour >= dragStart.hour && hour <= dragEnd.hour
 
-                              let bgColor = ''
-                              if (res) {
-                                if (isConfirmed) bgColor = 'bg-[#10b981]'
-                                if (isPending) bgColor = 'bg-[#f59e0b]'
-                                if (isCompleted) bgColor = 'bg-[#3b82f6]'
-                                if (isCancelled) bgColor = 'bg-[#ef4444]'
-                                if (isNoShow) bgColor = 'bg-[#a855f7]'
-                              }
+                                if (res) {
+                                  // Count how many consecutive hours this reservation spans in HOURS
+                                  const resStart = new Date(res.startTime).getHours()
+                                  const resEnd = new Date(res.endTime).getHours()
+                                  let span = 0
+                                  while (i + span < HOURS.length && HOURS[i + span] >= resStart && HOURS[i + span] < resEnd) span++
+                                  if (span === 0) span = 1
 
-                              return (
-                                <td key={hour} className="p-1 border-r border-gray-100 text-center min-w-[120px] h-20 relative group">
-                                  {res ? (
-                                    <>
-                                      <div 
-                                        onClick={() => isOwn && setSelectedRes(res)}
-                                        className={`${bgColor} text-white p-2 rounded-lg text-[10px] leading-tight flex flex-col justify-center h-full shadow-sm ${isOwn ? 'cursor-pointer' : 'cursor-help'} hover:opacity-90 transition-opacity`}
-                                      >
-                                        <div className="font-bold uppercase mb-1">
-                                          {isOwn ? 'Your Session' : 'Reserved'}
-                                        </div>
-                                        <div className="opacity-90">
-                                          {isOwn ? order.serviceTier.service.name : 'Occupied'}
-                                        </div>
-                                      </div>
+                                  const isOwn = res.orderId === orderId
+                                  let bgColor = ''
+                                  if (res.status === 'CONFIRMED') bgColor = 'bg-emerald-500'
+                                  else if (res.status === 'PENDING') bgColor = 'bg-amber-400'
+                                  else if (res.status === 'COMPLETED') bgColor = 'bg-blue-500'
+                                  else if (res.status === 'CANCELLED') bgColor = 'bg-red-400'
+                                  else if (res.status === 'NO_SHOW') bgColor = 'bg-purple-400'
 
-                                      {/* Hover Popover */}
-                                      <div className="hidden group-hover:block absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-60 bg-white border border-gray-200 rounded-xl shadow-2xl p-4 text-left animate-in fade-in slide-in-from-bottom-2 duration-200 pointer-events-none">
-                                        <div className="text-gray-900 font-bold mb-1 text-xs">
-                                          {isOwn ? 'Your Session' : 'Occupied Slot'}
-                                        </div>
-                                        {isOwn && (
-                                          <div className="text-gray-500 text-[10px] mb-2">{order.serviceTier.service.name}</div>
-                                        )}
-                                        
-                                        <div className="flex gap-2 items-center mb-2">
-                                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${getReservationStatusColor(res.status)}`}>
-                                            {res.status}
-                                          </span>
-                                          <span className="text-[9px] text-gray-500 font-semibold bg-gray-50 px-2 py-0.5 rounded border">
-                                            {hour}:00 - {hour + 1}:00
-                                          </span>
-                                        </div>
-                                        
-                                        {isOwn && res.status === 'CONFIRMED' && (
-                                          <div className="mt-2 pt-3 border-t border-gray-100 space-y-2">
-                                            <div>
-                                              <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest block mb-1">Zoom Meeting URL</span>
-                                              <div className="text-[9px] text-gray-400 break-all p-2 bg-blue-50/30 rounded border border-blue-100/30 font-mono">
-                                                {res.zoomJoinUrl || 'Link pending...'}
-                                              </div>
-                                            </div>
-                                            {res.zoomPassword && (
-                                              <div>
-                                                <span className="text-[9px] font-black text-blue-600 uppercase tracking-widest block mb-1">Meeting Password</span>
-                                                <code className="text-[9px] text-gray-700 bg-gray-50 px-2 py-0.5 rounded border font-bold">
-                                                  {res.zoomPassword}
-                                                </code>
-                                              </div>
-                                            )}
-                                          </div>
-                                        )}
-
-                                        {/* Tooltip Arrow */}
-                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-white drop-shadow-sm"></div>
-                                      </div>
-                                    </>
-                                  ) : (
-                                    <button
-                                      onClick={() => isSelectable && bookReservation(day, hour)}
-                                      disabled={!isSelectable || isPast || reserving}
-                                      className={`w-full h-full group/btn flex items-center justify-center transition-all ${isPast ? 'cursor-not-allowed' : 'hover:bg-blue-50'}`}
+                                  cells.push(
+                                    <td
+                                      key={hour}
+                                      colSpan={span}
+                                      className="h-14 p-1 border-r border-gray-100 relative group"
+                                      onClick={() => isOwn && setSelectedRes(res)}
                                     >
-                                      <span className="text-gray-300 group-hover/btn:text-blue-400 group-hover/btn:scale-150 transition-all font-bold">-</span>
-                                    </button>
-                                  )}
-                                </td>
-                              )
-                            })}
+                                      <div className={`${bgColor} h-full rounded-lg flex flex-col items-center justify-center ${
+                                        isOwn ? 'cursor-pointer' : 'cursor-help'
+                                      } hover:brightness-110 transition-all shadow-sm`}>
+                                        <span className="text-white font-bold text-[11px] uppercase tracking-wide">
+                                          {isOwn ? 'Moi' : 'Occupé'}
+                                        </span>
+                                        <span className="text-white/80 text-[10px]">
+                                          {resStart}h – {resEnd}h
+                                        </span>
+                                      </div>
+                                      {/* Hover Popover */}
+                                      <div className="hidden group-hover:block absolute z-50 bottom-full left-0 mb-2 w-52 bg-white border border-gray-200 rounded-xl shadow-2xl p-3 text-left pointer-events-none">
+                                        <div className="font-bold text-gray-900 text-xs mb-1">{isOwn ? 'Ma session' : 'Créneau occupé'}</div>
+                                        {isOwn && <div className="text-gray-500 text-[10px] mb-2">{order.serviceTier.service.name}</div>}
+                                        <div className="flex gap-2 items-center">
+                                          <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${getReservationStatusColor(res.status)}`}>{res.status}</span>
+                                          <span className="text-[9px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded border">{resStart}h – {resEnd}h</span>
+                                        </div>
+                                        <div className="absolute top-full left-4 border-8 border-transparent border-t-white"></div>
+                                      </div>
+                                    </td>
+                                  )
+                                  i += span
+                                } else {
+                                  cells.push(
+                                    <td
+                                      key={hour}
+                                      className="h-14 p-1 border-r border-gray-100 min-w-[80px] group select-none"
+                                      onMouseDown={() => {
+                                        if (!isSelectable) return
+                                        setDragStart({ day, hour })
+                                        setDragEnd({ day, hour })
+                                        setIsDragging(true)
+                                      }}
+                                      onMouseEnter={() => {
+                                        if (isDragging && dragStart && dragStart.day.toDateString() === day.toDateString() && hour >= dragStart.hour) {
+                                          setDragEnd({ day, hour })
+                                        }
+                                      }}
+                                      onMouseUp={() => {
+                                        if (isDragging && dragStart && dragEnd) {
+                                          setPendingSlot({ day: dragStart.day, startHour: dragStart.hour, endHour: dragEnd.hour + 1 })
+                                        }
+                                        setIsDragging(false)
+                                        setDragStart(null)
+                                        setDragEnd(null)
+                                      }}
+                                    >
+                                      <div className={`w-full h-full rounded-lg flex items-center justify-center transition-all ${
+                                        isPast ? 'cursor-not-allowed' :
+                                        isInDrag ? 'bg-blue-500 cursor-pointer' :
+                                        isSelectable ? 'hover:bg-blue-50 cursor-pointer' : 'cursor-not-allowed'
+                                      }`}>
+                                        <span className={`text-base font-bold ${
+                                          isPast ? 'text-gray-200' :
+                                          isInDrag ? 'text-white' :
+                                          'text-gray-300 group-hover:text-blue-400'
+                                        }`}>
+                                          {isInDrag ? (hour === dragStart?.hour ? '▶' : '—') : '○'}
+                                        </span>
+                                      </div>
+                                    </td>
+                                  )
+                                  i++
+                                }
+                              }
+                              return cells
+                            })()}
                           </tr>
                         ))}
                       </tbody>
@@ -728,6 +755,37 @@ export default function OrderDetails() {
         </div>
       </div>
 
+      {/* Meeting Type Selection Modal */}
+      {pendingSlot && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setPendingSlot(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-lg font-bold text-gray-900 mb-1">Type de réunion</h2>
+            <p className="text-sm text-gray-500 mb-6">
+              {pendingSlot.day.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} · {pendingSlot.startHour}h – {pendingSlot.endHour}h
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => { bookReservation(pendingSlot.day, pendingSlot.startHour, pendingSlot.endHour, 'ZOOM'); setPendingSlot(null) }}
+                className="flex flex-col items-center gap-3 p-5 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
+              >
+                <span className="text-3xl">🎥</span>
+                <span className="font-bold text-gray-800 group-hover:text-blue-700">Zoom</span>
+                <span className="text-xs text-gray-400 text-center">Réunion en ligne</span>
+              </button>
+              <button
+                onClick={() => { bookReservation(pendingSlot.day, pendingSlot.startHour, pendingSlot.endHour, 'SUR_PLACE'); setPendingSlot(null) }}
+                className="flex flex-col items-center gap-3 p-5 border-2 border-green-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group"
+              >
+                <span className="text-3xl">🏢</span>
+                <span className="font-bold text-gray-800 group-hover:text-green-700">Sur Place</span>
+                <span className="text-xs text-gray-400 text-center">Réunion physique</span>
+              </button>
+            </div>
+            <button onClick={() => setPendingSlot(null)} className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600">Annuler</button>
+          </div>
+        </div>
+      )}
+
       {/* Reservation Detail Modal */}
       {selectedRes && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setSelectedRes(null)}>
@@ -750,13 +808,18 @@ export default function OrderDetails() {
                 <span className={`px-3 py-1 rounded-full text-xs font-bold ${getReservationStatusColor(selectedRes.status)}`}>
                   {selectedRes.status}
                 </span>
+                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                  selectedRes.meetingType === 'SUR_PLACE' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
+                }`}>
+                  {selectedRes.meetingType === 'SUR_PLACE' ? '🏢 Sur Place' : '🎥 Zoom'}
+                </span>
                 <span className="text-sm text-gray-500">
                   {new Date(selectedRes.startTime).toLocaleDateString()} · {new Date(selectedRes.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - {new Date(selectedRes.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
 
               {/* Zoom Details for CONFIRMED */}
-              {selectedRes.status === 'CONFIRMED' && (
+              {selectedRes.status === 'CONFIRMED' && selectedRes.meetingType !== 'SUR_PLACE' && (
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 space-y-4">
                   <div className="flex items-center gap-2 mb-1">
                     <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
@@ -807,6 +870,15 @@ export default function OrderDetails() {
                   {selectedRes.zoomJoinUrl && canJoin(selectedRes) && (
                     <JoinZoomButton joinUrl={selectedRes.zoomJoinUrl} className="w-full justify-center" />
                   )}
+                </div>
+              )}
+
+              {/* Sur Place message for CONFIRMED */}
+              {selectedRes.status === 'CONFIRMED' && selectedRes.meetingType === 'SUR_PLACE' && (
+                <div className="bg-green-50 border border-green-100 rounded-xl p-5 text-center">
+                  <p className="text-2xl mb-2">🏢</p>
+                  <p className="text-green-700 font-semibold">Réunion en présentiel confirmée</p>
+                  <p className="text-green-600 text-sm mt-1">Contactez votre consultant pour les détails du lieu</p>
                 </div>
               )}
 

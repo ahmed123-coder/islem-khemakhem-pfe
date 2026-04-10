@@ -87,3 +87,13 @@ export async function getConsultantId(): Promise<string | null> {
   }
 }
 
+export function getConsultantIdFromRequest(req: NextRequest): string | null {
+  const token = req.cookies.get('auth_token')?.value
+  if (!token) return null
+
+  const payload = verifyToken(token)
+  if (!payload || payload.role !== 'CONSULTANT') return null
+
+  return payload.userId
+}
+

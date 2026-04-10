@@ -34,6 +34,7 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
         endTime: true,
         status: true,
         orderId: true,
+        meetingType: true,
         zoomJoinUrl: true,
         zoomPassword: true
       },
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { startTime, endTime } = await req.json()
+    const { startTime, endTime, meetingType } = await req.json()
 
     if (!startTime || !endTime) {
       return NextResponse.json({ error: 'Missing start or end time' }, { status: 400 })
@@ -104,6 +105,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         serviceTierId: order.serviceTierId,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
+        meetingType: meetingType === 'SUR_PLACE' ? 'SUR_PLACE' : 'ZOOM',
         status: 'PENDING'
       }
     })

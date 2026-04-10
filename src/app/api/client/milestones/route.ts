@@ -11,8 +11,8 @@ export async function PATCH(req: NextRequest) {
 
     const { milestoneId, status } = await req.json()
 
-    if (status === 'PENDING') {
-      return NextResponse.json({ error: 'Clients cannot set milestones to pending' }, { status: 400 })
+    if (!['PENDING', 'COMPLETED'].includes(status)) {
+      return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
 
     // Verify the milestone belongs to a mission in an order owned by this client
@@ -38,6 +38,9 @@ export async function PATCH(req: NextRequest) {
         completedAt: status === 'COMPLETED' ? new Date() : null
       }
     })
+
+    const { notifyConsultantMilestoneUpdate } = await import('@/lib/notification-service')
+    await notifyConsultantMilestoneUpdate(milestone.missionId, 'Task Updated', `Task "${milestone.title}" has been updated.`)
 
     return NextResponse.json(updatedMilestone)
   } catch (error) {

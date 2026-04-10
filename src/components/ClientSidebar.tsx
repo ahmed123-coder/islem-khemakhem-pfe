@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Settings, LogOut, ShoppingBag, Calendar, MessageSquare, Bell } from 'lucide-react'
+import { Home, Settings, LogOut, ShoppingBag } from 'lucide-react'
 
 export default function ClientSidebar() {
   const pathname = usePathname()
@@ -16,19 +16,17 @@ export default function ClientSidebar() {
   const links = [
     { href: '/client', label: 'My Subscriptions', icon: ShoppingBag },
     { href: '/client/services', label: 'Browse Services', icon: Home },
-    { href: '/client/reservations', label: 'My Reservations', icon: Calendar },
-    { href: '/client/messages', label: 'Messages', icon: MessageSquare },
-    { href: '/client/notifications', label: 'Notifications', icon: Bell },
     { href: '/client/settings', label: 'Settings', icon: Settings },
   ]
 
   return (
-    <aside className="w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col shadow-xl">
-      <div className="p-6 border-b border-gray-700/50">
-        <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Client Portal</h1>
+    <aside className="w-[90px] md:w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col shadow-xl transition-all duration-300">
+      <div className="p-4 md:p-6 border-b border-gray-700/50 flex items-center justify-center md:justify-start">
+        <h1 className="hidden md:block text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Client Portal</h1>
+        <span className="md:hidden text-blue-400 font-bold text-xs text-center">CP</span>
       </div>
       
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-2 md:p-4 space-y-1">
         {links.map(link => {
           const Icon = link.icon
           const isActive = pathname === link.href
@@ -36,28 +34,30 @@ export default function ClientSidebar() {
             <Link
               key={link.href}
               href={link.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                isActive ? 'bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg shadow-blue-500/30' : 'hover:bg-gray-700/50 hover:translate-x-1'
+              title={link.label}
+              className={`flex items-center justify-center md:justify-start gap-3 px-2 md:px-4 py-3 rounded-xl transition-all duration-200 group ${
+                isActive ? 'bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg shadow-blue-500/30' : 'hover:bg-gray-700/50 md:hover:translate-x-1'
               }`}
             >
               <Icon size={20} className={isActive ? '' : 'group-hover:scale-110 transition-transform'} />
-              <span className="font-medium">{link.label}</span>
+              <span className="hidden md:block font-medium">{link.label}</span>
             </Link>
           )
         })}
       </nav>
 
-      <div className="p-4 border-t border-gray-700/50 space-y-1">
-        <Link href="/" className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group hover:translate-x-1">
+      <div className="p-2 md:p-4 border-t border-gray-700/50 space-y-1">
+        <Link href="/" title="Back to Site" className="flex items-center justify-center md:justify-start gap-2 px-2 md:px-4 py-2 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group md:hover:translate-x-1">
           <Home size={16} className="group-hover:scale-110 transition-transform" />
-          <span className="text-sm">Back to Site</span>
+          <span className="hidden md:block text-sm">Back to Site</span>
         </Link>
-        <button 
+        <button
           onClick={handleLogout}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-200 w-full text-left group hover:translate-x-1"
+          title="Logout"
+          className="flex items-center justify-center md:justify-start gap-2 px-2 md:px-4 py-2 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-200 w-full text-left group md:hover:translate-x-1"
         >
           <LogOut size={16} className="group-hover:scale-110 transition-transform" />
-          <span className="text-sm">Logout</span>
+          <span className="hidden md:block text-sm">Logout</span>
         </button>
       </div>
     </aside>

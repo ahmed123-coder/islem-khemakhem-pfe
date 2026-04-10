@@ -72,40 +72,43 @@ export default function LoginPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="jean@entreprise.com"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1B3F7A] focus:border-transparent text-sm bg-gray-50"
-                  required
-                />
-              </div>
-              <div>
-                <div className="flex justify-between mb-1.5">
-                  <label className="block text-sm font-medium text-gray-700">Mot de passe</label>
-                  <Link href="/forgot-password" className="text-xs text-[#7AB648] hover:underline">Mot de passe oublié ?</Link>
-                </div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1B3F7A] focus:border-transparent text-sm bg-gray-50"
-                  required
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-[#1B3F7A] hover:bg-[#152f5c] disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-all hover:shadow-lg"
-              >
-                {loading ? 'Connexion...' : 'Se connecter'}
-              </button>
-            </form>
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="jean@entreprise.com"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-2">Mot de passe</label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <button
+              type="submit"
+              className="w-full bg-blue-700 hover:bg-blue-800 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+            >
+              Se connecter
+            </button>
+          </form>
 
             <p className="text-center text-gray-500 text-sm mt-6">
               Pas encore de compte ?{' '}

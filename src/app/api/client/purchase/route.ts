@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { serviceTierId, consultantId, startTime, endTime } = await request.json()
+    const { serviceTierId, consultantId, startTime, endTime, meetingType } = await request.json()
 
     if (!serviceTierId || !consultantId || !startTime || !endTime) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -71,6 +71,7 @@ export async function POST(request: NextRequest) {
         serviceTierId: serviceTierId,
         startTime: new Date(startTime),
         endTime: new Date(endTime),
+        meetingType: meetingType === 'SUR_PLACE' ? 'SUR_PLACE' : 'ZOOM',
         status: 'PENDING'
       }
     })

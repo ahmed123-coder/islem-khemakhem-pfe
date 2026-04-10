@@ -228,17 +228,50 @@ export default function ContentEditor() {
               <Input value={content.logo || ''} onChange={e => setContent({ ...content, logo: e.target.value })} />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Menu Links (JSON)</label>
-              <Textarea 
-                rows={8}
-                value={JSON.stringify(content.links || [], null, 2)} 
-                onChange={e => {
-                  try {
-                    setContent({ ...content, links: JSON.parse(e.target.value) })
-                  } catch {}
-                }} 
-              />
-              <p className="text-xs text-gray-500 mt-1">Format: [{`{"label": "Home", "href": "/"}`}]</p>
+              <label className="block text-sm font-medium mb-2">Menu Links</label>
+              <div className="space-y-2">
+                {(content.links || []).map((link: { label: string; href: string }, i: number) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <Input
+                      placeholder="Label"
+                      value={link.label}
+                      onChange={e => {
+                        const links = [...(content.links || [])]
+                        links[i] = { ...links[i], label: e.target.value }
+                        setContent({ ...content, links })
+                      }}
+                    />
+                    <Input
+                      placeholder="Href (ex: /services)"
+                      value={link.href}
+                      onChange={e => {
+                        const links = [...(content.links || [])]
+                        links[i] = { ...links[i], href: e.target.value }
+                        setContent({ ...content, links })
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        const links = (content.links || []).filter((_: any, idx: number) => idx !== i)
+                        setContent({ ...content, links })
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setContent({ ...content, links: [...(content.links || []), { label: '', href: '' }] })}
+                >
+                  + Ajouter un lien
+                </Button>
+              </div>
             </div>
           </div>
         )}
