@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { verifyToken } from './src/lib/auth'
 
-const publicRoutes = ['/', '/services', '/blog', '/contact', '/login', '/register', '/pricing', '/prendre-rdv']
+const publicRoutes = ['/', '/solutions', '/ressources', '/contact', '/login', '/register', '/approches', ]
 const adminRoutes = ['/admin']
 const consultantRoutes = ['/consultant']
 const clientRoutes = ['/client']
