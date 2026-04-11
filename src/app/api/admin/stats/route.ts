@@ -19,13 +19,27 @@ export async function GET() {
       prisma.contact.count({ where: { status: 'new' } })
     ])
 
+    // Calculate growth (clients in last 30 days vs total)
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    
+    const newClients = await prisma.user.count({
+      where: { 
+        role: 'CLIENT',
+        createdAt: { gte: thirtyDaysAgo }
+      }
+    })
+
+    const growth = clients > 0 ? ((newClients / clients) * 100).toFixed(1) : "0"
+
     return NextResponse.json({ 
       blogs, 
       services, 
       contacts,
       clients,
       consultants,
-      pendingContacts
+      pendingContacts,
+      growth
     })
   } catch (error) {
     return NextResponse.json({ 

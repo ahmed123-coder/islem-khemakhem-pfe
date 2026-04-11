@@ -61,7 +61,8 @@ export default function AdminDashboard() {
           contacts: data.contacts || 0,
           clients: data.clients || 0,
           consultants: data.consultants || 0,
-          pendingContacts: data.pendingContacts || 0
+          pendingContacts: data.pendingContacts || 0,
+          growth: data.growth || 0
         })
       })
       .catch(() => {})
@@ -129,7 +130,7 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider">
                   <TrendingUp className="w-3 h-3" />
-                  +12.5% Grow
+                  +{stats.growth}% Grow
                 </div>
               </div>
               <div>
