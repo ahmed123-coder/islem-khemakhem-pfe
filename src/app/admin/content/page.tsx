@@ -1,310 +1,262 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import * as React from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  Monitor, 
+  Smartphone, 
+  Layout, 
+  Image as ImageIcon, 
+  Settings2, 
+  Save, 
+  Upload, 
+  CloudUpload,
+  Plus,
+  Trash2,
+  ExternalLink,
+  ChevronRight,
+  Sparkles,
+  MousePointer2,
+  AppWindow,
+  Navigation,
+  Columns
+} from 'lucide-react'
+import { StandardPage } from '@/components/admin/standard-page'
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
-import { Card } from '@/components/ui/card'
-import Image from 'next/image'
-import { Upload, Trash2 } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { cn } from '@/lib/utils'
 
-type ContentSection = 'navbar' | 'footer' | 'hero'
+type Section = 'hero' | 'navbar' | 'footer'
 
-export default function ContentEditor() {
-  const [section, setSection] = useState<ContentSection>('hero')
-  const [content, setContent] = useState<any>({})
-  const [loading, setLoading] = useState(false)
-  const [logoFile, setLogoFile] = useState<File | null>(null)
-  const [logoPreview, setLogoPreview] = useState<string>('')
-  const [logoUrl, setLogoUrl] = useState('/logo.jpeg')
-  const [dbLogoUrl, setDbLogoUrl] = useState('')
-  const [heroImages, setHeroImages] = useState<string[]>([])
-  const [uploading, setUploading] = useState(false)
+export default function SiteVisualEditor() {
+  const [activeTab, setActiveTab] = React.useState<Section>('hero')
+  const [content, setContent] = React.useState<any>({})
+  const [logoUrl, setLogoUrl] = React.useState('/logo.jpeg')
+  const [isLoading, setIsLoading] = React.useState(false)
 
-  useEffect(() => {
+  React.useEffect(() => {
     loadContent()
-    loadLogo()
-    if (section === 'hero') loadHeroImages()
-  }, [section])
-
-  const loadLogo = async () => {
-    const res = await fetch('/api/content/navbar')
-    if (res.ok) {
-      const data = await res.json()
-      const url = data.value?.logoUrl || '/logo.jpeg'
-      setDbLogoUrl(url)
-      setLogoUrl(url)
-    }
-  }
+  }, [activeTab])
 
   const loadContent = async () => {
-    const res = await fetch(`/api/content/${section}`)
-    if (res.ok) {
-      const data = await res.json()
-      setContent(data.value || {})
-    }
-  }
-
-  const loadHeroImages = async () => {
-    const res = await fetch('/api/hero')
-    if (res.ok) {
-      const data = await res.json()
-      setHeroImages(data.images || [])
-    }
-  }
-
-  const handleHeroImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    
-    setUploading(true)
-    const formData = new FormData()
-    formData.append('file', file)
-    
+    setIsLoading(true)
     try {
-      const res = await fetch('/api/admin/hero', { 
-        method: 'POST', 
-        body: formData 
-      })
-      
+      const res = await fetch(`/api/content/${activeTab}`)
       if (res.ok) {
-        loadHeroImages()
-        alert('Image uploaded successfully!')
-      } else {
-        alert('Failed to add image')
+        const data = await res.json()
+        setContent(data.value || {})
       }
-    } catch (error) {
-      alert('Upload failed')
     } finally {
-      setUploading(false)
+      setIsLoading(false)
     }
-  }
-
-  const deleteHeroImage = async (url: string) => {
-    if (!confirm('Delete this image?')) return
-    
-    const res = await fetch('/api/admin/hero', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ imageUrl: url })
-    })
-    
-    if (res.ok) loadHeroImages()
-  }
-
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      setLogoFile(file)
-      setLogoPreview(URL.createObjectURL(file))
-    }
-  }
-
-  const handleLogoUpload = async () => {
-    if (!logoFile) return
-    
-    const formData = new FormData()
-    formData.append('logo', logoFile)
-    
-    setLoading(true)
-    const res = await fetch('/api/upload/logo', {
-      method: 'POST',
-      body: formData
-    })
-    
-    if (res.ok) {
-      const data = await res.json()
-      alert('Logo uploaded successfully!')
-      setLogoPreview('')
-      setLogoFile(null)
-      // Update logo URL from response
-      setLogoUrl(data.logoUrl)
-      setDbLogoUrl(data.logoUrl)
-    } else {
-      alert('Failed to upload logo')
-    }
-    setLoading(false)
   }
 
   const handleSave = async () => {
-    setLoading(true)
-    const res = await fetch(`/api/content/${section}`, {
+    setIsLoading(true)
+    await fetch(`/api/content/${activeTab}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ value: content })
     })
-    setLoading(false)
-    if (res.ok) {
-      alert('Content saved!')
-    } else {
-      alert('Failed to save content')
-    }
+    setIsLoading(false)
   }
 
   return (
-    <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Content Editor</h1>
-      
-      <div className="flex gap-4 mb-6">
-        <Button onClick={() => setSection('hero')} variant={section === 'hero' ? 'default' : 'outline'}>Hero</Button>
-        <Button onClick={() => setSection('navbar')} variant={section === 'navbar' ? 'default' : 'outline'}>Navbar</Button>
-        <Button onClick={() => setSection('footer')} variant={section === 'footer' ? 'default' : 'outline'}>Footer</Button>
-      </div>
-
-      {/* Logo Upload Section */}
-      <Card className="p-6 max-w-3xl mb-6">
-        <h2 className="text-xl font-bold mb-4">Logo Management</h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-2">Current Logo</label>
-            <Image key={logoUrl} src={logoUrl} alt="Logo" width={100} height={100} className="rounded-lg" />
+    <StandardPage
+      title="Site Visual Builder"
+      description="Customize your brand identity and website components in real-time."
+      breadcrumbs={[{ label: 'Content' }, { label: 'Site Editor' }]}
+    >
+      <Tabs defaultValue="hero" className="space-y-10" onValueChange={(v) => setActiveTab(v as Section)}>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <TabsList className="bg-white/50 backdrop-blur-md border border-slate-100 p-1.5 rounded-[24px] shadow-sm">
+            <TabsTrigger value="hero" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
+              <AppWindow className="w-4 h-4" /> Hero Section
+            </TabsTrigger>
+            <TabsTrigger value="navbar" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
+              <Navigation className="w-4 h-4" /> Navigation
+            </TabsTrigger>
+            <TabsTrigger value="footer" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
+              <Columns className="w-4 h-4" /> Global Footer
+            </TabsTrigger>
+          </TabsList>
+          
+          <div className="flex items-center gap-3">
+             <Button variant="ghost" className="rounded-2xl font-bold text-xs gap-2">
+               <ExternalLink className="w-4 h-4" /> Preview Live Site
+             </Button>
+             <Button 
+               onClick={handleSave}
+               disabled={isLoading}
+               className="rounded-2xl bg-slate-900 hover:bg-black text-white px-8 h-12 font-black italic text-base shadow-xl shadow-slate-200"
+             >
+               {isLoading ? 'Saving...' : 'Deploy Changes'} <Save className="w-4 h-4 ml-2" />
+             </Button>
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2">Upload New Logo</label>
-            <Input type="file" accept="image/jpeg,image/jpg,image/png" onChange={handleLogoChange} />
-          </div>
-          {logoPreview && (
-            <div>
-              <label className="block text-sm font-medium mb-2">Preview</label>
-              <img src={logoPreview} alt="Preview" className="w-24 h-24 rounded-lg" />
-            </div>
-          )}
-          <Button onClick={handleLogoUpload} disabled={!logoFile || loading}>
-            {loading ? 'Uploading...' : 'Upload Logo'}
-          </Button>
         </div>
-      </Card>
 
-      <Card className="p-6 max-w-3xl">
-        <h2 className="text-xl font-bold mb-4">Edit {section.charAt(0).toUpperCase() + section.slice(1)} Content</h2>
-        
-        {section === 'hero' && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Hero Background Images</label>
-              <div className="mb-4">
-                <label className="cursor-pointer">
-                  <Button type="button" disabled={uploading || heroImages.length >= 3} asChild>
-                    <span>{uploading ? 'Uploading...' : <><Upload size={16} className="mr-2" />Upload Image</>}</span>
-                  </Button>
-                  <input type="file" accept="image/*" onChange={handleHeroImageUpload} className="hidden" disabled={heroImages.length >= 3} />
-                </label>
-                <p className="text-xs text-gray-500 mt-2">Max 3 images. Multiple images create slideshow animation.</p>
-              </div>
-              <div className="grid grid-cols-3 gap-4 mb-4">
-                {heroImages.map((img, index) => (
-                  <div key={index} className="relative">
-                    <img src={img} alt={`Hero ${index + 1}`} className="w-full h-32 object-cover rounded" />
-                    <Button size="sm" variant="destructive" onClick={() => deleteHeroImage(img)} className="absolute top-2 right-2">
-                      <Trash2 size={14} />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Title</label>
-              <Input value={content.title || ''} onChange={e => setContent({ ...content, title: e.target.value })} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Subtitle</label>
-              <Textarea value={content.subtitle || ''} onChange={e => setContent({ ...content, subtitle: e.target.value })} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">CTA Text</label>
-              <Input value={content.ctaText || ''} onChange={e => setContent({ ...content, ctaText: e.target.value })} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">CTA Link</label>
-              <Input value={content.ctaLink || ''} onChange={e => setContent({ ...content, ctaLink: e.target.value })} />
-            </div>
-          </div>
-        )}
+        <TabsContent value="hero" className="mt-0 outline-none">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* Control Panel */}
+            <div className="lg:col-span-12 space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <Card className="p-8 rounded-[40px] border-none bg-white/70 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] space-y-8">
+                   <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-2xl bg-blue-100 flex items-center justify-center text-blue-600">
+                         <Sparkles className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900">Dynamic Imagery</h3>
+                   </div>
+                   
+                   <div className="space-y-4">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Hero Background Slideshow</label>
+                      <div className="group relative h-48 rounded-[32px] border-2 border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/50 transition-all cursor-pointer overflow-hidden">
+                        <CloudUpload className="w-12 h-12 text-slate-300 mb-3 group-hover:text-blue-600 transition-colors" />
+                        <span className="text-xs font-bold text-slate-500">Drag & Drop new visual assets</span>
+                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" />
+                      </div>
+                   </div>
+                </Card>
 
-        {section === 'navbar' && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Logo Text</label>
-              <Input value={content.logo || ''} onChange={e => setContent({ ...content, logo: e.target.value })} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Menu Links</label>
-              <div className="space-y-2">
-                {(content.links || []).map((link: { label: string; href: string }, i: number) => (
-                  <div key={i} className="flex gap-2 items-center">
-                    <Input
-                      placeholder="Label"
-                      value={link.label}
-                      onChange={e => {
-                        const links = [...(content.links || [])]
-                        links[i] = { ...links[i], label: e.target.value }
-                        setContent({ ...content, links })
-                      }}
-                    />
-                    <Input
-                      placeholder="Href (ex: /services)"
-                      value={link.href}
-                      onChange={e => {
-                        const links = [...(content.links || [])]
-                        links[i] = { ...links[i], href: e.target.value }
-                        setContent({ ...content, links })
-                      }}
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        const links = (content.links || []).filter((_: any, idx: number) => idx !== i)
-                        setContent({ ...content, links })
-                      }}
-                    >
-                      <Trash2 size={14} />
-                    </Button>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setContent({ ...content, links: [...(content.links || []), { label: '', href: '' }] })}
-                >
-                  + Ajouter un lien
-                </Button>
+                <Card className="p-8 rounded-[40px] border-none bg-white/70 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] space-y-6">
+                   <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-2xl bg-amber-100 flex items-center justify-center text-amber-600">
+                         <Layout className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900">Text Content</h3>
+                   </div>
+                   
+                   <div className="space-y-5">
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Main Headline</label>
+                        <Input 
+                          value={content.title || ''} 
+                          onChange={(e) => setContent({ ...content, title: e.target.value })}
+                          className="h-12 rounded-2xl border-slate-100 bg-white/50 focus:ring-4 focus:ring-blue-600/5 font-black uppercase italic tracking-tight"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Supporting Description</label>
+                        <Textarea 
+                          value={content.subtitle || ''} 
+                          onChange={(e) => setContent({ ...content, subtitle: e.target.value })}
+                          className="h-24 rounded-2xl border-slate-100 bg-white/50 focus:ring-4 focus:ring-blue-600/5 font-medium leading-relaxed"
+                        />
+                      </div>
+                   </div>
+                </Card>
+
+                {/* Second Row: Actions */}
+                <Card className="p-8 rounded-[40px] border-none bg-white/70 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] space-y-6 md:col-span-2">
+                   <div className="flex items-center gap-3 mb-2">
+                      <div className="w-10 h-10 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-600">
+                         <MousePointer2 className="w-5 h-5" />
+                      </div>
+                      <h3 className="text-xl font-bold text-slate-900">Interaction & CTA</h3>
+                   </div>
+                   
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Button Text</label>
+                        <Input 
+                          value={content.ctaText || ''} 
+                          onChange={(e) => setContent({ ...content, ctaText: e.target.value })}
+                          className="h-12 rounded-2xl border-slate-100 bg-white shadow-sm font-bold"
+                        />
+                     </div>
+                     <div className="space-y-1.5">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Destination URL</label>
+                        <Input 
+                          value={content.ctaLink || ''} 
+                          onChange={(e) => setContent({ ...content, ctaLink: e.target.value })}
+                          className="h-12 rounded-2xl border-slate-100 bg-white shadow-sm font-bold"
+                        />
+                     </div>
+                   </div>
+                </Card>
               </div>
             </div>
           </div>
-        )}
+        </TabsContent>
 
-        {section === 'footer' && (
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Company Name</label>
-              <Input value={content.company || ''} onChange={e => setContent({ ...content, company: e.target.value })} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Tagline</label>
-              <Textarea value={content.tagline || ''} onChange={e => setContent({ ...content, tagline: e.target.value })} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Email</label>
-              <Input value={content.email || ''} onChange={e => setContent({ ...content, email: e.target.value })} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Phone</label>
-              <Input value={content.phone || ''} onChange={e => setContent({ ...content, phone: e.target.value })} />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Address</label>
-              <Input value={content.address || ''} onChange={e => setContent({ ...content, address: e.target.value })} />
-            </div>
-          </div>
-        )}
+        {/* Similar redesign for Navbar and Footer contents */}
+        <TabsContent value="navbar" className="mt-0 outline-none">
+           <Card className="p-10 rounded-[40px] border-none bg-white shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
+             <div className="max-w-4xl space-y-10">
+                <div className="flex items-end justify-between">
+                   <div>
+                      <h3 className="text-2xl font-black text-slate-900">Brand Elements</h3>
+                      <p className="text-sm font-medium text-slate-400 mt-1">Manage global navigation logo and identity.</p>
+                   </div>
+                   <div className="flex items-center gap-3">
+                      <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden">
+                         <img src={logoUrl} className="w-full h-full object-contain p-2" alt="Current Logo" />
+                      </div>
+                      <Button variant="outline" className="rounded-xl font-bold text-xs h-11 px-6 border-slate-200">Replace Logo</Button>
+                   </div>
+                </div>
 
-        <Button onClick={handleSave} disabled={loading} className="mt-6">
-          {loading ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </Card>
-    </div>
+                <div className="space-y-6">
+                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Menu Navigation Flow</label>
+                   <div className="space-y-3">
+                      {(content.links || []).map((link: any, i: number) => (
+                        <div key={i} className="flex gap-4 p-4 rounded-3xl bg-slate-50 border border-slate-100 transition-all hover:bg-white hover:shadow-md group">
+                           <div className="flex-1 space-y-4 md:flex md:space-y-0 md:gap-4">
+                              <Input 
+                                placeholder="Menu Label" 
+                                value={link.label} 
+                                className="h-11 rounded-xl border-white bg-white/80 shadow-none focus:ring-4 focus:ring-blue-600/5 font-bold" 
+                              />
+                              <Input 
+                                placeholder="Link Link (/...)" 
+                                value={link.href} 
+                                className="h-11 rounded-xl border-white bg-white/80 shadow-none focus:ring-4 focus:ring-blue-600/5 font-bold" 
+                              />
+                           </div>
+                           <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl text-red-400 hover:text-red-500 hover:bg-red-50">
+                              <Trash2 className="w-5 h-5" />
+                           </Button>
+                        </div>
+                      ))}
+                      <Button variant="ghost" className="w-full h-16 rounded-3xl border-2 border-dashed border-slate-100 text-slate-400 font-bold gap-2 hover:bg-blue-50/30 hover:text-blue-600 hover:border-blue-200 transition-all">
+                         <Plus className="w-5 h-5" /> Add Navigation Node
+                      </Button>
+                   </div>
+                </div>
+             </div>
+           </Card>
+        </TabsContent>
+      </Tabs>
+      
+      {/* Live Preview System (Visual Overlay Example) */}
+      <div className="mt-20 pt-10 border-t border-slate-100">
+         <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 mb-8">
+            Global Design <ChevronRight className="w-3" /> System Preview
+         </div>
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="p-6 rounded-[32px] bg-white shadow-sm border border-slate-50 flex items-center gap-4">
+               <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
+                  <Monitor className="w-6 h-6" />
+               </div>
+               <div>
+                  <h4 className="font-bold text-slate-900 leading-tight">Desktop Optix</h4>
+                  <p className="text-[10px] font-bold text-emerald-600 uppercase">Optimal View</p>
+               </div>
+            </div>
+            <div className="p-6 rounded-[32px] bg-white shadow-sm border border-slate-50 flex items-center gap-4">
+               <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors">
+                  <Smartphone className="w-6 h-6" />
+               </div>
+               <div>
+                  <h4 className="font-bold text-slate-400 leading-tight">Mobile Responsive</h4>
+                  <p className="text-[10px] font-bold text-slate-300 uppercase">Sync Pending</p>
+               </div>
+            </div>
+         </div>
+      </div>
+    </StandardPage>
   )
 }
