@@ -182,12 +182,13 @@ async function main() {
         key: 'navbar',
         value: {
           logo: 'DSL Consulting',
-          logoUrl: '/logo.jpeg',
+          logoUrl: '/logo-1772242356501-removebg-preview.png',
           links: [
-            { label: 'Accueil', href: '/' },
-            { label: 'Approches', href: '/approches' },
             { label: 'Solutions', href: '/solutions' },
+            { label: 'Ressources', href: '/ressources' },
             { label: 'Contact', href: '/contact' },
+            { label: 'Approches', href: '/approches' },
+            { label: 'Connexion', href: '/login' },
           ],
         },
       },
@@ -204,7 +205,7 @@ async function main() {
         key: 'footer',
         value: {
           company: 'DSL Conseil',
-          logoUrl: '/logo.jpeg',
+          logoUrl: '/logo-1772242356501-removebg-preview.png',
           tagline: 'Cabinet de conseil en management',
           email: 'contact@dsl-conseil.com',
           phone: '+33 1 23 45 67 89',
