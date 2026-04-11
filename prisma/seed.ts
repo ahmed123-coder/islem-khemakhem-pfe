@@ -64,10 +64,10 @@ async function main() {
       email: 'consultant@consultpro.com',
       password: hashedConsultantPassword,
       name: 'Ahmed Mohamed',
-      specialty: 'Financial Consulting',
-      hourlyRate: 100.00,
-      bio: 'Expert in financial consulting and investment with 10 years experience.',
-      imageUrl: '/images/consultants/ahmed.jpg',
+      specialty: 'Management de la Performance',
+      hourlyRate: 120.00,
+      bio: 'Expert en management de la performance avec 15 ans d\'expérience.',
+      imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400',
       isActive: true,
     },
   });
@@ -77,10 +77,36 @@ async function main() {
       email: 'consultant2@consultpro.com',
       password: hashedConsultantPassword,
       name: 'Sara Ahmed',
-      specialty: 'Marketing Consulting',
-      hourlyRate: 100.00,
-      bio: 'Specialist in digital marketing',
-      imageUrl: '/images/consultants/sara.jpg',
+      specialty: 'Ressources Humaines',
+      hourlyRate: 110.00,
+      bio: 'Spécialiste en développement des talents et recrutement.',
+      imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400',
+      isActive: true,
+    },
+  });
+
+  const consultant3 = await prisma.consultant.create({
+    data: {
+      email: 'consultant3@consultpro.com',
+      password: hashedConsultantPassword,
+      name: 'Jean Dupont',
+      specialty: 'Qualité & Processus',
+      hourlyRate: 105.00,
+      bio: 'Expert en certification ISO et optimisation des processus.',
+      imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
+      isActive: true,
+    },
+  });
+
+  const consultant4 = await prisma.consultant.create({
+    data: {
+      email: 'consultant4@consultpro.com',
+      password: hashedConsultantPassword,
+      name: 'Marie Lefebvre',
+      specialty: 'Stratégie Digitale',
+      hourlyRate: 130.00,
+      bio: 'Conseillère en transformation digitale et innovation.',
+      imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400',
       isActive: true,
     },
   });
@@ -93,6 +119,9 @@ async function main() {
       description: 'Identifier les dysfonctionnements invisibles qui freinent la performance et transformer les coûts cachés en valeur durable.',
       category: 'Management',
       isActive: true,
+      consultants: {
+        connect: [{ id: consultant1.id }, { id: consultant2.id }]
+      }
     },
   });
 
@@ -110,6 +139,9 @@ async function main() {
       description: 'Construire des trajectoires professionnelles alignées avec la stratégie de l\'entreprise.',
       category: 'RH',
       isActive: true,
+      consultants: {
+        connect: [{ id: consultant3.id }]
+      }
     },
   });
 
@@ -127,6 +159,9 @@ async function main() {
       description: 'Renforcer l\'attractivité et la fidélisation en créant une expérience collaborateur cohérente et engageante.',
       category: 'RH',
       isActive: true,
+      consultants: {
+        connect: [{ id: consultant4.id }]
+      }
     },
   });
 
@@ -221,7 +256,10 @@ async function main() {
   console.log('Admin: admin@consultpro.com / admin123');
   console.log('Client: client@consultpro.com / client123');
   console.log('Client2: client2@consultpro.com / client123');
-  console.log('Consultant: consultant@consultpro.com / consultant123');
+  console.log('Consultant 1: consultant@consultpro.com / consultant123');
+  console.log('Consultant 2: consultant2@consultpro.com / consultant123');
+  console.log('Consultant 3: consultant3@consultpro.com / consultant123');
+  console.log('Consultant 4: consultant4@consultpro.com / consultant123');
 }
 
 main()
