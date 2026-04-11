@@ -195,8 +195,8 @@ async function main() {
       {
         key: 'hero',
         value: {
-          title: 'Vision: Votre catalyseur de performance pour un avenir ambitieux et durable.',
-          subtitle: 'Conseil en management, RH, qualité et performance.',
+          title: 'Cabinet de Conseil & Accompagnement',
+          subtitle: 'Accédez à un réseau d’experts métier engagés et inspirants afin de favoriser la pérennité de votre entreprise.',
           ctaText: 'Prendre rendez-vous',
           ctaLink: '/login',
         },

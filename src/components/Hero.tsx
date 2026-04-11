@@ -56,21 +56,19 @@ export default function Hero() {
               Cabinet de Conseil & Accompagnement
             </Badge>
             <h1 className="text-5xl lg:text-6xl font-serif font-bold mb-6 leading-tight tracking-tight text-white">
-              Transformez vos défis<br />
-              en opportunités de<br />
-              performance durable !
+              {content?.title || "Transformez vos défis en opportunités de performance durable !"}
               <div className="w-22 h-1 bg-[#7AB648] rounded-full mt-4"></div>
             </h1>
             <p className="text-base mb-10 text-white/75 leading-relaxed border-l-4 border-[#7AB648] pl-4 italic">
-              Accédez à un réseau d’experts métier engagés et inspirants afin de favoriser la pérennité de votre entreprise.
+              {content?.subtitle || "Accédez à un réseau d’experts métier engagés et inspirants afin de favoriser la pérennité de votre entreprise."}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href="/contact">
+              <Link href={content?.ctaLink || "/contact"}>
                 <Button className="bg-[#7AB648] hover:bg-[#639a3a] text-white rounded-lg px-6 py-6 text-base font-semibold">
-                  Nous contacter 
+                  {content?.ctaText || "Nous contacter"}
                 </Button>
               </Link>
-              <Link href="/services">
+              <Link href="/solutions">
                 <Button className="bg-white text-[#7AB648] hover:bg-gray-100 rounded-lg px-6 py-6 text-base font-semibold border-2 border-white">
                   Découvrir nos approches
                 </Button>
