@@ -53,7 +53,7 @@ export function ConsultantSidebar() {
 
   const mainItems = [
     { href: '/consultant', label: 'Workspace', icon: LayoutDashboard },
-    { href: '/consultant/appointments', label: 'Schedule', icon: Calendar },
+    { href: '/consultant/reservations', label: 'Reservations', icon: Calendar },
     { href: '/consultant/clients', label: 'Clients', icon: Users },
     { href: '/consultant/portfolio', label: 'Portfolio', icon: Award },
   ]
