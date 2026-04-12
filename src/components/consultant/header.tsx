@@ -3,7 +3,6 @@
 import * as React from 'react'
 import { 
   Bell, 
-  Search, 
   ChevronDown, 
   Calendar as CalendarIcon,
   Zap
@@ -30,17 +29,8 @@ export function ConsultantHeader({ user }: ConsultantHeaderProps) {
   }, [])
 
   return (
-    <header className="h-24 sticky top-0 z-40 bg-slate-50/80 backdrop-blur-xl border-b border-white/40 px-8 md:px-12 flex items-center justify-between">
-      <div className="flex-1 max-w-lg hidden md:block">
-        <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-emerald-600 transition-colors" />
-          <input 
-            type="text" 
-            placeholder="Search workspace... (CMD+J)"
-            className="w-full h-12 pl-12 pr-4 rounded-2xl bg-white border border-slate-100 shadow-sm focus:ring-4 focus:ring-emerald-600/5 focus:border-emerald-600/20 text-sm font-medium transition-all"
-          />
-        </div>
-      </div>
+    <header className="h-24 sticky top-0 z-40 bg-slate-50/80 backdrop-blur-xl border-b border-white/40 px-8 md:px-12 flex items-center justify-end">
+
 
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-3 pr-6 border-r border-slate-200">
