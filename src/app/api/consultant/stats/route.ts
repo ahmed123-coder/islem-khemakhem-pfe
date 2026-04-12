@@ -25,7 +25,8 @@ export async function GET() {
       totalHoursMonth,
       totalClients,
       nextAppointment,
-      recentClientGrowth
+      recentClientGrowth,
+      todayMissions
     ] = await Promise.all([
       // Appointments today
       prisma.reservation.count({
@@ -43,7 +44,7 @@ export async function GET() {
         where: {
           consultantId,
           startTime: { gte: startOfMonth },
-          status: { in: ['CONFIRMED', 'COMPLETED'] }
+          status: { in: ['COMPLETED'] }
         },
         select: {
           startTime: true,
@@ -71,6 +72,19 @@ export async function GET() {
           consultantId,
           createdAt: { gte: new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000) }
         }
+      }),
+      // Today's Missions
+      prisma.reservation.findMany({
+        where: {
+          consultantId,
+          startTime: {
+            gte: startOfDay,
+            lte: endOfDay
+          },
+          status: { in: ['CONFIRMED', 'COMPLETED'] }
+        },
+        orderBy: { startTime: 'asc' },
+        include: { client: { select: { name: true } } }
       })
     ])
 
@@ -89,7 +103,8 @@ export async function GET() {
       progress,
       totalClients: totalClients.length,
       nextAppointment,
-      clientGrowth: recentClientGrowth
+      clientGrowth: recentClientGrowth,
+      todayMissions
     })
   } catch (error) {
     console.error('Stats error:', error)

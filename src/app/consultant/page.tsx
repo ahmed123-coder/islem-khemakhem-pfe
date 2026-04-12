@@ -188,27 +188,37 @@ export default function ConsultantWorkspace() {
           <section className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-black text-slate-900 tracking-tight">Today's Missions</h3>
-              <Link href="/consultant/appointments" className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1.5 hover:gap-3 transition-all">
+              <Link href="/consultant/reservations" className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1.5 hover:gap-3 transition-all">
                 Full Agenda <ChevronRight className="w-3 h-3" />
               </Link>
             </div>
             
             <div className="space-y-4">
-               {[1, 2, 3].map((i) => (
-                 <div key={i} className="group p-5 rounded-[32px] bg-white border border-slate-50 shadow-sm flex items-center gap-5 transition-all hover:shadow-xl hover:-translate-y-1">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-50 flex flex-col items-center justify-center font-bold text-slate-400 group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                       <span className="text-[10px] uppercase leading-none">{i === 1 ? 'Now' : '16:00'}</span>
-                       <span className="text-xl leading-none">{i === 1 ? '•' : '12'}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                       <h4 className="font-bold text-slate-900 truncate">Quarterly Review</h4>
-                       <p className="text-xs text-slate-400 font-medium truncate">Client: SARL Innovate — Project Alpha</p>
-                    </div>
-                    <Button size="icon" className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-emerald-600 hover:text-white transition-all">
-                       <Play className="w-4 h-4 fill-current" />
-                    </Button>
+               {stats?.todayMissions?.length > 0 ? (
+                 stats.todayMissions.map((mission: any) => (
+                   <div key={mission.id} className="group p-5 rounded-[32px] bg-white border border-slate-50 shadow-sm flex items-center gap-5 transition-all hover:shadow-xl hover:-translate-y-1">
+                      <div className="w-12 h-12 rounded-2xl bg-slate-50 flex flex-col items-center justify-center font-bold text-slate-400 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                         <span className="text-[10px] uppercase leading-none">
+                           {new Date(mission.startTime).getHours()}:00
+                         </span>
+                         <span className="text-xl leading-none">•</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                         <h4 className="font-bold text-slate-900 truncate">Consultation Session</h4>
+                         <p className="text-xs text-slate-400 font-medium truncate">Client: {mission.client.name}</p>
+                      </div>
+                      <Link href="/consultant/reservations">
+                        <Button size="icon" className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-emerald-600 hover:text-white transition-all">
+                           <Play className="w-4 h-4 fill-current" />
+                        </Button>
+                      </Link>
+                   </div>
+                 ))
+               ) : (
+                 <div className="p-8 text-center bg-slate-50/50 rounded-[32px] border border-dashed border-slate-200">
+                    <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">No missions for today</p>
                  </div>
-               ))}
+               )}
             </div>
           </section>
         </motion.div>
