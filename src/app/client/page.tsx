@@ -2,13 +2,38 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
+import { 
+  Plus, 
+  Calendar, 
+  Clock, 
+  MessageSquare, 
+  Phone, 
+  ShieldCheck, 
+  ArrowRight, 
+  Package, 
+  TrendingUp,
+  Search,
+  CheckCircle2,
+  AlertCircle,
+  MoreVertical,
+  ExternalLink,
+  Zap,
+  Layout
+} from 'lucide-react'
 import { JoinZoomButton } from '@/components/JoinZoomButton'
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { cn } from "@/lib/utils"
 
-export default function ClientSubscriptions() {
+export default function ClientDashboard() {
   const [orders, setOrders] = useState<any[]>([])
   const [reservations, setReservations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'orders' | 'reservations'>('orders')
+  const [activeOrder, setActiveOrder] = useState<any>(null)
 
   useEffect(() => {
     fetchData()
@@ -18,32 +43,27 @@ export default function ClientSubscriptions() {
     try {
       const res = await fetch('/api/client/orders')
       const data = await res.json()
-      setOrders(data.orders || [])
+      const allOrders = data.orders || []
+      setOrders(allOrders)
       setReservations(data.reservations || [])
+      
+      // Select the first active order to be featured
+      const active = allOrders.find((o: any) => o.status === 'ACTIVE') || allOrders[0]
+      setActiveOrder(active)
+      
       setLoading(false)
     } catch (error) {
       setLoading(false)
     }
   }
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen">Loading...</div>
-
-  const getOrderStatusColor = (status: string) => {
-    switch (status) {
-      case 'ACTIVE': return 'bg-green-100 text-green-700'
-      case 'COMPLETED': return 'bg-blue-100 text-blue-700'
-      case 'CANCELLED': return 'bg-red-100 text-red-700'
-      default: return 'bg-yellow-100 text-yellow-700'
-    }
-  }
-
   const getReservationStatusColor = (status: string) => {
     switch (status) {
-      case 'CONFIRMED': return 'bg-green-100 text-green-700'
+      case 'CONFIRMED': return 'bg-emerald-100 text-emerald-700'
       case 'COMPLETED': return 'bg-blue-100 text-blue-700'
-      case 'CANCELLED': return 'bg-red-100 text-red-700'
-      case 'NO_SHOW': return 'bg-purple-100 text-purple-700'
-      default: return 'bg-yellow-100 text-yellow-700'
+      case 'CANCELLED': return 'bg-rose-100 text-rose-700'
+      case 'NO_SHOW': return 'bg-amber-100 text-amber-700'
+      default: return 'bg-slate-100 text-slate-700'
     }
   }
 
@@ -51,192 +71,333 @@ export default function ClientSubscriptions() {
     const now = new Date()
     const start = new Date(reservation.startTime)
     const end = new Date(reservation.endTime)
-    
-    // Time before meeting when the join button becomes active (15 minutes)
     const earlyAccessMs = 15 * 60 * 1000 
-    
     return now.getTime() >= (start.getTime() - earlyAccessMs) && now.getTime() <= end.getTime()
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">My Subscriptions</h1>
-
-        {/* Tabs */}
-        <div className="bg-white rounded-lg shadow mb-6">
-          <div className="border-b flex">
-            <button
-              onClick={() => setActiveTab('orders')}
-              className={`px-6 py-3 font-medium ${activeTab === 'orders' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
-            >
-              Orders ({orders.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('reservations')}
-              className={`px-6 py-3 font-medium ${activeTab === 'reservations' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500'}`}
-            >
-              Reservations ({reservations.length})
-            </button>
-          </div>
+  if (loading) {
+    return (
+      <div className="flex h-full items-center justify-center bg-[#F8FAFC]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+          <p className="text-sm font-black text-slate-400 font-sans uppercase tracking-widest">Securing Connection...</p>
         </div>
+      </div>
+    )
+  }
 
-        {/* Orders Tab */}
-        {activeTab === 'orders' && (
-          <div className="space-y-4">
-            {orders.length === 0 ? (
-              <div className="bg-white rounded-lg shadow p-12 text-center">
-                <p className="text-gray-500 mb-4">No orders yet</p>
-                <Link href="/client/services" className="text-blue-600 hover:underline">
-                  Browse Services
-                </Link>
-              </div>
-            ) : (
-              orders.map(order => (
-                <div key={order.id} className="bg-white rounded-lg shadow p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <h3 className="text-xl font-semibold mb-2">{order.serviceTier.service.name}</h3>
-                      <p className="text-gray-600">{order.serviceTier.tierType} Tier</p>
-                    </div>
-                    <span className={`px-4 py-2 rounded-full text-sm font-medium ${getOrderStatusColor(order.status)}`}>
-                      {order.status}
-                    </span>
-                  </div>
+  return (
+    <div className="min-h-full bg-[#F8FAFC] p-6 lg:p-12 font-sans overflow-x-hidden">
+      <div className="max-w-7xl mx-auto flex flex-col gap-10">
+        
+        {/* Active Subscription Featured Card */}
+        <section>
+          <div className="flex items-center justify-between mb-8">
+             <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+               <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+               Current Service
+             </h3>
+             <Link href="/client/services">
+               <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-black text-[10px] uppercase tracking-widest gap-2">
+                 Explore Tiers <ArrowRight className="w-3 h-3" />
+               </Button>
+             </Link>
+          </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <div>
-                      <span className="text-sm text-gray-600">Consultant:</span>
-                      <p className="font-medium">{order.consultant?.name || 'Not assigned'}</p>
-                      {order.consultant?.specialty && (
-                        <p className="text-sm text-gray-500">{order.consultant.specialty}</p>
-                      )}
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Created:</span>
-                      <p className="font-medium">{new Date(order.createdAt).toLocaleDateString()}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Messages Used:</span>
-                      <p className="font-medium">{order.messagesUsed} / {order.serviceTier.maxMessages || '∞'}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Call Minutes Used:</span>
-                      <p className="font-medium">{order.callMinutesUsed} / {order.serviceTier.maxCallDuration || '∞'}</p>
-                    </div>
-                  </div>
-
-                  {order.missions.length > 0 && (
-                    <div className="border-t pt-4 mt-4">
-                      <h4 className="font-semibold mb-2">Missions ({order.missions.length})</h4>
-                      <div className="space-y-2">
-                        {order.missions.map((mission: any) => (
-                          <div key={mission.id} className="flex justify-between items-center bg-gray-50 p-3 rounded">
-                            <div>
-                              <div className="font-medium">{mission.title}</div>
-                              <div className="text-sm text-gray-500">
-                                {mission.milestones.length} tasks - {mission.milestones.filter((m: any) => m.status === 'COMPLETED').length} completed
-                              </div>
-                            </div>
-                            <span className={`px-3 py-1 rounded-full text-xs ${
-                              mission.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                              mission.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
-                              'bg-gray-100 text-gray-700'
-                            }`}>
-                              {mission.status}
-                            </span>
-                          </div>
-                        ))}
+          {activeOrder ? (
+            <Card className="border-none shadow-2xl shadow-blue-100/40 rounded-[2.5rem] overflow-hidden bg-white group transition-all duration-500 hover:shadow-blue-200/50 relative">
+              <div className="absolute top-0 right-0 w-96 h-96 bg-blue-100/30 rounded-full blur-[100px] -mr-48 -mt-48 transition-transform group-hover:scale-110" />
+              <CardContent className="p-0 flex flex-col lg:flex-row relative z-10">
+                {/* Left: Info */}
+                <div className="lg:w-3/5 p-8 md:p-12 flex flex-col justify-between border-b lg:border-b-0 lg:border-r border-slate-100">
+                  <div>
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="h-16 w-16 rounded-[2rem] bg-blue-600 flex items-center justify-center text-white shadow-xl shadow-blue-200">
+                        <Package className="h-8 w-8" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-3 mb-1">
+                          <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">{activeOrder.serviceTier.service.name}</h2>
+                          <Badge className="bg-emerald-50 text-emerald-600 border-none px-3 py-1 text-[10px] font-black uppercase tracking-widest relative">
+                            <span className="absolute -left-1 -top-1 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
+                            Active
+                          </Badge>
+                        </div>
+                        <p className="text-sm font-bold text-blue-500 uppercase tracking-widest">{activeOrder.serviceTier.tierType} Excellence Tier</p>
                       </div>
                     </div>
-                  )}
+                    
+                    <div className="grid grid-cols-2 gap-8 mt-12">
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-end">
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Messages</span>
+                          <span className="text-sm font-black text-slate-900">{activeOrder.messagesUsed} <span className="text-slate-400 font-bold">/ {activeOrder.serviceTier.maxMessages || '∞'}</span></span>
+                        </div>
+                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-blue-600 rounded-full shadow-lg shadow-blue-200 transition-all duration-1000 ease-out"
+                            style={{ width: `${Math.min(100, (activeOrder.messagesUsed / (activeOrder.serviceTier.maxMessages || 100)) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-end">
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Consulting Minutes</span>
+                          <span className="text-sm font-black text-slate-900">{activeOrder.callMinutesUsed} <span className="text-slate-400 font-bold">/ {activeOrder.serviceTier.maxCallDuration || '∞'}</span></span>
+                        </div>
+                        <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-indigo-600 rounded-full shadow-lg shadow-blue-200 transition-all duration-1000 ease-out"
+                            style={{ width: `${Math.min(100, (activeOrder.callMinutesUsed / (activeOrder.serviceTier.maxCallDuration || 100)) * 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
-                  <div className="flex gap-3 mt-4">
-                    <Link 
-                      href={`/client/orders/${order.id}`}
-                      className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                      View Details
-                    </Link>
+                  <div className="flex items-center gap-8 mt-12 pt-8 border-t border-slate-50">
+                    <div>
+                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Your Consultant</p>
+                      <p className="text-sm font-black text-slate-900">{activeOrder.consultant?.name || 'Assigned Pending'}</p>
+                    </div>
+                    <div>
+                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Billing Period</p>
+                      <p className="text-sm font-black text-slate-900">Renewable Monthly</p>
+                    </div>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+
+                {/* Right: Actions */}
+                <div className="lg:w-2/5 p-8 md:p-12 bg-slate-50/50 flex flex-col justify-center gap-4">
+                   <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-2">Quick Access</h4>
+                   <Link href={`/client/orders/${activeOrder.id}`} className="w-full">
+                     <Button className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-[1.5rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95 group">
+                        Manage Subscriptions <ExternalLink className="w-4 h-4 ml-2 opacity-30 group-hover:opacity-100 transition-opacity" />
+                     </Button>
+                   </Link>
+                   <Link href="/client/services" className="w-full">
+                     <Button variant="outline" className="w-full h-14 bg-white border-slate-200 hover:bg-slate-50 text-slate-900 rounded-[1.5rem] font-black uppercase text-xs tracking-widest shadow-sm transition-all active:scale-95">
+                        Upgrade Experience
+                     </Button>
+                   </Link>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card className="border-2 border-dashed border-slate-200 rounded-[2.5rem] p-12 text-center bg-white/50">
+               <div className="w-20 h-20 rounded-[2rem] bg-slate-100 flex items-center justify-center mx-auto mb-6 text-slate-300">
+                  <Search className="w-8 h-8" />
+               </div>
+               <h3 className="text-xl font-black text-slate-900 mb-2">No Active Membership</h3>
+               <p className="text-slate-500 font-medium max-w-sm mx-auto mb-8 leading-relaxed">You haven't initialized a consulting stream yet. Browse our premium service tiers to start.</p>
+               <Link href="/client/services">
+                 <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-10 h-14 font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-100 active:scale-95 transition-all">
+                    Discover Services
+                 </Button>
+               </Link>
+            </Card>
+          )}
+        </section>
+
+        {/* Missions Tracking (Visual Timeline/Cards) */}
+        {activeOrder && activeOrder.missions.length > 0 && (
+          <section>
+            <div className="flex items-center justify-between mb-8">
+               <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                 <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+                 Missions Tracking
+               </h3>
+               <Badge className="bg-slate-100 text-slate-500 border-none font-bold uppercase text-[9px] px-3">
+                 {activeOrder.missions.length} Registered
+               </Badge>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {activeOrder.missions.map((mission: any) => {
+                const total = mission.milestones.length
+                const completed = mission.milestones.filter((m: any) => m.status === 'COMPLETED').length
+                const progress = total > 0 ? (completed / total) * 100 : 0
+                
+                return (
+                  <Card key={mission.id} className="border border-slate-200 hover:border-blue-200 transition-all duration-300 rounded-[2rem] shadow-xl shadow-slate-200/20 bg-white overflow-hidden group">
+                    <CardHeader className="p-6 pb-0">
+                      <div className="flex justify-between items-start mb-4">
+                        <Badge className={cn(
+                          "uppercase text-[9px] font-black tracking-widest px-2.5 py-1 rounded-lg border-none",
+                          mission.status === 'COMPLETED' ? "bg-emerald-100 text-emerald-600" : "bg-blue-50 text-blue-600"
+                        )}>
+                          {mission.status}
+                        </Badge>
+                        <div className="text-[10px] font-bold text-slate-400 tracking-widest uppercase">REF: {mission.id.slice(-6)}</div>
+                      </div>
+                      <CardTitle className="text-lg font-black text-slate-900 line-clamp-1 group-hover:text-blue-600 transition-colors">{mission.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6 pt-6">
+                      <p className="text-xs font-semibold text-slate-500 mb-6 flex items-center gap-2">
+                         <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                         {completed} of {total} Milestones achieved
+                      </p>
+                      
+                      <div className="space-y-3">
+                         <div className="flex justify-between text-[10px] font-black uppercase text-slate-400 tracking-widest">
+                            <span>Status</span>
+                            <span>{Math.round(progress)}%</span>
+                         </div>
+                         <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                           <motion.div 
+                             initial={{ width: 0 }}
+                             animate={{ width: `${progress}%` }}
+                             transition={{ duration: 1.5, ease: "easeOut" }}
+                             className={cn(
+                               "h-full rounded-full shadow-sm",
+                               progress === 100 ? "bg-emerald-500 shadow-emerald-100" : "bg-blue-600 shadow-blue-100"
+                             )}
+                           />
+                         </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })}
+            </div>
+          </section>
         )}
 
-        {/* Reservations Tab */}
-        {activeTab === 'reservations' && (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
-            {reservations.length === 0 ? (
-              <div className="p-12 text-center">
-                <p className="text-gray-500 mb-4">No reservations yet</p>
-                <Link href="/client/services" className="text-blue-600 hover:underline">
-                  Book a Consultation
-                </Link>
+        {/* Tabs System: Reservations & Activity */}
+        <section>
+           <Tabs defaultValue="reservations" className="space-y-8">
+              <div className="flex items-center justify-between">
+                 <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+                   <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
+                   Timeline
+                 </h3>
+                 <TabsList className="bg-slate-100 h-10 p-1 rounded-2xl gap-1 border border-slate-100">
+                    <TabsTrigger value="reservations" className="rounded-xl px-6 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">
+                      Reservations ({reservations.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="orders" className="rounded-xl px-6 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">
+                      History ({orders.length})
+                    </TabsTrigger>
+                 </TabsList>
               </div>
-            ) : (
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Consultant</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Meeting</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {reservations.map(reservation => (
-                    <tr key={reservation.id}>
-                      <td className="px-6 py-4">
-                        <div className="font-medium">{reservation.serviceTier.service.name}</div>
-                        <div className="text-sm text-gray-500">{reservation.serviceTier.tierType}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="font-medium">{reservation.consultant.name}</div>
-                        <div className="text-sm text-gray-500">{reservation.consultant.specialty}</div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div>{new Date(reservation.startTime).toLocaleDateString()}</div>
-                        <div className="text-sm text-gray-500">
-                          {new Date(reservation.startTime).toLocaleTimeString()} - {new Date(reservation.endTime).toLocaleTimeString()}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${getReservationStatusColor(reservation.status)}`}>
-                          {reservation.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        {reservation.status === 'CONFIRMED' ? (
-                          reservation.zoomJoinUrl ? (
-                            canJoin(reservation) ? (
-                              <JoinZoomButton joinUrl={reservation.zoomJoinUrl} />
-                            ) : (
-                              <div className="text-sm text-gray-500 italic">
-                                {new Date() < new Date(reservation.startTime) 
-                                  ? 'Starts ' + new Date(reservation.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
-                                  : 'Meeting Ended'}
-                              </div>
-                            )
-                          ) : (
-                            <span className="text-sm text-gray-400 italic">Link pending...</span>
-                          )
-                        ) : reservation.status === 'PENDING' ? (
-                          <span className="text-sm text-gray-400 italic">Awaiting confirmation</span>
-                        ) : (
-                          <span className="text-sm text-gray-400 italic">-</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-        )}
+
+              <TabsContent value="reservations" className="m-0 focus-visible:ring-0">
+                <AnimatePresence mode="wait">
+                  {reservations.length === 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-white rounded-[2.5rem] border border-slate-100 p-12 text-center shadow-2xl shadow-slate-200/20"
+                    >
+                       <Calendar className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                       <p className="text-slate-500 font-bold text-sm">No upcoming face-to-face consulting sessions.</p>
+                       <Link href="/client/services" className="text-blue-600 hover:underline text-xs font-black uppercase tracking-widest mt-4 inline-block">Book Now</Link>
+                    </motion.div>
+                  ) : (
+                    <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/20 overflow-hidden">
+                       <div className="overflow-x-auto">
+                          <table className="min-w-full divide-y divide-slate-100">
+                             <thead className="bg-slate-50/50">
+                                <tr>
+                                   <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Item</th>
+                                   <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Expert</th>
+                                   <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Schedule</th>
+                                   <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Engagement</th>
+                                </tr>
+                             </thead>
+                             <tbody className="divide-y divide-slate-100">
+                                {reservations.map(reservation => (
+                                  <motion.tr 
+                                    key={reservation.id}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    className="hover:bg-slate-50/50 transition-colors"
+                                  >
+                                    <td className="px-8 py-6">
+                                       <div className="font-black text-slate-900">{reservation.serviceTier.service.name}</div>
+                                       <div className="text-[10px] font-bold text-blue-500 uppercase tracking-widest mt-0.5">{reservation.serviceTier.tierType} Access</div>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                       <div className="flex items-center gap-3">
+                                          <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 text-[10px] font-black uppercase">
+                                             {reservation.consultant.name.substring(0, 2)}
+                                          </div>
+                                          <div>
+                                             <div className="text-xs font-black text-slate-800">{reservation.consultant.name}</div>
+                                             <div className="text-[10px] font-bold text-slate-400 truncate w-32">{reservation.consultant.specialty}</div>
+                                          </div>
+                                       </div>
+                                    </td>
+                                    <td className="px-8 py-6">
+                                       <div className="text-xs font-black text-slate-900">{new Date(reservation.startTime).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+                                       <div className="text-[10px] font-bold text-slate-400 mt-0.5 uppercase tracking-wider">
+                                          {new Date(reservation.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                       </div>
+                                    </td>
+                                    <td className="px-8 py-6 text-right">
+                                       {reservation.status === 'CONFIRMED' && reservation.zoomJoinUrl ? (
+                                          canJoin(reservation) ? (
+                                            <JoinZoomButton joinUrl={reservation.zoomJoinUrl} />
+                                          ) : (
+                                            <Badge variant="outline" className="text-[9px] font-black uppercase border-slate-200 text-slate-400 rounded-full px-4 py-1.5">
+                                               Locked until Start
+                                            </Badge>
+                                          )
+                                       ) : (
+                                          <Badge className={cn("text-[9px] font-black uppercase border-none px-4 py-1.5 rounded-full shadow-sm", getReservationStatusColor(reservation.status))}>
+                                             {reservation.status}
+                                          </Badge>
+                                       )}
+                                    </td>
+                                  </motion.tr>
+                                ))}
+                             </tbody>
+                          </table>
+                       </div>
+                    </div>
+                  )}
+                </AnimatePresence>
+              </TabsContent>
+
+              <TabsContent value="orders" className="m-0 focus-visible:ring-0">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {orders.map(order => (
+                       <Card key={order.id} className="border-none shadow-xl shadow-slate-200/30 rounded-[2rem] bg-white overflow-hidden p-6 hover:-translate-y-1 transition-all duration-300">
+                          <div className="flex justify-between items-start mb-6">
+                             <div className="flex items-center gap-3">
+                                <div className="h-12 w-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400">
+                                   <Zap className="h-6 w-6" />
+                                </div>
+                                <div>
+                                   <h4 className="font-black text-slate-900">{order.serviceTier.service.name}</h4>
+                                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{new Date(order.createdAt).toLocaleDateString()}</p>
+                                </div>
+                             </div>
+                             <Badge className={cn(
+                                "border-none px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full",
+                                order.status === 'ACTIVE' ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"
+                             )}>
+                                {order.status}
+                             </Badge>
+                          </div>
+                          <div className="flex items-center justify-between pt-6 border-t border-slate-50">
+                             <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{order.serviceTier.tierType} Stream</span>
+                             <Link href={`/client/orders/${order.id}`}>
+                               <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-blue-600 hover:underline p-0">Detailed View</Button>
+                             </Link>
+                          </div>
+                       </Card>
+                    ))}
+                 </div>
+              </TabsContent>
+           </Tabs>
+        </section>
+
       </div>
+
+      {/* Background Decor */}
+      <div className="fixed top-[-200px] right-[-100px] w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[150px] pointer-events-none -z-10" />
+      <div className="fixed bottom-[-100px] left-[300px] w-[500px] h-[500px] bg-purple-600/5 rounded-full blur-[150px] pointer-events-none -z-10" />
     </div>
   )
 }
