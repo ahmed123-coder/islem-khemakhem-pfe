@@ -1,8 +1,63 @@
 'use client'
 
-import { useEffect, useState, useMemo } from 'react'
+import * as React from 'react'
+import { 
+  Calendar, 
+  CalendarX, 
+  Clock, 
+  MoreHorizontal, 
+  CheckCircle2, 
+  XCircle, 
+  Loader2,
+  Filter,
+  Users,
+  Briefcase,
+  ChevronLeft,
+  ChevronRight,
+  ShieldCheck,
+  Video,
+  MapPin,
+  Trash2,
+  Sparkles,
+  LayoutGrid,
+  List,
+  Search
+} from 'lucide-react'
+import { format, addDays, isSameDay } from 'date-fns'
+import { fr } from 'date-fns/locale'
 import { toast } from 'react-hot-toast'
+import { cn } from '@/lib/utils'
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Card } from '@/components/ui/card'
 import { JoinZoomButton } from '@/components/JoinZoomButton'
+import {
+  Dialog,
+  DialogContent,
+} from '@/components/ui/dialog'
 
 const HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17]
 
@@ -10,24 +65,41 @@ function getMonday(date: Date) {
   const d = new Date(date)
   const day = d.getDay()
   const diff = d.getDate() - day + (day === 0 ? -6 : 1)
-  return new Date(d.setDate(diff))
+  const monday = new Date(d.setDate(diff))
+  monday.setHours(0, 0, 0, 0)
+  return monday
 }
 
 export default function ConsultantReservations() {
-  const [reservations, setReservations] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => getMonday(new Date()).getTime())
-  const [selectedReservation, setSelectedReservation] = useState<any>(null)
+  const [reservations, setReservations] = React.useState<any[]>([])
+  const [loading, setLoading] = React.useState(true)
+  const [currentWeekStart, setCurrentWeekStart] = React.useState(() => getMonday(new Date()))
+  const [selectedRes, setSelectedRes] = React.useState<any>(null)
+  
+  // View States
+  const [viewMode, setViewMode] = React.useState<'calendar' | 'list'>('calendar')
+  const [statusFilter, setStatusFilter] = React.useState('all')
 
-  const DAYS = useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(currentWeekStart)
-      d.setDate(d.getDate() + i)
-      return d
-    })
+  const DAYS = React.useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i))
   }, [currentWeekStart])
 
-  useEffect(() => {
+  // --- Logic & API Preservation ---
+
+  const fetchReservations = async () => {
+    try {
+      const res = await fetch('/api/consultant/reservations')
+      const data = await res.json()
+      setReservations(Array.isArray(data) ? data : [])
+    } catch (error) {
+      console.error('Fetch error:', error)
+      setReservations([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  React.useEffect(() => {
     fetchReservations()
     const handleNotification = (e: any) => {
       if (e.detail?.type === 'RESERVATION') fetchReservations()
@@ -36,13 +108,50 @@ export default function ConsultantReservations() {
     return () => window.removeEventListener('notification', handleNotification)
   }, [])
 
-  const fetchReservations = async () => {
+  const updateStatus = async (id: string, status: string) => {
+    const loadingToast = toast.loading(`Updating...`)
     try {
-      const res = await fetch('/api/consultant/reservations')
-      const data = await res.json()
-      setReservations(Array.isArray(data) ? data : [])
-    } catch { setReservations([]) }
-    finally { setLoading(false) }
+      const res = await fetch('/api/consultant/reservations', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status })
+      })
+      if (!res.ok) throw new Error('Update failed')
+      toast.success(`Success`, { id: loadingToast })
+      fetchReservations()
+      if (selectedRes?.id === id) setSelectedRes((prev: any) => ({ ...prev, status }))
+    } catch {
+      toast.error('Failed', { id: loadingToast })
+    }
+  }
+
+  const deleteReservation = async (id: string) => {
+    if (!confirm('Permanent delete?')) return
+    try {
+      await fetch('/api/consultant/reservations', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id })
+      })
+      toast.success('Deleted')
+      fetchReservations()
+      setSelectedRes(null)
+    } catch {
+      toast.error('Failed')
+    }
+  }
+
+  // --- Helpers ---
+
+  const filteredList = React.useMemo(() => {
+    if (statusFilter === 'all') return reservations
+    return reservations.filter(r => r.status.toLowerCase() === statusFilter.toLowerCase())
+  }, [reservations, statusFilter])
+
+  const changeWeek = (dir: number) => {
+    const d = new Date(currentWeekStart)
+    d.setDate(d.getDate() + dir * 7)
+    setCurrentWeekStart(d)
   }
 
   const getReservationAt = (date: Date, hour: number) => {
@@ -51,279 +160,402 @@ export default function ConsultantReservations() {
       const rEnd = new Date(r.endTime)
       const cellStart = new Date(date); cellStart.setHours(hour, 0, 0, 0)
       const cellEnd = new Date(date); cellEnd.setHours(hour + 1, 0, 0, 0)
-      return rStart.toDateString() === date.toDateString() && cellStart < rEnd && cellEnd > rStart
+      return isSameDay(rStart, date) && cellStart < rEnd && cellEnd > rStart
     })
-  }
-
-  const updateStatus = async (id: string, status: string) => {
-    await fetch('/api/consultant/reservations', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, status })
-    })
-    fetchReservations()
-    setSelectedReservation((prev: any) => prev ? { ...prev, status } : null)
-  }
-
-  const deleteReservation = async (id: string) => {
-    if (!confirm('Supprimer cette réservation ?')) return
-    await fetch('/api/consultant/reservations', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id })
-    })
-    setSelectedReservation(null)
-    fetchReservations()
-  }
-
-  const changeWeek = (dir: number) => {
-    const d = new Date(currentWeekStart)
-    d.setDate(d.getDate() + dir * 7)
-    setCurrentWeekStart(d.getTime())
-  }
-
-  const canJoin = (r: any) => {
-    const now = new Date().getTime()
-    const start = new Date(r.startTime).getTime()
-    const end = new Date(r.endTime).getTime()
-    return now >= start - 15 * 60 * 1000 && now <= end
-  }
-
-  const getBg = (status: string) => {
-    switch (status) {
-      case 'CONFIRMED': return 'bg-emerald-500'
-      case 'PENDING': return 'bg-amber-400'
-      case 'COMPLETED': return 'bg-blue-500'
-      case 'CANCELLED': return 'bg-red-400'
-      case 'NO_SHOW': return 'bg-purple-400'
-      default: return 'bg-gray-400'
-    }
   }
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'CONFIRMED': return 'bg-green-100 text-green-700'
-      case 'PENDING': return 'bg-yellow-100 text-yellow-700'
-      case 'COMPLETED': return 'bg-blue-100 text-blue-700'
-      case 'CANCELLED': return 'bg-red-100 text-red-700'
-      case 'NO_SHOW': return 'bg-purple-100 text-purple-700'
-      default: return 'bg-gray-100 text-gray-700'
+      case 'CONFIRMED': return <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">Confirmed</Badge>
+      case 'PENDING': return <Badge className="bg-amber-50 text-amber-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">Pending</Badge>
+      case 'CANCELLED': return <Badge className="bg-rose-50 text-rose-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">Cancelled</Badge>
+      case 'COMPLETED': return <Badge className="bg-blue-50 text-blue-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">Completed</Badge>
+      case 'NO_SHOW': return <Badge className="bg-slate-50 text-slate-500 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">No Show</Badge>
+      default: return <Badge variant="outline">{status}</Badge>
     }
   }
 
-  const weekEnd = new Date(currentWeekStart)
-  weekEnd.setDate(weekEnd.getDate() + 6)
+  const getStatusColorClass = (status: string) => {
+    switch (status) {
+      case 'CONFIRMED': return 'bg-emerald-500 shadow-emerald-200 text-white'
+      case 'PENDING': return 'bg-amber-400 shadow-amber-100 text-white'
+      case 'COMPLETED': return 'bg-blue-500 shadow-blue-100 text-white'
+      case 'CANCELLED': return 'bg-rose-500 shadow-rose-100 text-white'
+      case 'NO_SHOW': return 'bg-slate-400 shadow-slate-100 text-white'
+      default: return 'bg-slate-200 text-slate-500'
+    }
+  }
 
-  if (loading) return <div className="flex items-center justify-center min-h-screen">Chargement...</div>
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-emerald-600 animate-pulse font-black text-xs">
+      <Loader2 className="w-10 h-10 animate-spin" />
+      SYNCHRONIZING HUB...
+    </div>
+  )
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-
-        {/* Header */}
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-800">Planning hebdomadaire</h1>
-          <div className="flex items-center gap-4">
-            <button onClick={() => changeWeek(-1)} className="px-4 py-2 border rounded-lg text-sm bg-white hover:bg-gray-50">← Semaine précédente</button>
-            <span className="text-sm font-semibold text-gray-700">
-              {new Date(currentWeekStart).toLocaleDateString('fr-FR')} – {weekEnd.toLocaleDateString('fr-FR')}
-            </span>
-            <button onClick={() => changeWeek(1)} className="px-4 py-2 border rounded-lg text-sm bg-white hover:bg-gray-50">Semaine suivante →</button>
+    <div className="p-8 md:p-12 space-y-10 animate-in fade-in duration-700">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+        <div>
+          <div className="flex items-center gap-2 text-emerald-600 font-black text-[10px] uppercase tracking-[0.3em] mb-4">
+            <Sparkles className="w-4 h-4" />
+            Reservation Management
           </div>
+          <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none flex items-center gap-4">
+            Expert Agenda
+            <Badge className="bg-slate-900 text-white border-none font-black text-xs px-4 h-8 rounded-full shadow-lg">
+              {reservations.length} Active
+            </Badge>
+          </h1>
+          <p className="text-slate-500 font-bold mt-2 text-sm italic">
+            Visualizing your high-impact consultations via {viewMode} view.
+          </p>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-          <table className="min-w-full border-collapse">
-            <thead>
-              <tr className="bg-gradient-to-r from-blue-600 to-blue-500 text-white">
-                <th className="p-4 text-left font-semibold text-sm border-r border-blue-400 min-w-[120px]">Jour</th>
-                {HOURS.map(h => (
-                  <th key={h} className="p-4 text-center font-semibold text-sm border-r border-blue-400 min-w-[80px]">{h}h</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {DAYS.map((day, dayIndex) => (
-                <tr key={dayIndex} className="border-b border-gray-100">
-                  <td className="p-4 border-r border-gray-200 bg-gray-50/50">
-                    <div className="font-bold text-gray-900 text-sm">{day.toLocaleDateString('fr-FR', { weekday: 'short' }).toUpperCase()}</div>
-                    <div className="text-xs text-gray-400">{day.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
-                  </td>
-                  {(() => {
-                    const cells = []
-                    let i = 0
-                    while (i < HOURS.length) {
-                      const hour = HOURS[i]
-                      const res = getReservationAt(day, hour)
-
-                      if (res) {
-                        const resStart = new Date(res.startTime).getHours()
-                        const resEnd = new Date(res.endTime).getHours()
-                        let span = 0
-                        while (i + span < HOURS.length && HOURS[i + span] >= resStart && HOURS[i + span] < resEnd) span++
-                        if (span === 0) span = 1
-
-                        cells.push(
-                          <td key={hour} colSpan={span} className="h-14 p-1 border-r border-gray-100 relative group">
-                            <div
-                              onClick={() => setSelectedReservation(res)}
-                              className={`${getBg(res.status)} h-full rounded-lg flex flex-col items-center justify-center cursor-pointer hover:brightness-110 transition-all shadow-sm`}
-                            >
-                              <span className="text-white font-bold text-[11px] uppercase tracking-wide">{res.client?.name || 'Client'}</span>
-                              <span className="text-white/80 text-[10px]">{resStart}h – {resEnd}h</span>
-                            </div>
-                            {/* Hover popover */}
-                            <div className="hidden group-hover:block absolute z-50 bottom-full left-0 mb-2 w-56 bg-white border border-gray-200 rounded-xl shadow-2xl p-3 text-left pointer-events-none">
-                              <div className="font-bold text-gray-900 text-xs mb-1">{res.client?.name || res.client?.email}</div>
-                              <div className="text-gray-500 text-[10px] mb-2">{res.serviceTier?.service?.name} — {res.serviceTier?.tierType}</div>
-                              <div className="flex gap-2 items-center">
-                                <span className={`px-2 py-0.5 rounded-full text-[9px] font-bold ${getStatusBadge(res.status)}`}>{res.status}</span>
-                                <span className="text-[9px] text-gray-500 bg-gray-50 px-2 py-0.5 rounded border">{resStart}h – {resEnd}h</span>
-                              </div>
-                              <div className="absolute top-full left-4 border-8 border-transparent border-t-white"></div>
-                            </div>
-                          </td>
-                        )
-                        i += span
-                      } else {
-                        cells.push(
-                          <td key={hour} className="h-14 p-1 border-r border-gray-100 min-w-[80px]">
-                            <div className="w-full h-full rounded-lg flex items-center justify-center">
-                              <span className="text-gray-200 text-base font-bold">○</span>
-                            </div>
-                          </td>
-                        )
-                        i++
-                      }
-                    }
-                    return cells
-                  })()}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Legend */}
-        <div className="flex gap-6 px-1">
-          {[['bg-amber-400', 'En attente'], ['bg-emerald-500', 'Confirmé'], ['bg-blue-500', 'Terminé'], ['bg-red-400', 'Annulé'], ['bg-purple-400', 'No Show']].map(([color, label]) => (
-            <div key={label} className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded ${color}`}></div>
-              <span className="text-sm text-gray-600">{label}</span>
-            </div>
-          ))}
+        <div className="flex items-center gap-4 self-end">
+           {/* View Switcher */}
+           <div className="bg-white border border-slate-200 p-1 rounded-2xl flex items-center shadow-sm">
+              <Button 
+                variant={viewMode === 'calendar' ? 'default' : 'ghost'} 
+                onClick={() => setViewMode('calendar')}
+                className={cn("rounded-xl h-10 px-4 font-bold text-xs", viewMode === 'calendar' ? "bg-slate-900 text-white" : "text-slate-400")}
+              >
+                <LayoutGrid className="w-4 h-4 mr-2" /> Calendar
+              </Button>
+              <Button 
+                variant={viewMode === 'list' ? 'default' : 'ghost'} 
+                onClick={() => setViewMode('list')}
+                className={cn("rounded-xl h-10 px-4 font-bold text-xs", viewMode === 'list' ? "bg-slate-900 text-white" : "text-slate-400")}
+              >
+                <List className="w-4 h-4 mr-2" /> List
+              </Button>
+           </div>
+           
+           {/* Date Range for Calendar / Status for List */}
+           {viewMode === 'calendar' ? (
+              <div className="flex items-center gap-2 p-1 bg-white border border-slate-200 rounded-2xl shadow-sm h-12">
+                 <Button variant="ghost" size="icon" onClick={() => changeWeek(-1)} className="rounded-xl h-10 w-10">
+                   <ChevronLeft className="w-5 h-5" />
+                 </Button>
+                 <span className="px-3 font-black text-[10px] uppercase tracking-widest text-slate-900">
+                   {format(currentWeekStart, 'dd MMM')} – {format(addDays(currentWeekStart, 6), 'dd MMM')}
+                 </span>
+                 <Button variant="ghost" size="icon" onClick={() => changeWeek(1)} className="rounded-xl h-10 w-10">
+                   <ChevronRight className="w-5 h-5" />
+                 </Button>
+              </div>
+           ) : (
+              <Tabs value={statusFilter} onValueChange={setStatusFilter}>
+                 <TabsList className="bg-white border border-slate-200 p-1 h-12 rounded-2xl shadow-sm">
+                   <TabsTrigger value="all" className="rounded-xl px-4 font-bold text-xs data-[state=active]:bg-slate-900 data-[state=active]:text-white">All</TabsTrigger>
+                   <TabsTrigger value="pending" className="rounded-xl px-4 font-bold text-xs data-[state=active]:bg-slate-900 data-[state=active]:text-white uppercase tracking-tighter">Pending</TabsTrigger>
+                   <TabsTrigger value="confirmed" className="rounded-xl px-4 font-bold text-xs data-[state=active]:bg-slate-900 data-[state=active]:text-white uppercase tracking-tighter">Confirmed</TabsTrigger>
+                   <TabsTrigger value="completed" className="rounded-xl px-4 font-bold text-xs data-[state=active]:bg-slate-900 data-[state=active]:text-white uppercase tracking-tighter">Finalized</TabsTrigger>
+                 </TabsList>
+              </Tabs>
+           )}
         </div>
       </div>
 
-      {/* Modal */}
-      {selectedReservation && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setSelectedReservation(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className={`p-6 text-white ${
-              selectedReservation.status === 'CONFIRMED' ? 'bg-gradient-to-r from-green-500 to-emerald-600' :
-              selectedReservation.status === 'PENDING' ? 'bg-gradient-to-r from-yellow-500 to-amber-600' :
-              selectedReservation.status === 'COMPLETED' ? 'bg-gradient-to-r from-blue-500 to-indigo-600' :
-              selectedReservation.status === 'CANCELLED' ? 'bg-gradient-to-r from-red-500 to-rose-600' :
-              'bg-gradient-to-r from-purple-500 to-violet-600'
-            }`}>
-              <div className="flex justify-between items-start">
-                <div>
-                  <h2 className="text-xl font-bold">Détails de la réservation</h2>
-                  <p className="text-white/80 text-sm mt-1">{selectedReservation.serviceTier?.service?.name} — {selectedReservation.serviceTier?.tierType}</p>
-                </div>
-                <button onClick={() => setSelectedReservation(null)} className="text-white/70 hover:text-white text-2xl font-bold leading-none">&times;</button>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-4">
-              {/* Client */}
-              <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl">
-                <div className="w-10 h-10 bg-gradient-to-tr from-blue-500 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                  {(selectedReservation.client?.name || selectedReservation.client?.email || 'C').charAt(0).toUpperCase()}
-                </div>
-                <div>
-                  <div className="font-bold text-gray-900 text-sm">{selectedReservation.client?.name || 'Client'}</div>
-                  <div className="text-xs text-gray-500">{selectedReservation.client?.email}</div>
-                </div>
-              </div>
-
-              {/* Status & Time */}
-              <div className="flex items-center gap-3">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${getStatusBadge(selectedReservation.status)}`}>{selectedReservation.status}</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                  selectedReservation.meetingType === 'SUR_PLACE' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                }`}>
-                  {selectedReservation.meetingType === 'SUR_PLACE' ? '🏢 Sur Place' : '🎥 Zoom'}
-                </span>
-                <span className="text-sm text-gray-500">
-                  {new Date(selectedReservation.startTime).toLocaleDateString('fr-FR')} · {new Date(selectedReservation.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – {new Date(selectedReservation.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-
-              {/* Meeting Info */}
-              {selectedReservation.status === 'CONFIRMED' && (
-                selectedReservation.meetingType === 'SUR_PLACE' ? (
-                  <div className="bg-green-50 border border-green-100 rounded-xl p-4 flex items-center gap-3">
-                    <span className="text-2xl">🏢</span>
-                    <div>
-                      <div className="font-bold text-green-700 text-sm">Réunion Sur Place</div>
-                      <div className="text-xs text-green-600">Rencontre en présentiel avec le client</div>
-                    </div>
-                  </div>
-                ) : (
-                <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-3">
-                  <div className="flex items-center gap-2">
-                    <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                    <span className="text-sm font-bold text-blue-700">Zoom Meeting</span>
-                  </div>
-                  {selectedReservation.zoomJoinUrl ? (
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 text-xs text-gray-600 bg-white p-2 rounded-lg border border-blue-200 font-mono truncate">{selectedReservation.zoomJoinUrl}</div>
-                      <button onClick={() => { navigator.clipboard.writeText(selectedReservation.zoomJoinUrl); toast.success('Lien copié!') }} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-bold">📋</button>
-                    </div>
-                  ) : <p className="text-xs text-gray-400 italic">Lien en attente...</p>}
-                  {selectedReservation.zoomPassword && (
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 text-sm text-gray-800 bg-white p-2 rounded-lg border border-blue-200 font-bold">{selectedReservation.zoomPassword}</code>
-                      <button onClick={() => { navigator.clipboard.writeText(selectedReservation.zoomPassword); toast.success('Mot de passe copié!') }} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-xs font-bold">📋</button>
-                    </div>
-                  )}
-                  {selectedReservation.zoomJoinUrl && canJoin(selectedReservation) && (
-                    <JoinZoomButton joinUrl={selectedReservation.zoomJoinUrl} className="w-full justify-center" />
-                  )}
-                </div>
-                )
-              )}
-
-              {/* Actions */}
-              <div className="border-t pt-4 space-y-3">
-                <div className="text-xs font-bold text-gray-400 uppercase tracking-widest">Changer le statut</div>
-                <div className="grid grid-cols-2 gap-3">
-                  {selectedReservation.status === 'PENDING' && (
-                    <>
-                      <button onClick={() => updateStatus(selectedReservation.id, 'CONFIRMED')} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm">✓ Confirmer</button>
-                      <button onClick={() => updateStatus(selectedReservation.id, 'CANCELLED')} className="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm">✗ Annuler</button>
-                    </>
-                  )}
-                  {selectedReservation.status === 'CONFIRMED' && (
-                    <>
-                      <button onClick={() => updateStatus(selectedReservation.id, 'COMPLETED')} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm">✓ Terminer</button>
-                      <button onClick={() => updateStatus(selectedReservation.id, 'NO_SHOW')} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl font-bold text-sm">⊘ No Show</button>
-                    </>
-                  )}
-                  {['COMPLETED', 'CANCELLED', 'NO_SHOW'].includes(selectedReservation.status) && (
-                    <div className="col-span-2 text-center text-gray-400 py-2 text-sm italic">Réservation finalisée</div>
-                  )}
-                </div>
-                <button onClick={() => deleteReservation(selectedReservation.id)} className="w-full bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 py-2.5 rounded-xl text-sm font-bold">
-                  🗑 Supprimer
-                </button>
-              </div>
-            </div>
+      {/* Main Container - Glassmorphic Content */}
+      <Card className="rounded-[40px] border border-white/20 bg-white/70 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.03)] overflow-hidden">
+        {viewMode === 'calendar' ? (
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="bg-slate-50 border-b border-slate-100">
+                  <th className="py-6 px-8 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 border-r border-slate-100 w-44">Timeline / Day</th>
+                  {HOURS.map(h => (
+                    <th key={h} className="py-6 text-center text-xs font-black text-slate-900 border-r border-slate-100 last:border-r-0">
+                      {h}:00
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {DAYS.map((day, dayIdx) => (
+                  <tr key={dayIdx} className="border-b border-slate-50 last:border-b-0 group">
+                    <td className="py-6 px-8 border-r border-slate-100 bg-slate-50/20 group-hover:bg-emerald-50/30 transition-colors">
+                       <p className="text-sm font-black text-slate-900 uppercase mb-1 leading-none">{format(day, 'EEEE', { locale: fr })}</p>
+                       <p className="text-[10px] font-bold text-slate-400 uppercase italic tracking-tighter">{format(day, 'dd MMMM', { locale: fr })}</p>
+                    </td>
+                    {(() => {
+                      const cells = []
+                      let i = 0
+                      while (i < HOURS.length) {
+                        const hour = HOURS[i]
+                        const res = getReservationAt(day, hour)
+                        if (res) {
+                          const resStart = new Date(res.startTime).getHours()
+                          const resEnd = new Date(res.endTime).getHours()
+                          let span = 0
+                          while (i + span < HOURS.length && HOURS[i + span] >= resStart && HOURS[i + span] < resEnd) span++
+                          if (span === 0) span = 1
+                          cells.push(
+                            <td key={hour} colSpan={span} className="p-1.5 border-r border-slate-100 last:border-r-0 relative">
+                              <button
+                                onClick={() => setSelectedRes(res)}
+                                className={cn(
+                                  getStatusColorClass(res.status),
+                                  "w-full h-16 rounded-2xl flex flex-col items-center justify-center transition-all hover:scale-[1.02] active:scale-95 shadow-lg group relative overflow-hidden"
+                                )}
+                              >
+                                <div className="absolute top-0 right-0 w-12 h-12 bg-white/10 rounded-full blur-xl -mr-6 -mt-6" />
+                                <span className="font-black text-[10px] uppercase tracking-widest leading-none z-10 truncate max-w-full px-2">{res.client?.name || 'Client'}</span>
+                                <span className="text-[9px] font-black opacity-60 z-10">{resStart}:00 – {resEnd}:00</span>
+                              </button>
+                            </td>
+                          )
+                          i += span
+                        } else {
+                          cells.push(
+                            <td key={hour} className="p-2 border-r border-slate-100 last:border-r-0 h-20">
+                              <div className="w-full h-full rounded-2xl border border-dashed border-slate-50 flex items-center justify-center group-hover:border-emerald-100 transition-colors">
+                                 <div className="w-1.5 h-1.5 rounded-full bg-slate-50 group-hover:bg-emerald-100 transition-all" />
+                              </div>
+                            </td>
+                          )
+                          i++
+                        }
+                      }
+                      return cells
+                    })()}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-slate-50">
+                <TableRow>
+                  <TableHead className="py-6 px-10 text-[10px] font-black uppercase tracking-widest text-slate-400">Expert's Client</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Schedule</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Assigned Service</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">State</TableHead>
+                  <TableHead className="text-right pr-10 text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredList.length > 0 ? (
+                  filteredList.map((res) => (
+                    <TableRow key={res.id} className="border-slate-50 group hover:bg-emerald-50/30 transition-colors">
+                      <TableCell className="py-6 px-10">
+                         <div className="flex items-center gap-4">
+                            <Avatar className="w-11 h-11 border-2 border-white shadow-md ring-2 ring-emerald-50">
+                               <AvatarFallback className="bg-emerald-600 text-white font-black text-xs">
+                                  {res.client?.name?.[0] || 'C'}
+                               </AvatarFallback>
+                            </Avatar>
+                            <div>
+                               <p className="text-sm font-black text-slate-900">{res.client?.name || 'Client'}</p>
+                               <p className="text-[10px] font-bold text-slate-400 italic">{res.client?.email}</p>
+                            </div>
+                         </div>
+                      </TableCell>
+                      <TableCell>
+                         <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-xs font-black text-slate-700">
+                               <Calendar className="w-4 h-4 text-emerald-600" />
+                               {format(new Date(res.startTime), 'EEEE dd MMM', { locale: fr })}
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
+                               <Clock className="w-3.5 h-3.5" />
+                               {format(new Date(res.startTime), 'HH:mm')} - {format(new Date(res.endTime), 'HH:mm')}
+                            </div>
+                         </div>
+                      </TableCell>
+                      <TableCell>
+                         <div className="flex flex-col">
+                            <span className="text-xs font-black text-slate-900">{res.serviceTier?.service?.name}</span>
+                            <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">{res.serviceTier?.tierType} Access</span>
+                         </div>
+                      </TableCell>
+                      <TableCell>
+                         {getStatusBadge(res.status)}
+                      </TableCell>
+                      <TableCell className="text-right pr-10">
+                         <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                               <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl hover:bg-emerald-50 text-slate-400">
+                                  <MoreHorizontal className="w-5 h-5" />
+                               </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl shadow-2xl border-slate-50">
+                               <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Hub Controls</DropdownMenuLabel>
+                               <DropdownMenuItem onClick={() => setSelectedRes(res)} className="rounded-xl px-3 py-2 cursor-pointer transition-colors focus:bg-emerald-50 focus:text-emerald-500">
+                                  <ChevronRight className="w-4 h-4 mr-2" /> View Detailed Card
+                               </DropdownMenuItem>
+                               <DropdownMenuSeparator className="my-1 bg-slate-50" />
+                               <DropdownMenuItem onClick={() => deleteReservation(res.id)} className="rounded-xl px-3 py-2 cursor-pointer text-rose-500 focus:bg-rose-50">
+                                  <Trash2 className="w-4 h-4 mr-2" /> Delete Permanentely
+                               </DropdownMenuItem>
+                            </DropdownMenuContent>
+                         </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-96 text-center">
+                       <div className="flex flex-col items-center justify-center gap-6">
+                          <div className="w-24 h-24 rounded-[32px] bg-slate-50 flex items-center justify-center border border-white shadow-xl">
+                             <CalendarX className="w-10 h-10 text-slate-200" />
+                          </div>
+                          <div>
+                            <h3 className="text-xl font-black text-slate-900 mb-1">Agenda is clear</h3>
+                            <p className="text-xs text-slate-400 font-bold italic tracking-tight">No reservations found in this category.</p>
+                          </div>
+                       </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        )}
+      </Card>
+
+      {/* Details Dialog */}
+      <Dialog open={!!selectedRes} onOpenChange={() => setSelectedRes(null)}>
+         <DialogContent className="max-w-2xl p-0 overflow-hidden rounded-[40px] border-none shadow-2xl animate-in zoom-in-95 duration-300">
+            {/* Modal Header Cover */}
+            <div className={cn("p-12 text-white relative", 
+              selectedRes?.status === 'CONFIRMED' ? 'bg-gradient-to-tr from-emerald-600 to-teal-500' :
+              selectedRes?.status === 'PENDING' ? 'bg-gradient-to-tr from-amber-500 to-orange-400' :
+              selectedRes?.status === 'CANCELLED' ? 'bg-gradient-to-tr from-rose-600 to-pink-500' :
+              'bg-slate-900'
+            )}>
+               <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-32 -mt-32 animate-pulse" />
+               <div className="relative">
+                  <div className="flex justify-between items-start mb-10">
+                     <Badge className="bg-white/20 text-white border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
+                        {selectedRes?.status}
+                     </Badge>
+                     <Button variant="ghost" className="text-white/60 hover:text-white rounded-full h-8" onClick={() => setSelectedRes(null)}>Close</Button>
+                  </div>
+                  <h2 className="text-5xl font-black tracking-tight leading-none mb-6">
+                     {selectedRes?.serviceTier?.service?.name}
+                  </h2>
+                  <div className="flex flex-wrap items-center gap-8">
+                     <div className="flex items-center gap-3 text-sm font-black italic">
+                        <Calendar className="w-5 h-5 opacity-60" />
+                        {selectedRes && format(new Date(selectedRes.startTime), 'dd MMMM yyyy', { locale: fr })}
+                     </div>
+                     <div className="flex items-center gap-3 text-sm font-black italic">
+                        <Clock className="w-5 h-5 opacity-60" />
+                        {selectedRes && format(new Date(selectedRes.startTime), 'HH:mm')} - {selectedRes && format(new Date(selectedRes.endTime), 'HH:mm')}
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-10 space-y-10 bg-white">
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Consulting Partner</p>
+                     <div className="flex items-center gap-5 bg-slate-50 p-5 rounded-[32px] border border-slate-100/60">
+                        <Avatar className="w-14 h-14 border-4 border-white shadow-xl ring-2 ring-emerald-50">
+                           <AvatarFallback className="bg-emerald-600 text-white font-black text-lg">
+                              {selectedRes?.client?.name?.[0] || 'C'}
+                           </AvatarFallback>
+                        </Avatar>
+                        <div>
+                           <p className="text-base font-black text-slate-900 leading-tight mb-1">{selectedRes?.client?.name || 'Expert'}</p>
+                           <p className="text-xs text-slate-400 font-bold italic truncate max-w-[120px]">{selectedRes?.client?.email}</p>
+                        </div>
+                     </div>
+                  </div>
+                  <div className="space-y-4">
+                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Session Logistics</p>
+                     <div className="flex items-center gap-5 bg-slate-50 p-5 rounded-[32px] border border-slate-100/60">
+                        <div className="w-14 h-14 rounded-[24px] bg-white border border-slate-100/60 flex items-center justify-center text-emerald-600 shadow-sm ring-2 ring-emerald-50">
+                           {selectedRes?.meetingType === 'SUR_PLACE' ? <MapPin className="w-7 h-7" /> : <Video className="w-7 h-7" />}
+                        </div>
+                        <div>
+                           <p className="text-base font-black text-slate-900 leading-tight mb-1">
+                              {selectedRes?.meetingType === 'SUR_PLACE' ? 'Face-to-Face' : 'Virtual Session'}
+                           </p>
+                           <p className="text-[10px] text-emerald-600 font-black uppercase tracking-[0.2em]">
+                              {selectedRes?.serviceTier?.tierType} Mode
+                           </p>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+               {/* Connection Portal */}
+               {selectedRes?.status === 'CONFIRMED' && selectedRes?.meetingType === 'ZOOM_MEETING' && (
+                  <div className="p-8 rounded-[32px] bg-slate-900 text-white relative overflow-hidden group border border-slate-800 shadow-2xl">
+                     <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
+                     <div className="relative flex flex-col items-center md:items-start text-center md:text-left gap-6">
+                        <div className="flex items-center gap-4">
+                           <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-emerald-400 border border-white/10">
+                              <Video className="w-6 h-6 animate-pulse" />
+                           </div>
+                           <div>
+                              <h4 className="text-xl font-black italic leading-none mb-1">Secured Video Bridge</h4>
+                              <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Encrypted Zoom Channel Ready</p>
+                           </div>
+                        </div>
+                        {selectedRes.zoomJoinUrl ? (
+                          <div className="w-full flex flex-col md:flex-row items-center gap-4">
+                             <JoinZoomButton joinUrl={selectedRes.zoomJoinUrl} className="w-full md:w-auto rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-black italic h-14 px-10 shadow-[0_10px_40px_rgba(16,185,129,0.3)] transition-all hover:-translate-y-1" />
+                             <Button variant="ghost" className="text-xs font-black text-slate-500 hover:text-white transition-colors" onClick={() => { navigator.clipboard.writeText(selectedRes.zoomJoinUrl); toast.success('Link Copied') }}>
+                                Copy Session ID
+                             </Button>
+                          </div>
+                        ) : (
+                          <Badge variant="outline" className="text-slate-500 border-slate-700 py-2 px-6 rounded-full font-black text-[10px] uppercase">Awaiting Activation...</Badge>
+                        )}
+                     </div>
+                  </div>
+               )}
+
+               {/* Interaction Action Bar */}
+               <div className="flex gap-4 justify-end pt-8 border-t border-slate-100/60">
+                  <div className="flex items-center gap-2 mr-auto">
+                    <DropdownMenu>
+                       <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-12 w-12 rounded-2xl hover:bg-slate-50 text-slate-300">
+                             <Trash2 className="w-5 h-5" />
+                          </Button>
+                       </DropdownMenuTrigger>
+                       <DropdownMenuContent align="start" className="p-2 rounded-2xl border-slate-100 shadow-xl">
+                          <DropdownMenuItem onClick={() => deleteReservation(selectedRes.id)} className="rounded-xl px-4 py-2 text-rose-500 font-bold focus:bg-rose-50 cursor-pointer">
+                             Destroy Reservation
+                          </DropdownMenuItem>
+                       </DropdownMenuContent>
+                    </DropdownMenu>
+                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">System Access Only</p>
+                  </div>
+
+                  <Button variant="ghost" className="rounded-2xl font-black text-slate-400 hover:text-slate-600 h-14 px-8" onClick={() => setSelectedRes(null)}>
+                     Dismiss
+                  </Button>
+
+                  {selectedRes?.status === 'PENDING' && (
+                    <>
+                      <Button onClick={() => updateStatus(selectedRes.id, 'CONFIRMED')} className="rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700 font-black px-10 h-14 shadow-xl shadow-emerald-100 hover:-translate-y-1 transition-all">
+                         Accept Request
+                      </Button>
+                      <Button onClick={() => updateStatus(selectedRes.id, 'CANCELLED')} className="rounded-2xl bg-rose-50 text-rose-600 hover:bg-rose-100 font-black px-8 h-14 transition-all">
+                         Reject
+                      </Button>
+                    </>
+                  )}
+                  {selectedRes?.status === 'CONFIRMED' && (
+                    <Button onClick={() => updateStatus(selectedRes.id, 'COMPLETED')} className="rounded-2xl bg-blue-600 text-white hover:bg-blue-700 font-black px-10 h-14 shadow-xl shadow-blue-100 hover:-translate-y-1 transition-all">
+                       Finalize Session
+                    </Button>
+                  )}
+               </div>
+            </div>
+         </DialogContent>
+      </Dialog>
     </div>
   )
 }
