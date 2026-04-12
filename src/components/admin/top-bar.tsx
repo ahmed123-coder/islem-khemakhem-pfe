@@ -2,9 +2,7 @@
 
 import * as React from 'react'
 import { 
-  Search, 
   Bell, 
-  Command, 
   ChevronDown,
   User as UserIcon,
   Settings,
@@ -29,38 +27,15 @@ export function AdminTopBar() {
 
   React.useEffect(() => {
     setMounted(true)
-    
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        // Open search command palette (implemented later or via shadcn command)
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
   }, [])
 
   if (!mounted) return null
 
   return (
-    <header className="h-20 border-b border-slate-200/60 bg-white/50 backdrop-blur-xl sticky top-0 z-40 px-6 md:px-10 flex items-center justify-between">
-      {/* Search Bar */}
-      <div className="flex-1 max-w-md">
-        <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 transition-colors group-focus-within:text-blue-600" />
-          <input 
-            type="text" 
-            placeholder="Search dashboard... (CMD+K)"
-            className="w-full h-11 pl-11 pr-4 rounded-2xl bg-slate-100/50 border-transparent transition-all focus:bg-white focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 text-sm placeholder:text-slate-400"
-          />
-          <div className="absolute right-4 top-1/2 -translate-y-1/2 hidden md:flex items-center gap-1 px-1.5 py-0.5 rounded border border-slate-200 bg-white shadow-sm pointer-events-none">
-            <Command className="w-2.5 h-2.5 text-slate-400" />
-            <span className="text-[10px] font-bold text-slate-400">K</span>
-          </div>
-        </div>
-      </div>
+    <header className="h-20 border-b border-slate-200/60 bg-white/50 backdrop-blur-xl sticky top-0 z-40 px-6 md:px-10 flex items-center justify-end">
 
       {/* Right Side Actions */}
+
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" className="relative group rounded-2xl hover:bg-slate-100/80">
           <Bell className="w-5 h-5 text-slate-600 transition-transform group-hover:scale-110" />
