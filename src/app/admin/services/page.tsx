@@ -17,7 +17,9 @@ import {
   Sparkles,
   ArrowRight,
   ChevronDown,
-  X
+  X,
+  Upload,
+  AlertCircle
 } from 'lucide-react'
 import { StandardPage } from '@/components/admin/standard-page'
 import { Button } from '@/components/ui/button'
@@ -60,8 +62,24 @@ export default function ServicesCMS() {
   const [form, setForm] = React.useState<Partial<Service>>({})
   const [tiers, setTiers] = React.useState<Tier[]>([])
   const [isLoading, setIsLoading] = React.useState(true)
+  const [submitting, setSubmitting] = React.useState(false)
   const [searchTerm, setSearchTerm] = React.useState('')
   const [isEditing, setIsEditing] = React.useState(false)
+  
+  // File states
+  const [iconFile, setIconFile] = React.useState<File | null>(null)
+  const [imageFile, setImageFile] = React.useState<File | null>(null)
+
+  // Tier management state
+  const [editTierId, setEditTierId] = React.useState<string | null>(null)
+  const [tierForm, setTierForm] = React.useState<Partial<Tier>>({
+    tierType: 'BASIC',
+    price: 0,
+    maxMessages: null,
+    maxCallDuration: null,
+    canSelectConsultant: false,
+    description: ''
+  })
 
   React.useEffect(() => { 
     loadServices() 
@@ -74,9 +92,13 @@ export default function ServicesCMS() {
         setForm(selected)
         loadTiers(selectedId)
       }
+      setIconFile(null)
+      setImageFile(null)
     } else {
       setForm({})
       setTiers([])
+      setIconFile(null)
+      setImageFile(null)
     }
   }, [selectedId, services])
 
@@ -110,6 +132,93 @@ export default function ServicesCMS() {
     setIsEditing(true)
   }
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'icon' | 'image') => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (type === 'icon') setIconFile(file)
+      else setImageFile(file)
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSubmitting(true)
+    const method = selectedId ? 'PUT' : 'POST'
+    
+    const formData = new FormData()
+    if (selectedId) formData.append('id', selectedId)
+    if (form.name) formData.append('name', form.name)
+    if (form.description) formData.append('description', form.description)
+    if (form.category) formData.append('category', form.category)
+    if (form.isActive !== undefined) formData.append('isActive', String(form.isActive))
+    
+    if (iconFile) formData.append('icon', iconFile)
+    if (imageFile) formData.append('image', imageFile)
+
+    try {
+      const res = await fetch('/api/admin/services', { method, body: formData })
+      if (res.ok) {
+        const updatedService = await res.json()
+        loadServices()
+        if (!selectedId) {
+           setSelectedId(updatedService.id)
+        }
+      }
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!selectedId || !confirm('Permanently dismantle this service record?')) return
+    await fetch(`/api/admin/services?id=${selectedId}`, { method: 'DELETE' })
+    setSelectedId(null)
+    setIsEditing(false)
+    loadServices()
+  }
+
+  // Tier CRUD
+  const handleAddNewTier = () => {
+    setEditTierId('new')
+    setTierForm({
+      tierType: 'BASIC',
+      price: 0,
+      maxMessages: null,
+      maxCallDuration: null,
+      canSelectConsultant: false,
+      description: ''
+    })
+  }
+
+  const handleTierSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedId) return
+
+    const method = editTierId && editTierId !== 'new' ? 'PUT' : 'POST'
+    const body = editTierId && editTierId !== 'new' 
+      ? { ...tierForm, id: editTierId } 
+      : { ...tierForm, serviceId: selectedId }
+    
+    const res = await fetch('/api/admin/services/tiers', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+
+    if (res.ok) {
+      setEditTierId(null)
+      loadTiers(selectedId)
+    }
+  }
+
+  const handleTierDelete = async (id: string) => {
+    if (!confirm('Dismantle this pricing tier?')) return
+    await fetch(`/api/admin/services/tiers?id=${id}`, { method: 'DELETE' })
+    if (selectedId) loadTiers(selectedId)
+  }
+
   const filteredServices = services.filter(s => 
     s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
     s.category?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -140,7 +249,7 @@ export default function ServicesCMS() {
               onClick={handleCreateNew}
               className={cn(
                 "w-full p-4 rounded-3xl border border-dashed border-slate-200 flex items-center justify-center gap-3 text-slate-400 hover:text-blue-600 hover:border-blue-200 hover:bg-blue-50/30 transition-all group font-bold text-sm",
-                !selectedId && isEditing ? "border-blue-600 bg-blue-50/50 text-blue-600" : ""
+                !selectedId && isEditing ? "border-blue-600 bg-blue-50/50 text-blue-600 shadow-lg shadow-blue-100/50" : ""
               )}
             >
               <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
@@ -166,17 +275,12 @@ export default function ServicesCMS() {
                   )}
                 >
                   <div className="flex gap-4">
-                    <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-slate-50 flex-shrink-0">
+                    <div className="relative w-14 h-14 rounded-2xl overflow-hidden bg-slate-50 flex-shrink-0 border border-slate-100/50">
                       {service.icon || service.image ? (
                         <img src={service.icon || service.image} alt="" className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <ImageIcon className="w-6 h-6 text-slate-200" />
-                        </div>
-                      )}
-                      {selectedId === service.id && (
-                        <div className="absolute inset-0 bg-blue-600/10 flex items-center justify-center">
-                          <Edit3 className="w-4 h-4 text-blue-600" />
                         </div>
                       )}
                     </div>
@@ -188,10 +292,10 @@ export default function ServicesCMS() {
                         {service.category || 'Consulting'}
                       </p>
                       <Badge className={cn(
-                        "rounded-lg px-2 py-0 border-none text-[9px] font-black uppercase tracking-tight",
+                        "rounded-lg px-2 py-0 border-none text-[8px] font-black uppercase tracking-tight",
                         service.isActive !== false ? "bg-emerald-50 text-emerald-600" : "bg-slate-100 text-slate-400"
                       )}>
-                        {service.isActive !== false ? 'Active' : 'Draft'}
+                        {service.isActive !== false ? 'Live' : 'Draft'}
                       </Badge>
                     </div>
                   </div>
@@ -222,7 +326,7 @@ export default function ServicesCMS() {
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">No Service Selected</h3>
                 <p className="text-sm text-slate-500 max-w-xs font-medium mb-8">
-                  Pick an existing service from the library or create a brand new offering for your clients.
+                  Pick a service or create a new offering to manage parameters, tiers, and capabilities.
                 </p>
                 <Button 
                   onClick={handleCreateNew}
@@ -252,7 +356,7 @@ export default function ServicesCMS() {
                           <h2 className="text-2xl font-black text-slate-900 tracking-tight">
                             {selectedId ? 'Refine Service' : 'New Offering'}
                           </h2>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{selectedId ? 'Update Parameters' : 'Initial Setup'}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{selectedId ? `SERVICE ID: ${selectedId.slice(0,8)}` : 'Strategic Resource Creation'}</p>
                         </div>
                       </div>
                       <Button 
@@ -273,8 +377,8 @@ export default function ServicesCMS() {
                           <Input 
                             value={form.name || ''} 
                             onChange={(e) => setForm({ ...form, name: e.target.value })}
-                            placeholder="e.g. Strategic Coaching" 
-                            className="h-14 rounded-2xl border-slate-100 bg-white shadow-sm focus:ring-4 focus:ring-blue-600/5 text-base font-bold placeholder:font-medium"
+                            placeholder="e.g. Strategic Audit" 
+                            className="h-14 rounded-2xl border-slate-100 bg-white/50 backdrop-blur-sm shadow-sm focus:ring-4 focus:ring-blue-600/5 text-base font-bold placeholder:font-medium transition-all"
                           />
                         </div>
                         <div className="space-y-2">
@@ -283,133 +387,224 @@ export default function ServicesCMS() {
                             value={form.category || ''} 
                             onChange={(e) => setForm({ ...form, category: e.target.value })}
                             placeholder="e.g. Business Strategy" 
-                            className="h-14 rounded-2xl border-slate-100 bg-white shadow-sm focus:ring-4 focus:ring-blue-600/5 text-base font-bold placeholder:font-medium"
+                            className="h-14 rounded-2xl border-slate-100 bg-white/50 backdrop-blur-sm shadow-sm focus:ring-4 focus:ring-blue-600/5 text-base font-bold placeholder:font-medium transition-all"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-6">
                         <div className="space-y-2 h-full flex flex-col">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Core Description</label>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Value Proposition (Bio)</label>
                           <Textarea 
                             value={form.description || ''} 
                             onChange={(e) => setForm({ ...form, description: e.target.value })}
-                            placeholder="Explain the value proposition..." 
-                            className="flex-1 rounded-2xl border-slate-100 bg-white shadow-sm focus:ring-4 focus:ring-blue-600/5 text-sm font-medium resize-none"
+                            placeholder="Explain the service impact..." 
+                            className="flex-1 rounded-3xl border-slate-100 bg-white/50 backdrop-blur-sm shadow-sm focus:ring-4 focus:ring-blue-600/5 text-sm font-medium resize-none p-4"
                           />
                         </div>
                       </div>
 
-                      {/* Image Dropzone style */}
+                      {/* Visual Content: Image Dropzones */}
                       <div className="md:col-span-2">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 mb-2 block">Visual Assets</label>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 mb-3 block">Digital Assets</label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="group relative h-32 rounded-3xl border-2 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer">
-                            {form.icon ? (
-                              <img src={form.icon} className="h-16 object-contain" alt="Icon" />
+                          <label className="group relative h-40 rounded-[32px] border-2 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer overflow-hidden">
+                            {(iconFile || form.icon) ? (
+                              <img src={iconFile ? URL.createObjectURL(iconFile) : form.icon} className="h-20 object-contain" alt="Icon" />
                             ) : (
                               <>
-                                <ImageIcon className="w-8 h-8 text-slate-300 group-hover:text-blue-400 transition-colors" />
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Primary Icon</span>
+                                <Upload className="w-8 h-8 text-slate-300 group-hover:text-blue-400 transition-colors mb-2" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Brand Icon</span>
                               </>
                             )}
-                          </div>
-                          <div className="group relative h-32 rounded-3xl border-2 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer">
-                            {form.image ? (
-                              <img src={form.image} className="h-full w-full object-cover rounded-3xl" alt="Cover" />
+                            <input type="file" accept="image/*" onChange={e => handleFileChange(e, 'icon')} className="hidden" />
+                            <div className="absolute inset-x-0 bottom-0 p-2 bg-white/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-center text-blue-600 uppercase tracking-widest">Change Icon</div>
+                          </label>
+
+                          <label className="group relative h-40 rounded-[32px] border-2 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer overflow-hidden">
+                            {(imageFile || form.image) ? (
+                              <img src={imageFile ? URL.createObjectURL(imageFile) : form.image} className="h-full w-full object-cover" alt="Hero" />
                             ) : (
                               <>
-                                <Layout className="w-8 h-8 text-slate-300 group-hover:text-blue-400 transition-colors" />
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">Hero Image</span>
+                                <ImageIcon className="w-8 h-8 text-slate-300 group-hover:text-blue-400 transition-colors mb-2" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hero Image</span>
                               </>
                             )}
-                          </div>
+                            <input type="file" accept="image/*" onChange={e => handleFileChange(e, 'image')} className="hidden" />
+                            <div className="absolute inset-x-0 bottom-0 p-2 bg-white/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-center text-blue-600 uppercase tracking-widest">Change Cover</div>
+                          </label>
                         </div>
                       </div>
                     </div>
 
-                    {/* Tier Builder */}
+                    {/* Tier Management Suite */}
                     <section className="pt-10 border-t border-slate-100">
                       <div className="flex items-center justify-between mb-8">
                         <div>
-                          <h3 className="text-xl font-bold text-slate-900">Pricing Architecture</h3>
-                          <p className="text-xs text-slate-400 font-medium">Define value tiers and engagement constraints.</p>
+                          <h3 className="text-xl font-bold text-slate-900">Tier Architecture</h3>
+                          <p className="text-xs text-slate-400 font-medium">Configure value packages and resource constraints.</p>
                         </div>
-                        <Button variant="outline" size="sm" className="rounded-xl border-slate-200 font-bold text-[10px] uppercase tracking-wider px-4">
-                          <FolderPlus className="w-3.5 h-3.5 mr-2" /> Add Tier
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={handleAddNewTier}
+                          className="rounded-xl border-slate-200 font-bold text-[10px] uppercase tracking-widest px-4 h-10 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
+                        >
+                          <FolderPlus className="w-4 h-4 mr-2" /> Synthesize Tier
                         </Button>
                       </div>
 
-                      <Accordion type="single" collapsible className="space-y-4">
-                        {tiers.map((tier) => (
-                          <AccordionItem 
-                            key={tier.id} 
-                            value={tier.id}
-                            className="border-none rounded-[32px] bg-slate-50/50 overflow-hidden"
-                          >
-                            <AccordionTrigger className="px-6 py-5 hover:no-underline group">
-                              <div className="flex items-center gap-4 text-left">
-                                <div className={cn(
-                                  "w-10 h-10 rounded-xl flex items-center justify-center shadow-sm",
-                                  tier.tierType === 'PREMIUM' ? "bg-indigo-600 text-white" : "bg-white text-slate-900"
-                                )}>
-                                  <Layers className="w-5 h-5" />
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-bold text-slate-900">{tier.tierType} PACK</span>
-                                    <Badge className="bg-blue-50 text-blue-600 border-none font-black text-[9px] uppercase">{tier.price} DT</Badge>
+                      <div className="space-y-4">
+                        {/* New/Edit Tier Form inside the list if active */}
+                        {editTierId && (
+                           <Card className="p-6 rounded-[32px] border-2 border-blue-600 shadow-xl shadow-blue-50 bg-white/50 backdrop-blur-sm mb-6 animate-in slide-in-from-top-4 duration-300">
+                             <header className="flex items-center justify-between mb-6">
+                               <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">
+                                 {editTierId === 'new' ? 'New Implementation' : 'Modify Parameters'}
+                               </h4>
+                               <Button variant="ghost" size="icon" onClick={() => setEditTierId(null)} className="rounded-xl"><X className="w-4 h-4 text-slate-400" /></Button>
+                             </header>
+                             
+                             <div className="grid grid-cols-2 gap-6 mb-6">
+                               <div className="space-y-2">
+                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Class Type</label>
+                                 <select 
+                                    className="w-full h-12 bg-white rounded-2xl border-slate-100 px-4 font-bold text-sm outline-none focus:ring-4 focus:ring-blue-600/5 transition-all"
+                                    value={tierForm.tierType}
+                                    onChange={e => setTierForm({ ...tierForm, tierType: e.target.value as any })}
+                                  >
+                                    <option value="BASIC">BASIC</option>
+                                    <option value="STANDARD">STANDARD</option>
+                                    <option value="PREMIUM">PREMIUM</option>
+                                  </select>
+                               </div>
+                               <div className="space-y-2">
+                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Yield Price (DT)</label>
+                                 <Input type="number" value={tierForm.price || 0} onChange={e => setTierForm({ ...tierForm, price: Number(e.target.value) })} className="h-12 rounded-2xl bg-white font-black italic" />
+                               </div>
+                               <div className="space-y-2">
+                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Max Messages</label>
+                                 <Input placeholder="Unlimited" type="number" value={tierForm.maxMessages || ''} onChange={e => setTierForm({ ...tierForm, maxMessages: e.target.value ? Number(e.target.value) : null })} className="h-12 rounded-2xl bg-white font-bold" />
+                               </div>
+                               <div className="space-y-2">
+                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Call Quota (Min)</label>
+                                 <Input placeholder="None" type="number" value={tierForm.maxCallDuration || ''} onChange={e => setTierForm({ ...tierForm, maxCallDuration: e.target.value ? Number(e.target.value) : null })} className="h-12 rounded-2xl bg-white font-bold" />
+                               </div>
+                               <div className="col-span-2 flex items-center gap-3 p-4 bg-white/50 rounded-2xl border border-slate-100/50">
+                                  <input 
+                                    type="checkbox" 
+                                    id="canSelect"
+                                    checked={tierForm.canSelectConsultant}
+                                    onChange={e => setTierForm({ ...tierForm, canSelectConsultant: e.target.checked })}
+                                    className="w-4 h-4 rounded-lg text-blue-600"
+                                  />
+                                  <label htmlFor="canSelect" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 cursor-pointer">Protocol: Allow expert selection</label>
+                               </div>
+                               <div className="col-span-2 space-y-2">
+                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Constraint Bio</label>
+                                 <Textarea value={tierForm.description || ''} onChange={e => setTierForm({ ...tierForm, description: e.target.value })} className="rounded-2xl bg-white h-20" />
+                               </div>
+                             </div>
+                             
+                             <footer className="flex gap-3 pt-6 border-t border-slate-100">
+                               <Button onClick={handleTierSubmit} className="rounded-xl bg-blue-600 text-white font-black italic h-12 flex-1 shadow-lg shadow-blue-100">Commit Tier</Button>
+                               <Button variant="ghost" onClick={() => setEditTierId(null)} className="rounded-xl font-bold h-12">Abandon</Button>
+                             </footer>
+                           </Card>
+                        )}
+
+                        <Accordion type="single" collapsible className="space-y-3">
+                          {tiers.map((tier) => (
+                            <AccordionItem 
+                              key={tier.id} 
+                              value={tier.id}
+                              className="border-none rounded-[28px] bg-slate-50/50 overflow-hidden group transition-all hover:bg-white hover:shadow-lg"
+                            >
+                              <div className="relative">
+                                <AccordionTrigger className="px-6 py-5 hover:no-underline flex-1">
+                                  <div className="flex items-center gap-4 text-left">
+                                    <div className={cn(
+                                      "w-10 h-10 rounded-xl flex items-center justify-center shadow-sm transition-transform group-hover:scale-110",
+                                      tier.tierType === 'PREMIUM' ? "bg-indigo-600 text-white" : "bg-white text-slate-900 border border-slate-100/50"
+                                    )}>
+                                      <Layers className="w-5 h-5" />
+                                    </div>
+                                    <div>
+                                      <div className="flex items-center gap-2">
+                                        <span className="font-black text-slate-900 uppercase tracking-tighter">{tier.tierType} Protocol</span>
+                                        <Badge className="bg-blue-50 text-blue-600 border-none font-black text-[9px] uppercase">{tier.price} DT</Badge>
+                                      </div>
+                                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.15em]">
+                                        {tier.maxMessages ? `${tier.maxMessages} COMMS` : 'UNLIMITED COMMS'} • {tier.maxCallDuration ? `${tier.maxCallDuration} MIN SYNC` : 'NO LIVE SYNC'}
+                                      </span>
+                                    </div>
                                   </div>
-                                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                                    {tier.maxMessages ? `${tier.maxMessages} Messages` : 'Unlimited'} • {tier.maxCallDuration ? `${tier.maxCallDuration} Min Call` : 'No Call'}
-                                  </span>
+                                </AccordionTrigger>
+                                
+                                <div className="absolute right-12 top-1/2 -translate-y-1/2 flex gap-1 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                                   <Button 
+                                    size="icon" 
+                                    variant="ghost" 
+                                    className="h-8 w-8 rounded-lg bg-white/80 hover:bg-blue-600 hover:text-white" 
+                                    onClick={(e) => { e.stopPropagation(); setEditTierId(tier.id); setTierForm(tier) }}
+                                   >
+                                      <Edit3 size={12} />
+                                   </Button>
+                                   <Button 
+                                    size="icon" 
+                                    variant="ghost" 
+                                    className="h-8 w-8 rounded-lg bg-white/80 hover:bg-red-500 hover:text-white" 
+                                    onClick={(e) => { e.stopPropagation(); handleTierDelete(tier.id) }}
+                                   >
+                                      <Trash2 size={12} />
+                                   </Button>
                                 </div>
                               </div>
-                            </AccordionTrigger>
-                            <AccordionContent className="px-6 pb-6 space-y-6">
-                              <div className="grid grid-cols-2 gap-6 pt-4 border-t border-white">
-                                <div className="space-y-2">
-                                   <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Tier Price (DT)</label>
-                                   <Input defaultValue={tier.price} className="h-10 rounded-xl border-white bg-white/50" />
-                                </div>
-                                <div className="space-y-2">
-                                   <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Constraints</label>
-                                   <div className="flex items-center gap-3 h-10 px-3 bg-white/50 rounded-xl border border-white">
-                                      <input type="checkbox" defaultChecked={tier.canSelectConsultant} className="rounded" />
-                                      <span className="text-xs font-bold text-slate-600">Freedom to pick expert</span>
+                              <AccordionContent className="px-6 pb-6 pt-2">
+                                <div className="p-4 rounded-2xl bg-white border border-slate-100">
+                                   <p className="text-xs font-bold text-slate-600 leading-relaxed italic">
+                                     {tier.description || 'Standard operating procedure for this tier allocation.'}
+                                   </p>
+                                   <div className="mt-4 flex gap-4 border-t border-slate-50 pt-4">
+                                      <div className="flex items-center gap-2">
+                                        <div className={cn("w-2 h-2 rounded-full", tier.canSelectConsultant ? "bg-emerald-500 animate-pulse" : "bg-slate-300")} />
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Expert Freedom: {tier.canSelectConsultant ? 'Granted' : 'Locked'}</span>
+                                      </div>
                                    </div>
                                 </div>
-                                <div className="col-span-2 space-y-2">
-                                   <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Inclusions/Description</label>
-                                   <Textarea defaultValue={tier.description || ''} className="rounded-xl border-white bg-white/50 h-20" />
-                                </div>
-                              </div>
-                            </AccordionContent>
-                          </AccordionItem>
-                        ))}
-                      </Accordion>
+                              </AccordionContent>
+                            </AccordionItem>
+                          ))}
+                        </Accordion>
+                      </div>
                       
-                      {tiers.length === 0 && (
-                        <div className="p-10 rounded-[32px] bg-slate-50/50 border border-dashed border-slate-200 text-center">
-                          <p className="text-sm font-bold text-slate-400">No tiers configured. Start by adding a basic plan.</p>
+                      {tiers.length === 0 && !editTierId && (
+                        <div className="p-12 rounded-[40px] bg-slate-50/50 border border-dashed border-slate-200 text-center">
+                          <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                          <p className="text-xs font-black uppercase tracking-widest text-slate-400">Pricing Pipeline Empty</p>
+                          <p className="text-[10px] font-bold text-slate-300 mt-1 uppercase">Initialize at least one engagement tier.</p>
                         </div>
                       )}
                     </section>
                   </div>
 
                   {/* Save Floating Action Button */}
-                  <div className="mt-12 flex items-center justify-between">
+                  <div className="mt-16 flex items-center justify-between pt-8 border-t border-slate-50">
+                    {selectedId && (
+                      <Button 
+                        variant="ghost" 
+                        className="text-red-400 hover:text-red-500 hover:bg-red-50 rounded-2xl font-bold text-xs uppercase tracking-widest px-6"
+                        onClick={handleDelete}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" /> Dismantle Service
+                      </Button>
+                    )}
                     <Button 
-                      variant="ghost" 
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl font-bold text-sm px-6"
-                      onClick={() => console.log('Delete service')}
+                      disabled={submitting}
+                      onClick={handleSubmit}
+                      className="rounded-[28px] bg-blue-600 hover:bg-blue-700 text-white font-black italic text-lg px-12 h-16 shadow-2xl shadow-blue-100 transition-all hover:scale-105 active:scale-95 disabled:bg-slate-300"
                     >
-                      <Trash2 className="w-4 h-4 mr-2" /> Finalize Destruction
-                    </Button>
-                    <Button 
-                      className="rounded-[24px] bg-blue-600 hover:bg-blue-700 text-white font-black italic text-lg px-10 h-16 shadow-2xl shadow-blue-200 transition-all hover:scale-105 active:scale-95"
-                    >
-                      Commit Changes <Save className="w-5 h-5 ml-3" />
+                      {submitting ? 'Synthesizing...' : 'Commit Changes'} <Save className="w-5 h-5 ml-3" />
                     </Button>
                   </div>
                 </Card>
