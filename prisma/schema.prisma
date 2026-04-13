@@ -12,7 +12,12 @@ model User {
   email         String         @unique
   password      String
   name          String?
+  firstName     String?
   phone         String?
+  company       String?
+  sector        String?
+  address       String?
+  needs         String?
   role          Role           @default(CLIENT)
   isActive      Boolean        @default(true)
   createdAt     DateTime       @default(now())
@@ -29,6 +34,8 @@ model Consultant {
   email        String        @unique
   password     String
   name         String
+  firstName    String?
+  phone        String?
   specialty    String?
   hourlyRate   Decimal?      @db.Decimal(10, 2)
   bio          String?

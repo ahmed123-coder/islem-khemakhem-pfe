@@ -5,7 +5,12 @@ import { createToken, setAuthCookie } from '@/lib/auth'
 
 export async function POST(request: Request) {
   try {
-    const { email, password, name, phone, specialty, cvUrl, certificationUrls, role } = await request.json()
+    const { 
+      email, password, name, firstName, phone, 
+      company, sector, address, needs, 
+      specialty, competences, cvUrl, certificationUrls, certUrls, 
+      role, type 
+    } = await request.json()
 
     if (!email || !password) {
       return NextResponse.json({ error: 'Email and password required' }, { status: 400 })
@@ -13,13 +18,25 @@ export async function POST(request: Request) {
 
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    if (role === 'CONSULTANT') {
+    const accountRole = role || type
+
+    if (accountRole === 'CONSULTANT') {
       const exists = await prisma.consultant.findUnique({ where: { email } })
       if (exists) {
         return NextResponse.json({ error: 'Email already in use' }, { status: 400 })
       }
       await prisma.consultant.create({
-        data: { email, password: hashedPassword, name, specialty, cvUrl, certifications: certificationUrls || [], isActive: false }
+        data: { 
+          email, 
+          password: hashedPassword, 
+          name,
+          firstName,
+          phone,
+          specialty: specialty || competences, 
+          cvUrl, 
+          certifications: certificationUrls || certUrls || [], 
+          isActive: false 
+        }
       })
       return NextResponse.json({ message: 'Consultant account created, awaiting activation' }, { status: 201 })
     }
@@ -30,7 +47,18 @@ export async function POST(request: Request) {
     }
 
     await prisma.user.create({
-      data: { email, password: hashedPassword, name, phone, isActive: false }
+      data: { 
+        email, 
+        password: hashedPassword, 
+        name, 
+        firstName,
+        phone, 
+        company,
+        sector,
+        address,
+        needs,
+        isActive: false 
+      }
     })
 
     return NextResponse.json({ message: 'Compte créé, en attente de validation par un administrateur.' }, { status: 201 })
