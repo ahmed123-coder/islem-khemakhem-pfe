@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
@@ -8,7 +8,22 @@ export const metadata: Metadata = {
   description: 'Découvrez nos trois approches complémentaires : Coaching professionnel, Conduite du changement, Formation & Sensibilisation.',
 }
 
-export default function ApprochesPage() {
+async function getFaqs() {
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/faqs`, { cache: 'no-store' });
+    if (!res.ok) return [];
+    const faqs = await res.json();
+    return faqs.filter((faq: any) => faq.isActive);
+  } catch (error) {
+    console.error("Fetch faqs error:", error);
+    return [];
+  }
+}
+
+export default async function ApprochesPage() {
+  const faqs = await getFaqs();
+
   return (
     <>
       {/* Hero Section */}
@@ -84,6 +99,37 @@ export default function ApprochesPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section className="py-20 bg-gray-50 mt-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14">
+            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">Questions fréquentes</h2>
+            <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full"></div>
+            <p className="text-lg text-gray-600 mt-4 max-w-2xl mx-auto">
+              Trouvez rapidement les réponses à vos questions les plus courantes.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="space-y-4">
+              {faqs.length > 0 ? faqs.map((faq: any) => (
+                <details key={faq.id} className="bg-white rounded-lg px-6 py-4 border border-gray-100 group shadow-sm hover:shadow-md transition-shadow">
+                  <summary className="text-left text-lg font-semibold text-[#1B3F7A] hover:text-[#7AB648] cursor-pointer flex justify-between items-center py-2">
+                    {faq.question}
+                    <ChevronDown className="w-5 h-5 text-[#7AB648] group-open:rotate-180 transition-transform flex-shrink-0 ml-4" />
+                  </summary>
+                  <div className="text-gray-700 mt-4 pb-2 whitespace-pre-wrap">
+                    {faq.answer}
+                  </div>
+                </details>
+              )) : (
+                <div className="text-center text-gray-500 py-8">Aucune question fréquente pour le moment.</div>
+              )}
+            </div>
           </div>
         </div>
       </section>

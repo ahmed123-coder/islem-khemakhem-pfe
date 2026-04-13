@@ -8,7 +8,6 @@ import { usePathname } from 'next/navigation'
 
 const NAV_LINKS = [
   { label: 'Solutions', href: '/solutions' },
-  { label: 'Ressources', href: '/ressources' },
   { label: 'Contact', href: '/contact' },
   { label: 'Approches', href: '/approches' },
 ]

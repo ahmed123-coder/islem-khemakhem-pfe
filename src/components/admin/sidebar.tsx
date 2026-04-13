@@ -14,7 +14,8 @@ import {
   Mail,
   LogOut,
   ChevronRight,
-  Sparkles
+  Sparkles,
+  HelpCircle
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
@@ -64,6 +65,7 @@ export function AdminSidebar() {
     { href: '/admin/blogs', label: 'Blogs', icon: FileEdit },
     { href: '/admin/services', label: 'Services', icon: Briefcase },
     { href: '/admin/contacts', label: 'Contacts', icon: Mail },
+    { href: '/admin/faqs', label: 'FAQs', icon: HelpCircle },
   ]
 
   return (
