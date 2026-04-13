@@ -38,7 +38,6 @@ export default function Services() {
   const [showMeetingTypeModal, setShowMeetingTypeModal] = useState(false)
   const [selectedMeetingType, setSelectedMeetingType] = useState<'ZOOM' | 'SUR_PLACE' | null>(null)
 
-  // Booking flow state
   const [selectedService, setSelectedService] = useState<any>(null)
   const [selectedTier, setSelectedTier] = useState<any>(null)
   const [consultants, setConsultants] = useState<any[]>([])
@@ -50,6 +49,14 @@ export default function Services() {
   const [submitting, setSubmitting] = useState(false)
   const [loadingConsultants, setLoadingConsultants] = useState(false)
   const [successOrder, setSuccessOrder] = useState<any>(null)
+
+
+  // Schedule Navigation state
+  const [scheduleStartDate, setScheduleStartDate] = useState<Date>(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  })
 
   useEffect(() => {
     fetch('/api/services')
@@ -68,12 +75,12 @@ export default function Services() {
       .catch(() => setIsLoggedIn(false))
   }, [])
 
-  // Fetch consultants only after payment is done
+  // Fetch consultants only after payment is done OR when schedule date changes
   useEffect(() => {
     if (selectedTier && isPaid) {
       setLoadingConsultants(true)
-      const startDate = new Date().toISOString().split('T')[0]
-      fetch(`/api/consultants/schedule?startDate=${startDate}&days=7&serviceTierId=${selectedTier.id}`)
+      const startDateStr = scheduleStartDate.toISOString().split('T')[0]
+      fetch(`/api/consultants/schedule?startDate=${startDateStr}&days=7&serviceTierId=${selectedTier.id}`)
         .then(r => r.json())
         .then(data => {
           setConsultants(Array.isArray(data) ? data : [])
@@ -84,14 +91,28 @@ export default function Services() {
           setLoadingConsultants(false)
         })
     }
-  }, [selectedTier, isPaid])
+  }, [selectedTier, isPaid, scheduleStartDate])
 //dsuwy6icj
   const hours = Array.from({ length: 9 }, (_, i) => i + 9)
   const dates = useMemo(() => Array.from({ length: 7 }, (_, i) => {
-    const d = new Date()
+    const d = new Date(scheduleStartDate)
     d.setDate(d.getDate() + i)
     return d
-  }), [])
+  }), [scheduleStartDate])
+
+  const navigateSchedule = (days: number) => {
+    const newDate = new Date(scheduleStartDate)
+    newDate.setDate(newDate.getDate() + days)
+    
+    // Prevent going before today
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    if (newDate < today) {
+      setScheduleStartDate(today)
+    } else {
+      setScheduleStartDate(newDate)
+    }
+  }
 
   const isSlotBlocked = (consultantId: string, date: Date, hour: number) => {
     const consultant = consultants.find(c => c.id === consultantId)
@@ -273,6 +294,8 @@ export default function Services() {
     setSelectedStartHour(null)
     setSelectedEndHour(null)
     setSuccessOrder(null)
+    setIsPaid(false)
+    setScheduleStartDate(new Date(new Date().setHours(0,0,0,0)))
   }
 
   const getTierIcon = (tierType: string) => {
@@ -481,7 +504,86 @@ export default function Services() {
                         ÉTAPE 2
                       </div>
                       <h3 className="text-2xl font-bold text-gray-900 mb-2">Sélectionnez votre créneau</h3>
-                      <p className="text-gray-500 text-sm">Cliquez et glissez sur les cellules pour sélectionner votre créneau.</p>
+                      <p className="text-gray-500 text-sm mb-6">Cliquez et glissez sur les cellules pour sélectionner votre créneau.</p>
+                      
+                      <div className="flex flex-col items-center gap-6 mb-10">
+                        {/* Quick Navigation Controls */}
+                        <div className="flex items-center gap-2 bg-gray-100/50 p-1.5 rounded-2xl border border-gray-200 shadow-inner">
+                          <button 
+                            onClick={() => navigateSchedule(-1)}
+                            disabled={scheduleStartDate <= new Date(new Date().setHours(0,0,0,0))}
+                            className="px-4 py-2 font-bold text-xs uppercase tracking-widest text-gray-500 hover:text-[#2B5A8E] hover:bg-white hover:shadow-sm rounded-xl transition-all disabled:opacity-30"
+                          >
+                            Jour
+                          </button>
+                          <button 
+                            onClick={() => navigateSchedule(-7)}
+                            disabled={scheduleStartDate <= new Date(new Date().setHours(0,0,0,0))}
+                            className="px-4 py-2 font-bold text-xs uppercase tracking-widest text-[#2B5A8E] bg-white shadow-sm rounded-xl transition-all disabled:opacity-30"
+                          >
+                            Semaine
+                          </button>
+                          <button 
+                            onClick={() => {
+                              const nextMonth = new Date(scheduleStartDate)
+                              nextMonth.setMonth(nextMonth.getMonth() + 1)
+                              setScheduleStartDate(nextMonth)
+                            }}
+                            className="px-4 py-2 font-bold text-xs uppercase tracking-widest text-gray-500 hover:text-[#2B5A8E] hover:bg-white hover:shadow-sm rounded-xl transition-all"
+                          >
+                            Mois
+                          </button>
+                        </div>
+
+                        {/* Main Date Display & Arrows */}
+                        <div className="flex items-center gap-4">
+                          <button 
+                            onClick={() => navigateSchedule(-7)}
+                            disabled={scheduleStartDate <= new Date(new Date().setHours(0,0,0,0))}
+                            className="w-12 h-12 flex items-center justify-center rounded-full border-2 border-gray-100 bg-white text-gray-400 hover:text-[#2B5A8E] hover:border-[#2B5A8E] hover:shadow-lg transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
+                          >
+                            <svg className="w-6 h-6 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
+                            </svg>
+                          </button>
+                          
+                          <div className="relative group">
+                            <div className="absolute inset-0 bg-blue-500/5 blur-2xl rounded-full group-hover:bg-blue-500/10 transition-colors"></div>
+                            <div className="relative flex flex-col items-center px-10 py-4 bg-white border-2 border-[#2B5A8E]/10 rounded-[2rem] shadow-[0_10px_40px_rgba(43,90,142,0.08)] min-w-[280px]">
+                              <div className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1">Période de Consultation</div>
+                              <div className="text-2xl font-serif font-black text-gray-900 flex items-center gap-3">
+                                <span className="text-gray-400 text-lg font-sans">📅</span>
+                                {(() => {
+                                  const endDate = new Date(scheduleStartDate)
+                                  endDate.setDate(endDate.getDate() + 6)
+                                  const startStr = scheduleStartDate.toLocaleDateString('fr-FR', { day: 'numeric' })
+                                  const endStr = endDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+                                  // Simplified logic for month display if different
+                                  if (scheduleStartDate.getMonth() !== endDate.getMonth()) {
+                                    const startMonth = scheduleStartDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
+                                    return `${startMonth} — ${endStr}`
+                                  }
+                                  return `${startStr} — ${endStr}`
+                                })()}
+                              </div>
+                            </div>
+                          </div>
+
+                          <button 
+                            onClick={() => navigateSchedule(7)}
+                            className="w-12 h-12 flex items-center justify-center rounded-full border-2 border-gray-100 bg-white text-gray-400 hover:text-[#2B5A8E] hover:border-[#2B5A8E] hover:shadow-lg transition-all group"
+                          >
+                            <svg className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </button>
+                        </div>
+                        
+                        <div className="text-xs text-blue-500 font-bold bg-blue-50 px-4 py-1.5 rounded-full border border-blue-100 flex items-center gap-2">
+                           <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                           Zone horaire : Paris (GMT+1)
+                        </div>
+                      </div>
                     </div>
 
                     {loadingConsultants ? (
@@ -795,6 +897,7 @@ export default function Services() {
                       />
                     </div>
                   </div>
+
 
                   <div>
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Nom sur la carte</label>
