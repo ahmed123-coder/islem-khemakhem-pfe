@@ -601,43 +601,74 @@ export default function ConsultantClients() {
                                     </Button>
                                   </div>
 
-                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {mission.milestones?.length === 0 ? (
-                                      <div className="col-span-full py-4 text-center border-2 border-dashed border-slate-100 rounded-3xl">
-                                        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No tasks defined for this mission.</p>
-                                      </div>
-                                    ) : (
-                                      mission.milestones?.map((m: any) => (
-                                        <div key={m.id} className="bg-slate-50/80 border border-slate-100 p-4 rounded-3xl flex items-center justify-between shadow-sm group hover:bg-white hover:border-emerald-200 transition-all">
-                                          <div className="flex items-center gap-3">
-                                            <button 
-                                              onClick={() => updateMilestoneStatus(m.id, m.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED')}
-                                              className={cn(
-                                                "h-6 w-6 rounded-xl flex items-center justify-center transition-all shadow-md active:scale-90", 
-                                                m.status === 'COMPLETED' ? "bg-emerald-600 text-white" : "bg-white border border-slate-200"
-                                              )}
-                                            >
-                                              {m.status === 'COMPLETED' && <CheckCircle className="h-4 w-4" />}
-                                            </button>
-                                            <span className={cn("text-xs font-bold", m.status === 'COMPLETED' ? "text-slate-400 line-through" : "text-slate-900")}>
-                                              {m.title}
-                                            </span>
-                                          </div>
-                                          <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            onClick={() => {
-                                              setDeleteContext({ id: m.id, type: 'milestone' })
-                                              setIsDeleteModalOpen(true)
-                                            }}
-                                            className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 text-slate-300 hover:text-red-500 transition-all"
-                                          >
-                                            <Trash className="h-3 w-3" />
-                                          </Button>
+                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {['PENDING', 'IN_PROGRESS', 'COMPLETED'].map(colStatus => (
+                                      <div 
+                                        key={colStatus} 
+                                        className="flex flex-col gap-4 bg-slate-50/50 p-4 rounded-[2rem] border border-slate-100 min-h-[300px]"
+                                        onDragOver={(e) => e.preventDefault()}
+                                        onDrop={(e) => {
+                                           e.preventDefault();
+                                           const milestoneId = e.dataTransfer.getData('milestoneId');
+                                           if (milestoneId) {
+                                             updateMilestoneStatus(milestoneId, colStatus);
+                                           }
+                                        }}
+                                      >
+                                        <div className="flex items-center justify-between mb-2 px-2">
+                                          <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-500">{colStatus.replace('_', ' ')}</h5>
+                                          <Badge className="bg-white text-slate-900 border-none shadow-sm shadow-slate-200/50">
+                                            {mission.milestones?.filter((m: any) => m.status === colStatus).length || 0}
+                                          </Badge>
                                         </div>
-                                      ))
-                                    )}
+                                        {mission.milestones?.filter((m: any) => m.status === colStatus).map((m: any) => (
+                                          <div 
+                                            key={m.id} 
+                                            draggable
+                                            onDragStart={(e) => e.dataTransfer.setData('milestoneId', m.id)}
+                                            className="bg-white border border-slate-100 p-4 rounded-2xl flex flex-col gap-3 shadow-sm group hover:border-emerald-200 transition-all flex-shrink-0 cursor-grab active:cursor-grabbing"
+                                          >
+                                            <div className="flex items-start justify-between pointer-events-none">
+                                              <span className={cn("text-xs font-bold leading-tight flex-1", m.status === 'COMPLETED' ? "text-slate-400 line-through opacity-80" : "text-slate-900")}>
+                                                {m.title}
+                                              </span>
+                                              <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  setDeleteContext({ id: m.id, type: 'milestone' })
+                                                  setIsDeleteModalOpen(true)
+                                                }}
+                                                className="h-6 w-6 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-red-50 text-slate-300 hover:text-red-500 transition-all shrink-0 ml-2 pointer-events-auto"
+                                              >
+                                                <Trash className="h-3 w-3" />
+                                              </Button>
+                                            </div>
+                                            <div className="flex items-center justify-start">
+                                              <select
+                                                value={m.status}
+                                                onChange={(e) => updateMilestoneStatus(m.id, e.target.value)}
+                                                className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-600 focus:ring-1 focus:ring-emerald-500 cursor-pointer w-full pointer-events-auto"
+                                                onClick={e => e.stopPropagation()}
+                                              >
+                                                <option value="PENDING">Pending</option>
+                                                <option value="IN_PROGRESS">Progress</option>
+                                                <option value="COMPLETED">Completed</option>
+                                              </select>
+                                            </div>
+                                          </div>
+                                        ))}
+                                        {mission.milestones?.filter((m: any) => m.status === colStatus).length === 0 && (
+                                          <div className="flex-1 flex items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl mt-2 p-2 pointer-events-none">
+                                            <span className="text-[9px] font-bold uppercase text-slate-300 tracking-widest text-center">Drop here</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    ))}
                                   </div>
+
+
                                 </div>
                               </CardContent>
                             </Card>

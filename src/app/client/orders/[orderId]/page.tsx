@@ -462,40 +462,68 @@ export default function OrderDetails() {
                                      />
                                  </div>
 
-                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    {mission.milestones?.map((m: any) => (
-                                       <Card 
-                                         key={m.id} 
-                                         onClick={() => updateMilestoneStatus(m.id, m.status === 'COMPLETED' ? 'PENDING' : 'COMPLETED')}
-                                         className={cn(
-                                           "border-none shadow-sm rounded-2xl p-5 cursor-pointer transition-all hover:scale-[1.02] active:scale-[0.98] border-2",
-                                           m.status === 'COMPLETED' ? "bg-emerald-50/30 border-emerald-100" : "bg-white border-slate-50 shadow-slate-100/50 hover:shadow-md"
-                                         )}
+                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {['PENDING', 'IN_PROGRESS', 'COMPLETED'].map(colStatus => (
+                                       <div 
+                                         key={colStatus} 
+                                         className="flex flex-col gap-4 bg-slate-50/50 p-4 rounded-[2rem] border border-slate-100 min-h-[300px]"
+                                         onDragOver={(e) => e.preventDefault()}
+                                         onDrop={(e) => {
+                                            e.preventDefault();
+                                            const milestoneId = e.dataTransfer.getData('milestoneId');
+                                            if (milestoneId) {
+                                              updateMilestoneStatus(milestoneId, colStatus);
+                                            }
+                                         }}
                                        >
-                                          <div className="flex items-start gap-4">
-                                             <div className={cn(
-                                               "h-6 w-6 rounded-lg flex items-center justify-center shrink-0 border-2 mt-0.5 transition-colors",
-                                               m.status === 'COMPLETED' ? "bg-emerald-500 border-emerald-500" : "bg-white border-slate-200"
-                                             )}>
-                                                {m.status === 'COMPLETED' ? <CheckSquare className="w-4 h-4 text-white" /> : <Square className="w-4 h-4 text-slate-100" />}
-                                             </div>
-                                             <div className="flex-1 min-w-0">
-                                                <p className={cn(
-                                                  "text-sm font-bold font-sans leading-tight",
-                                                  m.status === 'COMPLETED' ? "text-emerald-800 line-through" : "text-slate-900"
-                                                )}>
-                                                   {m.title}
-                                                </p>
-                                                {m.dueDate && (
-                                                   <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mt-2 flex items-center gap-1.5">
-                                                      <Clock className="w-2.5 h-2.5" /> Due {new Date(m.dueDate).toLocaleDateString()}
-                                                   </p>
-                                                )}
-                                             </div>
+                                          <div className="flex items-center justify-between mb-2 px-2">
+                                             <h5 className="text-[10px] font-black uppercase tracking-widest text-slate-500">{colStatus.replace('_', ' ')}</h5>
+                                             <Badge className="bg-white text-slate-900 border-none shadow-sm shadow-slate-200/50">
+                                                {mission.milestones?.filter((m: any) => m.status === colStatus).length || 0}
+                                             </Badge>
                                           </div>
-                                       </Card>
+                                          {mission.milestones?.filter((m: any) => m.status === colStatus).map((m: any) => (
+                                             <Card 
+                                               key={m.id} 
+                                               draggable
+                                               onDragStart={(e) => e.dataTransfer.setData('milestoneId', m.id)}
+                                               className={cn(
+                                                 "border-none shadow-sm rounded-2xl p-5 cursor-grab active:cursor-grabbing transition-all hover:scale-[1.02] active:scale-[0.98] border-2 flex-shrink-0",
+                                                 m.status === 'COMPLETED' ? "bg-emerald-50/30 border-emerald-100" : m.status === 'IN_PROGRESS' ? "bg-blue-50/30 border-blue-100" : "bg-white border-slate-50 shadow-slate-100/50 hover:shadow-md"
+                                               )}
+                                             >
+                                                <div className="flex items-start gap-4 pointer-events-none">
+                                                   <div className={cn(
+                                                     "h-6 w-6 rounded-lg flex items-center justify-center shrink-0 border-2 mt-0.5 transition-colors",
+                                                     m.status === 'COMPLETED' ? "bg-emerald-500 border-emerald-500" : m.status === 'IN_PROGRESS' ? "border-blue-500" : "bg-white border-slate-200"
+                                                   )}>
+                                                      {m.status === 'COMPLETED' ? <CheckSquare className="w-4 h-4 text-white" /> : m.status === 'IN_PROGRESS' ? <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" /> : <Square className="w-4 h-4 text-slate-100" />}
+                                                   </div>
+                                                   <div className="flex-1 min-w-0">
+                                                      <p className={cn(
+                                                        "text-sm font-bold font-sans leading-tight",
+                                                        m.status === 'COMPLETED' ? "text-emerald-800 line-through opacity-80" : "text-slate-900"
+                                                      )}>
+                                                         {m.title}
+                                                      </p>
+                                                      {m.dueDate && (
+                                                         <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mt-2 flex items-center gap-1.5">
+                                                            <Clock className="w-2.5 h-2.5" /> Due {new Date(m.dueDate).toLocaleDateString()}
+                                                         </p>
+                                                      )}
+                                                   </div>
+                                                </div>
+                                             </Card>
+                                          ))}
+                                          {mission.milestones?.filter((m: any) => m.status === colStatus).length === 0 && (
+                                             <div className="flex-1 flex items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl mt-2 pointer-events-none">
+                                                <span className="text-[10px] font-black uppercase text-slate-300 tracking-widest px-4 text-center">Drop here</span>
+                                             </div>
+                                          )}
+                                       </div>
                                     ))}
                                  </div>
+
                               </section>
                            )
                         })}
