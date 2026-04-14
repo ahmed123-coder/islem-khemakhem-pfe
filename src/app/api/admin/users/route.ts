@@ -15,7 +15,12 @@ export async function GET() {
         id: true,
         email: true,
         name: true,
+        firstName: true,
         phone: true,
+        company: true,
+        sector: true,
+        address: true,
+        needs: true,
         role: true,
         isActive: true,
         createdAt: true,
@@ -53,7 +58,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json()
-    const { email, password, name, phone, role } = body
+    const { email, password, name, firstName, phone, company, sector, address, needs, role } = body
     
     const hashedPassword = await bcrypt.hash(password, 10)
     
@@ -62,7 +67,12 @@ export async function POST(request: Request) {
         email,
         password: hashedPassword,
         name,
+        firstName,
         phone,
+        company,
+        sector,
+        address,
+        needs,
         role: role || 'CLIENT',
       },
     })
@@ -81,11 +91,11 @@ export async function PUT(request: Request) {
 
   try {
     const body = await request.json()
-    const { id, email, name, phone, role, isActive } = body
+    const { id, email, name, firstName, phone, company, sector, address, needs, role, isActive } = body
     
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: { email, name, phone, role, ...(isActive !== undefined && { isActive }) },
+      data: { email, name, firstName, phone, company, sector, address, needs, role, ...(isActive !== undefined && { isActive }) },
     })
     
     return NextResponse.json(updatedUser)
