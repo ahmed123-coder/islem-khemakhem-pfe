@@ -71,20 +71,19 @@ export default function ServicesPage() {
 
   const handleTierSelect = (tier: any) => {
     setSelectedTier(tier)
-    setShowMeetingModal(true)
+    setShowPaymentModal(true)
   }
 
   const handleMeetingTypeConfirm = (type: 'ZOOM' | 'SUR_PLACE') => {
     setSelectedMeetingType(type)
     setShowMeetingModal(false)
-    setShowPaymentModal(true)
+    setStep(3)
   }
 
   const handlePaymentSuccess = () => {
     setShowPaymentModal(false)
     setIsPaid(true)
-    setStep(3)
-    toast.success('Paiement accepté ! Choisissez votre créneau.')
+    setShowMeetingModal(true)
   }
 
   const handlePurchase = async () => {
@@ -110,6 +109,7 @@ export default function ServicesPage() {
         setSelectedTier(null)
         setSelection(null)
         setIsPaid(false)
+        router.push('/client')
       } else {
         toast.error('Erreur lors de la réservation.')
       }

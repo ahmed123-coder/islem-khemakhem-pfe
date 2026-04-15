@@ -65,22 +65,19 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
 
   const handleTierSelect = (tier: any) => {
     setSelectedTier(tier)
-    // Here we check if user needs to pay before scheduling or after.
-    // In the previous version, it was before scheduling.
-    setShowMeetingModal(true)
+    setShowPaymentModal(true)
   }
 
   const handleMeetingTypeConfirm = (type: 'ZOOM' | 'SUR_PLACE') => {
     setSelectedMeetingType(type)
     setShowMeetingModal(false)
-    setShowPaymentModal(true)
+    setStep(3)
   }
 
   const handlePaymentSuccess = () => {
     setShowPaymentModal(false)
     setIsPaid(true)
-    setStep(3)
-    toast.success('Paiement accepté ! Choisissez votre créneau.')
+    setShowMeetingModal(true)
   }
 
   const handlePurchase = async () => {
@@ -101,7 +98,7 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
 
       if (res.ok) {
         toast.success('Commande créée avec succès !')
-        router.push('/client/orders')
+        router.push('/client')
       } else {
         toast.error('Une erreur est survenue lors de la réservation.')
       }
