@@ -57,6 +57,34 @@ export default function ServicesPage() {
   const [paymentSuccess, setPaymentSuccess] = useState(false)
   const [isPaid, setIsPaid] = useState(false)
   const [selectedMeetingType, setSelectedMeetingType] = useState<'ZOOM' | 'SUR_PLACE' | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  const getTierIcon = (tierType: string) => {
+    switch (tierType) {
+      case 'BASIC': return '🥉'
+      case 'STANDARD': return '🥈'
+      case 'PREMIUM': return '🥇'
+      default: return '📦'
+    }
+  }
+
+  const getTierColor = (tierType: string) => {
+    switch (tierType) {
+      case 'BASIC': return 'from-gray-500 to-gray-600'
+      case 'STANDARD': return 'from-blue-500 to-indigo-600'
+      case 'PREMIUM': return 'from-amber-500 to-orange-600'
+      default: return 'from-gray-500 to-gray-600'
+    }
+  }
+
+  const getTierBorder = (tierType: string) => {
+    switch (tierType) {
+      case 'BASIC': return 'border-gray-200 hover:border-gray-400'
+      case 'STANDARD': return 'border-blue-200 hover:border-blue-400'
+      case 'PREMIUM': return 'border-amber-200 hover:border-amber-400 ring-2 ring-amber-100'
+      default: return 'border-gray-200'
+    }
+  }
 
   // Schedule Navigation state
   const [scheduleStartDate, setScheduleStartDate] = useState<Date>(() => {
@@ -80,13 +108,15 @@ export default function ServicesPage() {
   }
 
   useEffect(() => {
+    setLoading(true)
     fetch('/api/services/with-tiers').then(r => r.json()).then(data => {
       setServices(data)
       if (serviceId) {
         const service = data.find((s: Service) => s.id === serviceId)
         if (service) setSelectedService(service)
       }
-    })
+      setLoading(false)
+    }).catch(() => setLoading(false))
   }, [serviceId])
 
   useEffect(() => {
@@ -203,114 +233,222 @@ export default function ServicesPage() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-500 font-medium">Chargement...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Nos Services</h1>
-
-      {step === 3 && consultants.length === 0 && (
-        <div className="text-center py-12">
-          <p className="text-lg">Chargement des consultants...</p>
+    <div className="min-h-screen bg-gray-50/50 pb-20">
+      {/* Header Section */}
+      <div className="bg-[#2B5A8E] text-white py-12 mb-8 shadow-inner">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div className="h-1 w-12 bg-amber-400 rounded-full"></div>
+            <span className="text-amber-400 font-bold tracking-widest text-xs uppercase">Espace Client</span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-serif font-bold mb-4">
+            {step === 1 ? 'Nos Services' : selectedService?.name}
+          </h1>
+          <p className="text-blue-100 text-lg max-w-2xl">
+            {step === 1 
+              ? 'Choisissez l\'expertise dont vous avez besoin pour propulser votre activité.' 
+              : selectedService?.description}
+          </p>
         </div>
-      )}
+      </div>
 
-      {step === 1 && (
-        <div className="grid gap-4">
-          {services.map(service => (
-            <div key={service.id} className="border rounded-lg p-6">
-              <h2 className="text-xl font-semibold mb-2">{service.name}</h2>
-              <p className="text-gray-600 mb-4">{service.description}</p>
-              <button
-                onClick={() => {
-                  setSelectedService(service)
-                  setStep(2)
-                }}
-                className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-              >
-                Choisir
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="max-w-7xl mx-auto px-6">
+        {step === 3 && consultants.length === 0 && (
+          <div className="text-center py-20 bg-white rounded-[2rem] border-2 border-dashed border-gray-200 shadow-sm">
+            <div className="text-5xl mb-4">🔍</div>
+            <p className="text-xl text-gray-500 font-medium">Recherche de consultants disponibles...</p>
+          </div>
+        )}
 
-      {step === 2 && selectedService && (
-        <div>
-          <button onClick={() => setStep(1)} className="mb-4 text-blue-600">← Retour</button>
-          <h2 className="text-2xl font-semibold mb-4">{selectedService.name}</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            {selectedService.tiers.map(tier => (
-              <div key={tier.id} className="border rounded-lg p-6">
-                <h3 className="text-lg font-semibold mb-2">{tier.name}</h3>
-                <p className="text-3xl font-bold mb-4">{tier.price}€</p>
-                <p className="text-sm text-gray-600 mb-2">{tier.messageLimit} messages</p>
-                <p className="text-sm text-gray-600 mb-4">{tier.callLimit} appels</p>
+        {step === 1 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {services.map(service => (
+              <div key={service.id} className="group bg-white rounded-3xl p-8 border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgb(0,0,0,0.1)] transition-all duration-500 hover:-translate-y-1">
+                <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-500 shadow-sm">
+                  <span className="text-3xl">🎯</span>
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-4">{service.name}</h2>
+                <p className="text-gray-600 mb-8 line-clamp-3 leading-relaxed">
+                  {service.description}
+                </p>
                 <button
                   onClick={() => {
-                    setSelectedTier(tier)
-                    setShowMeetingModal(true) // Show meeting type first
+                    setSelectedService(service)
+                    setStep(2)
                   }}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  className="w-full bg-gray-50 text-blue-600 font-bold py-4 rounded-xl hover:bg-blue-600 hover:text-white transition-all duration-300 flex items-center justify-center gap-2 group/btn"
                 >
-                  Continuer
+                  Choisir ce service
+                  <svg className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
                 </button>
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
+        {step === 2 && selectedService && (
+          <div className="space-y-12">
+            <div className="flex items-center justify-between">
+              <button 
+                onClick={() => setStep(1)} 
+                className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-bold transition-colors group"
+              >
+                <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-50 transition-all">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                </div>
+                Retour aux services
+              </button>
+              <div className="flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                <span className="w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-[10px] font-black">1</span>
+                SÉLECTION DE LA FORMULE
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {selectedService.tiers.map((tier: any) => (
+                <div 
+                  key={tier.id} 
+                  className={`relative bg-white rounded-[2.5rem] border-2 ${getTierBorder(tier.tierType || tier.name)} p-8 shadow-sm hover:shadow-2xl transition-all duration-500 flex flex-col group`}
+                >
+                  {(tier.tierType === 'PREMIUM' || tier.name?.toLowerCase().includes('premium')) && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-6 py-1.5 rounded-full shadow-lg border-2 border-white">
+                      Populaire
+                    </div>
+                  )}
+                  <div className={`bg-gradient-to-br ${getTierColor(tier.tierType || tier.name)} text-white rounded-3xl p-6 mb-8 text-center shadow-lg transform group-hover:scale-105 transition-transform duration-500`}>
+                    <div className="text-4xl mb-2">{getTierIcon(tier.tierType || tier.name)}</div>
+                    <h4 className="text-xl font-bold uppercase tracking-wider">{tier.tierType || tier.name}</h4>
+                  </div>
+                  
+                  <div className="text-center mb-8">
+                    <div className="flex items-center justify-center gap-1">
+                      <span className="text-5xl font-black text-gray-900 tracking-tight">{Number(tier.price).toFixed(0)}</span>
+                      <span className="text-xl text-gray-400 font-bold self-start mt-2">€</span>
+                    </div>
+                    {tier.description && <p className="text-sm text-gray-400 mt-3 font-medium">{tier.description}</p>}
+                  </div>
+
+                  <div className="space-y-4 mb-10 flex-1">
+                    <div className="flex items-center gap-4 text-sm font-medium text-gray-600 bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                      <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                      </div>
+                      <span>{tier.messageLimit || tier.maxMessages} messages inclus</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm font-medium text-gray-600 bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                      <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                      </div>
+                      <span>{tier.callLimit || tier.maxCallDuration} min d'appels</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-sm font-medium text-gray-600 bg-gray-50/50 p-3 rounded-2xl border border-gray-100">
+                      <div className={`w-8 h-8 ${(tier.canSelectConsultant ?? true) ? 'bg-green-100' : 'bg-gray-100'} rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm`}>
+                        {(tier.canSelectConsultant ?? true) ? (
+                          <svg className="w-4 h-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        ) : (
+                          <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                        )}
+                      </div>
+                      <span className={(tier.canSelectConsultant ?? true) ? 'text-gray-600' : 'text-gray-400'}>Expert dédié au choix</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setSelectedTier(tier)
+                      setShowMeetingModal(true)
+                    }}
+                    className={`w-full py-4 rounded-2xl font-black text-sm uppercase tracking-widest transition-all duration-300 shadow-lg hover:shadow-2xl hover:-translate-y-1 ${
+                      (tier.tierType === 'PREMIUM' || tier.name?.toLowerCase().includes('premium'))
+                        ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+                        : 'bg-[#2B5A8E] text-white hover:bg-[#1d3d61]'
+                    }`}
+                  >
+                    Sélectionner →
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       {step === 3 && consultants.length > 0 && (
-        <div>
-          <button onClick={() => setStep(2)} className="mb-6 text-blue-600 hover:underline">← Retour</button>
-          <h2 className="text-2xl font-bold mb-4">Sélectionnez votre créneau</h2>
+        <div className="space-y-12 animate-in fade-in duration-700">
+          <div className="flex items-center justify-between">
+            <button 
+              onClick={() => setStep(2)} 
+              className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-bold transition-colors group"
+            >
+              <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-50 transition-all">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+              </div>
+              Changer de formule
+            </button>
+            <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-xs font-bold shadow-sm">
+              <span className="w-5 h-5 bg-green-600 text-white rounded-full flex items-center justify-center text-[10px] font-black">2</span>
+              CHOIX DU CRÉNEAU
+            </div>
+          </div>
+
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <h3 className="text-3xl font-serif font-black text-gray-900 mb-4">Sélectionnez votre créneau</h3>
+            <p className="text-gray-500 font-medium tracking-wide">Cliquez et glissez sur les cellules pour réserver votre session avec nos experts.</p>
+          </div>
           
-          <div className="flex flex-col items-center gap-6 mb-10">
+          <div className="flex flex-col items-center gap-10 mb-16">
             {/* Quick Navigation Controls */}
-            <div className="flex items-center gap-2 bg-gray-100/50 p-1.5 rounded-2xl border border-gray-200 shadow-inner">
-              <button 
-                onClick={() => navigateSchedule(-1)}
-                disabled={scheduleStartDate <= new Date(new Date().setHours(0,0,0,0))}
-                className="px-4 py-2 font-bold text-xs uppercase tracking-widest text-gray-500 hover:text-blue-600 hover:bg-white hover:shadow-sm rounded-xl transition-all disabled:opacity-30"
-              >
-                Jour
-              </button>
-              <button 
-                onClick={() => navigateSchedule(-7)}
-                disabled={scheduleStartDate <= new Date(new Date().setHours(0,0,0,0))}
-                className="px-4 py-2 font-bold text-xs uppercase tracking-widest text-blue-600 bg-white shadow-sm rounded-xl transition-all disabled:opacity-30"
-              >
-                Semaine
-              </button>
-              <button 
-                onClick={() => {
-                  const nextMonth = new Date(scheduleStartDate)
-                  nextMonth.setMonth(nextMonth.getMonth() + 1)
-                  setScheduleStartDate(nextMonth)
-                }}
-                className="px-4 py-2 font-bold text-xs uppercase tracking-widest text-gray-500 hover:text-blue-600 hover:bg-white hover:shadow-sm rounded-xl transition-all"
-              >
-                Mois
-              </button>
+            <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-gray-200 shadow-sm">
+              {[
+                { label: 'Jour', value: -1 },
+                { label: 'Semaine', value: -7 },
+                { label: 'Mois', value: 30 }
+              ].map((opt) => (
+                <button 
+                  key={opt.label}
+                  onClick={() => opt.value === 30 ? setScheduleStartDate(new Date(new Date(scheduleStartDate).setMonth(scheduleStartDate.getMonth() + 1))) : navigateSchedule(opt.value)}
+                  disabled={opt.value !== 30 && scheduleStartDate <= new Date(new Date().setHours(0,0,0,0))}
+                  className={`px-6 py-2.5 font-black text-[10px] uppercase tracking-[0.15em] rounded-xl transition-all ${
+                    opt.label === 'Semaine' 
+                    ? 'bg-blue-600 text-white shadow-md' 
+                    : 'text-gray-400 hover:text-blue-600 hover:bg-blue-50'
+                  } disabled:opacity-20`}
+                >
+                  {opt.label}
+                </button>
+              ))}
             </div>
 
             {/* Main Date Display & Arrows */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               <button 
                 onClick={() => navigateSchedule(-7)}
                 disabled={scheduleStartDate <= new Date(new Date().setHours(0,0,0,0))}
-                className="w-12 h-12 flex items-center justify-center rounded-full border-2 border-gray-100 bg-white text-gray-400 hover:text-blue-600 hover:border-blue-600 hover:shadow-lg transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
+                className="w-14 h-14 flex items-center justify-center rounded-full border-2 border-gray-200 bg-white text-gray-400 hover:text-blue-600 hover:border-blue-600 hover:shadow-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed group shadow-sm"
               >
-                <svg className="w-6 h-6 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
                 </svg>
               </button>
               
               <div className="relative group">
-                <div className="absolute inset-0 bg-blue-500/5 blur-2xl rounded-full group-hover:bg-blue-500/10 transition-colors"></div>
-                <div className="relative flex flex-col items-center px-10 py-4 bg-white border-2 border-blue-600/10 rounded-[2rem] shadow-[0_10px_40px_rgba(37,99,235,0.08)] min-w-[280px]">
-                  <div className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1">Période de Consultation</div>
-                  <div className="text-2xl font-serif font-black text-gray-900 flex items-center gap-3">
-                    <span className="text-gray-400 text-lg font-sans">📅</span>
+                <div className="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full group-hover:bg-blue-500/20 transition-all duration-700"></div>
+                <div className="relative flex flex-col items-center px-12 py-6 bg-white border border-blue-100 rounded-[2.5rem] shadow-[0_20px_60px_rgba(37,99,235,0.08)] min-w-[320px]">
+                  <div className="text-[10px] font-black text-blue-400 uppercase tracking-[0.25em] mb-2">Période disponible</div>
+                  <div className="text-3xl font-serif font-black text-gray-900 flex items-center gap-4">
+                    <span className="text-2xl">📅</span>
                     {(() => {
                       const endDate = new Date(scheduleStartDate)
                       endDate.setDate(endDate.getDate() + 6)
@@ -328,41 +466,51 @@ export default function ServicesPage() {
 
               <button 
                 onClick={() => navigateSchedule(7)}
-                className="w-12 h-12 flex items-center justify-center rounded-full border-2 border-gray-100 bg-white text-gray-400 hover:text-blue-600 hover:border-blue-600 hover:shadow-lg transition-all group"
+                className="w-14 h-14 flex items-center justify-center rounded-full border-2 border-gray-200 bg-white text-gray-400 hover:text-blue-600 hover:border-blue-600 hover:shadow-xl transition-all group shadow-sm"
               >
-                <svg className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
           </div>
           
-          <div className="grid gap-8">
+          <div className="grid gap-12">
             {Array.isArray(consultants) && consultants.map(consultant => (
-              <div key={consultant.id} className="border-2 rounded-xl p-6 shadow-lg bg-white">
-                <h3 className="text-xl font-bold mb-4 text-blue-600">{consultant.name}</h3>
+              <div key={consultant.id} className="group bg-white border border-gray-100 rounded-[2rem] p-8 shadow-[0_10px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_80px_rgba(0,0,0,0.08)] transition-all duration-700 overflow-hidden">
+                <div className="flex items-center gap-6 mb-8">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg">
+                    {consultant.name.charAt(0)}
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{consultant.name}</h3>
+                    <p className="text-sm text-gray-400 font-bold uppercase tracking-widest">Expert Consultant</p>
+                  </div>
+                </div>
                 
-                <div className="overflow-x-auto">
-                <table className="w-full border-collapse" onMouseLeave={() => setIsDragging(false)}>
+                <div className="overflow-x-auto rounded-3xl border border-gray-100 shadow-inner">
+                  <table className="w-full border-collapse" onMouseLeave={() => setIsDragging(false)}>
                     <thead>
-                      <tr className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-                        <th className="border border-blue-400 p-3 text-left font-semibold">Date</th>
+                      <tr className="bg-gray-50 text-gray-400 border-b border-gray-100">
+                        <th className="p-5 text-left font-black text-[10px] uppercase tracking-widest bg-gray-50/50 sticky left-0 z-10 backdrop-blur-sm">Calendrier</th>
                         {hours.map(h => (
-                          <th key={h} className="border border-blue-400 p-3 text-center font-semibold text-sm">
-                            {h}h
+                          <th key={h} className="p-5 text-center font-black text-[10px] uppercase tracking-widest whitespace-nowrap min-w-[80px]">
+                            {h}h:00
                           </th>
                         ))}
                       </tr>
                     </thead>
                     <tbody>
                       {dates.map(date => (
-                        <tr key={date.toISOString()} className="hover:bg-gray-50">
-                          <td className="border border-gray-300 p-3 font-medium bg-gray-50">
-                            <div className="text-sm">{date.toLocaleDateString('fr-FR', { weekday: 'short' })}</div>
-                            <div className="text-xs text-gray-600">{date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
+                        <tr key={date.toISOString()} className="group/row">
+                          <td className="p-5 font-bold bg-gray-50/30 border-r border-gray-50 group-hover/row:bg-blue-50/30 transition-colors sticky left-0 z-10 backdrop-blur-sm">
+                            <div className="text-xs text-gray-900 uppercase tracking-tighter">{date.toLocaleDateString('fr-FR', { weekday: 'short' })}</div>
+                            <div className="text-[10px] text-blue-500 font-black">{date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
                           </td>
                           {hours.map(hour => {
                             const blocked = isSlotBlocked(consultant.id, date, hour, 1)
+                            const isPast = new Date(date).setHours(hour) < new Date().getTime()
+                            const isDisabled = blocked || isPast
                             const isStart = selectedConsultant === consultant.id &&
                               selectedDate?.toDateString() === date.toDateString() &&
                               selectedStartHour === hour
@@ -375,7 +523,7 @@ export default function ServicesPage() {
                               <td
                                 key={hour}
                                 onMouseDown={() => {
-                                  if (blocked) return
+                                  if (isDisabled) return
                                   setSelectedConsultant(consultant.id)
                                   setSelectedDate(date)
                                   setSelectedStartHour(hour)
@@ -388,15 +536,17 @@ export default function ServicesPage() {
                                   }
                                 }}
                                 onMouseUp={() => setIsDragging(false)}
-                                className={`border border-gray-300 p-2 text-center text-sm font-medium transition-all select-none ${
-                                  blocked
-                                    ? 'bg-red-100 text-red-700 cursor-not-allowed'
+                                className={`p-4 text-center transition-all duration-300 select-none border-r border-b border-gray-50/50 ${
+                                  isDisabled
+                                    ? 'bg-gray-50/50 text-gray-200 cursor-not-allowed'
                                     : isInRange
-                                    ? 'bg-green-500 text-white cursor-pointer'
-                                    : 'bg-green-50 hover:bg-green-200 cursor-pointer'
+                                    ? 'bg-blue-600 text-white shadow-lg z-10 scale-[1.02] rounded-md'
+                                    : 'bg-white hover:bg-blue-50 group-hover/row:bg-blue-50/20 cursor-pointer'
                                 }`}
                               >
-                                {blocked ? '✕' : isInRange ? (isStart ? '▶' : '—') : '○'}
+                                {isDisabled ? '✕' : isInRange ? (isStart ? '▶' : '•') : (
+                                  <div className="w-2 h-2 rounded-full bg-blue-100 mx-auto group-hover:scale-125 transition-transform"></div>
+                                )}
                               </td>
                             )
                           })}
@@ -410,118 +560,157 @@ export default function ServicesPage() {
           </div>
 
           {selectedConsultant && selectedDate && selectedStartHour !== null && selectedEndHour !== null && (
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-green-500 p-4 shadow-2xl">
-              <div className="max-w-7xl mx-auto flex items-center justify-between">
-                <div className="text-sm">
-                  <span className="font-semibold">Sélection:</span> {consultants.find(c => c.id === selectedConsultant)?.name} - {selectedDate.toLocaleDateString('fr-FR')} de {selectedStartHour}h à {selectedEndHour}h ({selectedEndHour - selectedStartHour}h)
+            <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-4xl px-6 z-40 animate-in slide-in-from-bottom-10 duration-500">
+              <div className="bg-white/80 backdrop-blur-xl border border-white shadow-[0_30px_60px_rgba(0,0,0,0.15)] p-6 rounded-[2rem] flex items-center justify-between gap-8">
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-xl shadow-lg">
+                    ✨
+                  </div>
+                  <div>
+                    <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Confirmation de séance</div>
+                    <div className="font-bold text-gray-900">
+                      {consultants.find(c => c.id === selectedConsultant)?.name} · {selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                      <span className="text-blue-600 ml-2">({selectedStartHour}h – {selectedEndHour}h)</span>
+                    </div>
+                  </div>
                 </div>
                 <button
                   onClick={() => setShowMeetingModal(true)}
-                  className="bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-semibold shadow-lg hover:shadow-xl transition-all"
+                  className="bg-[#2B5A8E] hover:bg-[#1d3d61] text-white px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 active:scale-95"
                 >
-                  Confirmer la réservation
+                  Confirmer et continuer
                 </button>
               </div>
             </div>
           )}
         </div>
       )}
+    </div>
       {/* Meeting Type Popup */}
       {showMeetingModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => setShowMeetingModal(false)}>
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm mx-4 p-6" onClick={e => e.stopPropagation()}>
-            <h2 className="text-lg font-bold text-gray-900 mb-1">Type de réunion</h2>
-            <p className="text-sm text-gray-500 mb-6">
-              {selectedDate?.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} · {selectedStartHour}h – {selectedEndHour}h
-            </p>
-            <div className="grid grid-cols-2 gap-4">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-center justify-center z-50 animate-in fade-in duration-300" onClick={() => setShowMeetingModal(false)}>
+          <div className="bg-white rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.25)] w-full max-w-md mx-4 p-10 transform animate-in zoom-in-95 duration-300 border border-white" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 bg-blue-50 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+                <span className="text-4xl text-blue-600">🤝</span>
+              </div>
+              <h2 className="text-2xl font-black text-gray-900 mb-2">Type de réunion</h2>
+              <p className="text-gray-500 font-medium">
+                Comment souhaitez-vous échanger ?
+              </p>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4">
               <button
                 onClick={() => {
                   setSelectedMeetingType('ZOOM')
                   setShowMeetingModal(false)
                   setShowPaymentModal(true)
                 }}
-                className="flex flex-col items-center gap-3 p-5 border-2 border-blue-200 rounded-xl hover:border-blue-500 hover:bg-blue-50 transition-all group"
+                className="flex items-center gap-6 p-6 border-2 border-blue-100 rounded-[2rem] hover:border-blue-600 hover:bg-blue-50/50 transition-all group text-left shadow-sm hover:shadow-xl"
               >
-                <span className="text-3xl">🎥</span>
-                <span className="font-bold text-gray-800 group-hover:text-blue-700">Zoom</span>
-                <span className="text-xs text-gray-400 text-center">Réunion en ligne</span>
+                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-sm group-hover:scale-110 transition-transform">🎥</div>
+                <div className="flex-1">
+                  <span className="block font-black text-gray-900 group-hover:text-blue-600 text-lg">Visioconférence Zoom</span>
+                  <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Réunion à distance</span>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
+                </div>
               </button>
+              
               <button
                 onClick={() => {
                   setSelectedMeetingType('SUR_PLACE')
                   setShowMeetingModal(false)
                   setShowPaymentModal(true)
                 }}
-                className="flex flex-col items-center gap-3 p-5 border-2 border-green-200 rounded-xl hover:border-green-500 hover:bg-green-50 transition-all group"
+                className="flex items-center gap-6 p-6 border-2 border-green-100 rounded-[2rem] hover:border-green-600 hover:bg-green-50/50 transition-all group text-left shadow-sm hover:shadow-xl"
               >
-                <span className="text-3xl">🏢</span>
-                <span className="font-bold text-gray-800 group-hover:text-green-700">Sur Place</span>
-                <span className="text-xs text-gray-400 text-center">Réunion physique</span>
+                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-3xl shadow-sm group-hover:scale-110 transition-transform">🏢</div>
+                <div className="flex-1">
+                  <span className="block font-black text-gray-900 group-hover:text-green-600 text-lg">Rencontre sur place</span>
+                  <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Réunion physique</span>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center text-green-600 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
+                </div>
               </button>
             </div>
-            <button onClick={() => setShowMeetingModal(false)} className="mt-4 w-full text-sm text-gray-400 hover:text-gray-600">Annuler</button>
+            
+            <button onClick={() => setShowMeetingModal(false)} className="mt-8 w-full text-xs font-black text-gray-400 hover:text-gray-900 uppercase tracking-[0.2em] transition-colors">
+              Annuler la demande
+            </button>
           </div>
         </div>
       )}
 
       {/* Payment Modal */}
       {showPaymentModal && selectedTier && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 overflow-hidden" onClick={e => e.stopPropagation()}>
-            <div className={`transition-all duration-500 ${paymentSuccess ? 'bg-green-500' : 'bg-[#2B5A8E]'} p-6 text-white`}>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xl flex items-center justify-center z-50 animate-in fade-in duration-500">
+          <div className="bg-white rounded-[3rem] shadow-[0_50px_120px_rgba(0,0,0,0.3)] max-w-md w-full mx-4 overflow-hidden border border-white transform animate-in zoom-in-95 slide-in-from-bottom-10 duration-500" onClick={e => e.stopPropagation()}>
+            <div className={`transition-all duration-700 ${paymentSuccess ? 'bg-green-600' : 'bg-[#2B5A8E]'} p-10 text-white relative overflow-hidden text-center`}>
+              <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
               {paymentSuccess ? (
-                <div className="text-center py-4">
-                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                    <svg className="w-8 h-8 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                <div className="relative z-10 animate-in zoom-in duration-500">
+                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-2xl">
+                    <svg className="w-10 h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <h2 className="text-2xl font-bold">Paiement Réussi !</h2>
-                  <p className="text-green-100 mt-2">Redirection vers le calendrier...</p>
+                  <h2 className="text-3xl font-black mb-2">Paiement Réussi !</h2>
+                  <p className="text-green-100 font-medium">Votre accès est activé. Redirection...</p>
                 </div>
               ) : (
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="text-xl font-bold">Paiement Sécurisé</h2>
-                    <p className="text-blue-100 text-sm mt-1">Formule {selectedTier.name} — {Number(selectedTier.price).toFixed(0)}€</p>
+                <div className="relative z-10">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="text-left">
+                      <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-70 mb-2">Caisse Sécurisée</div>
+                      <h2 className="text-3xl font-black tracking-tight">{Number(selectedTier.price).toFixed(0)}<span className="text-lg ml-0.5">€</span></h2>
+                    </div>
+                    <button onClick={() => setShowPaymentModal(false)} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors text-xl font-bold">&times;</button>
                   </div>
-                  <button onClick={() => setShowPaymentModal(false)} className="text-white/70 hover:text-white text-2xl font-bold leading-none">&times;</button>
+                  <div className="flex items-center gap-4 bg-black/10 rounded-2xl p-4 border border-white/10 backdrop-blur-sm text-left">
+                    <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center text-2xl">{getTierIcon(selectedTier.name)}</div>
+                    <div>
+                      <div className="font-bold uppercase text-sm tracking-widest">{selectedTier.name}</div>
+                      <div className="text-[10px] font-medium opacity-70">Accès Premium aux services de conseil</div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
             {!paymentSuccess && (
-              <form onSubmit={handlePayment} className="p-6">
-                <div className="mb-6">
-                  {/* Credit Card Graphic */}
-                  <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl p-5 text-white shadow-lg relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-10 -mt-10 blur-xl"></div>
-                    <div className="flex justify-between items-center mb-6">
-                      <div className="w-10 h-8 bg-yellow-400/80 rounded flex items-center justify-center">
-                        <div className="w-6 h-4 border border-yellow-500/50 rounded-sm"></div>
+              <form onSubmit={handlePayment} className="p-10">
+                <div className="space-y-6">
+                  {/* Digital Card Preview */}
+                  <div className="bg-gradient-to-br from-indigo-900 to-slate-900 rounded-[2rem] p-6 text-white shadow-2xl relative overflow-hidden border border-white/20 transform hover:scale-105 transition-transform duration-500">
+                    <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full -mr-16 -mb-16 blur-2xl"></div>
+                    <div className="flex justify-between items-center mb-8">
+                      <div className="w-12 h-9 bg-amber-400/90 rounded-lg shadow-inner flex items-center justify-center overflow-hidden">
+                        <div className="w-10 h-6 border-y border-white/30"></div>
                       </div>
-                      <div className="text-xl">{cardNumber ? getCardBrand(cardNumber)?.icon || '💳' : '💳'}</div>
+                      <div className="text-2xl font-bold opacity-80">{cardNumber ? getCardBrand(cardNumber)?.icon || '🔒' : '🔒'}</div>
                     </div>
-                    <div className="text-lg tracking-[0.2em] font-mono mb-4 min-h-[1.5rem] opacity-90">
+                    <div className="text-xl tracking-[0.25em] font-mono mb-6 min-h-[1.75rem] text-center drop-shadow-md">
                       {cardNumber || '•••• •••• •••• ••••'}
                     </div>
-                    <div className="flex justify-between text-xs text-gray-400 font-mono">
-                      <div className="uppercase tracking-wider truncate max-w-[150px]">{cardName || 'NOM SUR LA CARTE'}</div>
-                      <div>{cardExpiry || 'MM/YY'}</div>
+                    <div className="flex justify-between items-end">
+                      <div className="flex flex-col">
+                        <span className="text-[8px] font-black uppercase tracking-widest opacity-50 mb-1">Détenteur</span>
+                        <span className="text-xs font-bold uppercase tracking-widest truncate max-w-[140px]">{cardName || 'NOM PRENOM'}</span>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <span className="text-[8px] font-black uppercase tracking-widest opacity-50 mb-1">Expiration</span>
+                        <span className="text-xs font-mono font-bold">{cardExpiry || 'MM/YY'}</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5 flex justify-between">
-                      <span>Numéro de carte</span>
-                      <span className={`font-medium ${getCardBrand(cardNumber)?.color || 'text-gray-400'}`}>
-                        {getCardBrand(cardNumber)?.name || ''}
-                      </span>
-                    </label>
+                  <div className="grid gap-5">
                     <div className="relative">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Numéro de carte</label>
                       <input
                         type="text"
                         value={cardNumber}
@@ -529,81 +718,85 @@ export default function ServicesPage() {
                         placeholder="0000 0000 0000 0000"
                         maxLength={19}
                         required
-                        className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono transition-all"
+                        className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 text-sm focus:ring-4 focus:ring-blue-100 focus:border-blue-500 font-mono transition-all outline-none"
                       />
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-5">
+                      <div>
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Expiration</label>
+                        <input
+                          type="text"
+                          value={cardExpiry}
+                          onChange={e => setCardExpiry(formatExpiry(e.target.value))}
+                          placeholder="MM/YY"
+                          maxLength={5}
+                          required
+                          className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 text-sm focus:ring-4 focus:ring-blue-100 focus:border-blue-500 font-mono transition-all outline-none text-center"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">CVC / CVV</label>
+                        <input
+                          type="text"
+                          value={cardCvc}
+                          onChange={e => setCardCvc(e.target.value.replace(/\D/g, '').slice(0, 3))}
+                          placeholder="***"
+                          maxLength={3}
+                          required
+                          className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 text-sm focus:ring-4 focus:ring-blue-100 focus:border-blue-500 font-mono transition-all outline-none text-center"
+                        />
+                      </div>
+                    </div>
+
                     <div>
-                      <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Expiration</label>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-1.5 ml-1">Nom sur la carte</label>
                       <input
                         type="text"
-                        value={cardExpiry}
-                        onChange={e => setCardExpiry(formatExpiry(e.target.value))}
-                        placeholder="MM/YY"
-                        maxLength={5}
+                        value={cardName}
+                        onChange={e => setCardName(e.target.value.toUpperCase())}
+                        placeholder="JEAN DUPONT"
                         required
-                        className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono transition-all"
+                        className="w-full bg-gray-50 border-2 border-gray-100 rounded-2xl px-5 py-4 text-sm focus:ring-4 focus:ring-blue-100 focus:border-blue-500 uppercase transition-all outline-none font-bold tracking-wider"
                       />
                     </div>
-                    <div>
-                      <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">CVC</label>
-                      <input
-                        type="text"
-                        value={cardCvc}
-                        onChange={e => setCardCvc(e.target.value.replace(/\D/g, '').slice(0, 3))}
-                        placeholder="123"
-                        maxLength={3}
-                        required
-                        className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 font-mono transition-all"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest block mb-1.5">Nom sur la carte</label>
-                    <input
-                      type="text"
-                      value={cardName}
-                      onChange={e => setCardName(e.target.value.toUpperCase())}
-                      placeholder="Votre nom"
-                      required
-                      className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 uppercase transition-all"
-                    />
                   </div>
 
                   <button
                     type="submit"
                     disabled={paymentProcessing}
-                    className="w-full bg-[#2B5A8E] hover:bg-[#234a73] disabled:opacity-50 text-white py-3 rounded-xl font-bold transition-all mt-4 relative overflow-hidden group"
+                    className="w-full bg-[#2B5A8E] hover:bg-[#1d3d61] disabled:opacity-50 text-white py-5 rounded-2xl font-black text-sm uppercase tracking-[0.2em] transition-all mt-4 relative overflow-hidden group shadow-xl hover:shadow-2xl active:scale-95"
                   >
                     {paymentProcessing ? (
-                      <span className="flex items-center justify-center gap-2">
+                      <span className="flex items-center justify-center gap-3">
                         <svg className="animate-spin h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Traitement en cours...
+                        Sécurisation...
                       </span>
                     ) : (
                       <>
-                        <span className="relative z-10 flex items-center justify-center gap-2">
+                        <span className="relative z-10 flex items-center justify-center gap-3">
                           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                           </svg>
-                          Payer {Number(selectedTier.price).toFixed(0)}€
+                          Confirmer & Payer
                         </span>
                         <div className="absolute inset-0 h-full w-full bg-blue-600 border-t-2 border-white/20 transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></div>
                       </>
                     )}
                   </button>
-                  <p className="text-center text-xs text-gray-400 flex items-center justify-center gap-1 mt-2">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                    Paiement 100% sécurisé (Test Mode)
-                  </p>
+                  
+                  <div className="flex items-center justify-center gap-4 pt-4 border-t border-gray-100">
+                    <img src="https://img.icons8.com/color/48/visa.png" className="h-6 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all cursor-help" />
+                    <img src="https://img.icons8.com/color/48/mastercard.png" className="h-6 grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all cursor-help" />
+                    <div className="h-4 w-px bg-gray-200mx-2"></div>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest flex items-center gap-2">
+                       <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z"/></svg>
+                       Secure 256-bit
+                    </p>
+                  </div>
                 </div>
               </form>
             )}

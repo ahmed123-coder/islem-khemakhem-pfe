@@ -9,35 +9,8 @@ export default function Services() {
   const router = useRouter()
   const [services, setServices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null)
 
-  // Auth modal state
-  const [showAuthModal, setShowAuthModal] = useState(false)
-  const [authTab, setAuthTab] = useState<'login' | 'register'>('login')
-  const [authEmail, setAuthEmail] = useState('')
-  const [authPassword, setAuthPassword] = useState('')
-  const [authName, setAuthName] = useState('')
-  const [authLoading, setAuthLoading] = useState(false)
-  const [authError, setAuthError] = useState('')
-  const [pendingService, setPendingService] = useState<any>(null)
-  const [pendingTier, setPendingTier] = useState<any>(null)
-
-  // Payment modal state
-  const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [paymentService, setPaymentService] = useState<any>(null)
-  const [paymentTier, setPaymentTier] = useState<any>(null)
-  const [cardNumber, setCardNumber] = useState('')
-  const [cardExpiry, setCardExpiry] = useState('')
-  const [cardCvc, setCardCvc] = useState('')
-  const [cardName, setCardName] = useState('')
-  const [paymentProcessing, setPaymentProcessing] = useState(false)
-  const [paymentSuccess, setPaymentSuccess] = useState(false)
-  const [isPaid, setIsPaid] = useState(false)
-
-  // Meeting type modal state
-  const [showMeetingTypeModal, setShowMeetingTypeModal] = useState(false)
-  const [selectedMeetingType, setSelectedMeetingType] = useState<'ZOOM' | 'SUR_PLACE' | null>(null)
-
+  // Booking & Selection State
   const [selectedService, setSelectedService] = useState<any>(null)
   const [selectedTier, setSelectedTier] = useState<any>(null)
   const [consultants, setConsultants] = useState<any[]>([])
@@ -45,120 +18,40 @@ export default function Services() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [selectedStartHour, setSelectedStartHour] = useState<number | null>(null)
   const [selectedEndHour, setSelectedEndHour] = useState<number | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
+  const [scheduleStartDate, setScheduleStartDate] = useState<Date>(new Date(new Date().setHours(0,0,0,0)))
+
+  // UI State
   const [submitting, setSubmitting] = useState(false)
-  const [loadingConsultants, setLoadingConsultants] = useState(false)
   const [successOrder, setSuccessOrder] = useState<any>(null)
+  const [isPaid, setIsPaid] = useState(false)
 
+  // Modals & Popups State
+  const [showMeetingTypeModal, setShowMeetingTypeModal] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [paymentService, setPaymentService] = useState<any>(null)
+  const [paymentTier, setPaymentTier] = useState<any>(null)
+  const [selectedMeetingType, setSelectedMeetingType] = useState<'ZOOM' | 'SUR_PLACE' | null>(null)
+  
+  // Payment Form State
+  const [cardNumber, setCardNumber] = useState('')
+  const [cardExpiry, setCardExpiry] = useState('')
+  const [cardCvc, setCardCvc] = useState('')
+  const [cardName, setCardName] = useState('')
+  const [paymentProcessing, setPaymentProcessing] = useState(false)
+  const [paymentSuccess, setPaymentSuccess] = useState(false)
 
-  // Schedule Navigation state
-  const [scheduleStartDate, setScheduleStartDate] = useState<Date>(() => {
-    const d = new Date()
-    d.setHours(0, 0, 0, 0)
-    return d
-  })
+  // Auth State
+  const [authTab, setAuthTab] = useState<'login' | 'register'>('login')
+  const [authName, setAuthName] = useState('')
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [authError, setAuthError] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [pendingTier, setPendingTier] = useState<any>(null)
+  const [pendingService, setPendingService] = useState<any>(null)
 
-  useEffect(() => {
-    fetch('/api/services')
-      .then(res => res.json())
-      .then(data => {
-        setServices(data)
-        setLoading(false)
-      })
-      .catch(() => setLoading(false))
-
-    fetch('/api/auth/me')
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        setIsLoggedIn(data?.role === 'CLIENT')
-      })
-      .catch(() => setIsLoggedIn(false))
-  }, [])
-
-  // Fetch consultants only after payment is done OR when schedule date changes
-  useEffect(() => {
-    if (selectedTier && isPaid) {
-      setLoadingConsultants(true)
-      const startDateStr = scheduleStartDate.toISOString().split('T')[0]
-      fetch(`/api/consultants/schedule?startDate=${startDateStr}&days=7&serviceTierId=${selectedTier.id}`)
-        .then(r => r.json())
-        .then(data => {
-          setConsultants(Array.isArray(data) ? data : [])
-          setLoadingConsultants(false)
-        })
-        .catch(() => {
-          setConsultants([])
-          setLoadingConsultants(false)
-        })
-    }
-  }, [selectedTier, isPaid, scheduleStartDate])
-//dsuwy6icj
-  const hours = Array.from({ length: 9 }, (_, i) => i + 9)
-  const dates = useMemo(() => Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(scheduleStartDate)
-    d.setDate(d.getDate() + i)
-    return d
-  }), [scheduleStartDate])
-
-  const navigateSchedule = (days: number) => {
-    const newDate = new Date(scheduleStartDate)
-    newDate.setDate(newDate.getDate() + days)
-    
-    // Prevent going before today
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    if (newDate < today) {
-      setScheduleStartDate(today)
-    } else {
-      setScheduleStartDate(newDate)
-    }
-  }
-
-  const isSlotBlocked = (consultantId: string, date: Date, hour: number) => {
-    const consultant = consultants.find(c => c.id === consultantId)
-    if (!consultant) return false
-    const slotStart = new Date(date)
-    slotStart.setHours(hour, 0, 0, 0)
-    const slotEnd = new Date(slotStart)
-    slotEnd.setHours(hour + 1, 0, 0, 0)
-    return consultant.reservations?.some((r: any) => {
-      const resStart = new Date(r.startTime)
-      const resEnd = new Date(r.endTime)
-      return slotStart < resEnd && slotEnd > resStart
-    })
-  }
-
-  const handleTierSelect = (service: any, tier: any) => {
-    if (!isLoggedIn) {
-      setPendingService(service)
-      setPendingTier(tier)
-      setAuthError('')
-      setAuthEmail('')
-      setAuthPassword('')
-      setAuthName('')
-      setShowAuthModal(true)
-      return
-    }
-    // Show meeting type modal first
-    setPaymentService(service)
-    setPaymentTier(tier)
-    setSelectedMeetingType(null)
-    setShowMeetingTypeModal(true)
-  }
-
-  const handleMeetingTypeConfirm = (type: 'ZOOM' | 'SUR_PLACE') => {
-    setSelectedMeetingType(type)
-    setShowMeetingTypeModal(false)
-    // Now show payment modal
-    setCardNumber('')
-    setCardExpiry('')
-    setCardCvc('')
-    setCardName('')
-    setPaymentProcessing(false)
-    setPaymentSuccess(false)
-    setShowPaymentModal(true)
-  }
-
+  // Helper functions
   const formatCardNumber = (value: string) => {
     const v = value.replace(/\D/g, '').slice(0, 16)
     return v.replace(/(\d{4})(?=\d)/g, '$1 ')
@@ -178,75 +71,57 @@ export default function Services() {
     return null
   }
 
-  const handlePayment = (e: React.FormEvent) => {
-    e.preventDefault()
-    setPaymentProcessing(true)
-
-    // Simulate payment processing
-    setTimeout(() => {
-      setPaymentProcessing(false)
-      setPaymentSuccess(true)
-
-      // After success animation, proceed to booking
-      setTimeout(() => {
-        setShowPaymentModal(false)
-        setIsPaid(true)
-        setSelectedService(paymentService)
-        setSelectedTier(paymentTier)
-        setSelectedConsultant('')
-        setSelectedDate(null)
-        setSelectedStartHour(null)
-        setSuccessOrder(null)
-        toast.success('Paiement effectué avec succès !')
-      }, 1500)
-    }, 2000)
+  const handleMeetingTypeConfirm = (type: 'ZOOM' | 'SUR_PLACE') => {
+    setSelectedMeetingType(type)
+    setShowMeetingTypeModal(false)
+    setShowPaymentModal(true)
   }
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault()
     setAuthLoading(true)
-    setAuthError('')
+    // Basic mock auth or implementation placeholder
+    setAuthLoading(false)
+    setShowAuthModal(false)
+  }
 
-    try {
-      const endpoint = authTab === 'login' ? '/api/auth/login' : '/api/auth/register'
-      const body = authTab === 'login' 
-        ? { email: authEmail, password: authPassword }
-        : { email: authEmail, password: authPassword, name: authName }
-
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        setAuthError(data.error || 'Erreur d\'authentification')
-        setAuthLoading(false)
-        return
-      }
-
-      // Auth succeeded
-      setIsLoggedIn(true)
-      setShowAuthModal(false)
-      toast.success(authTab === 'login' ? 'Connexion réussie !' : 'Compte créé avec succès !')
-
-      // Resume the booking flow — show meeting type modal first
-      if (pendingService && pendingTier) {
-        setPaymentService(pendingService)
-        setPaymentTier(pendingTier)
-        setSelectedMeetingType(null)
-        setShowMeetingTypeModal(true)
-        setPendingService(null)
-        setPendingTier(null)
-      }
-    } catch (err) {
-      setAuthError('Une erreur est survenue. Veuillez réessayer.')
-    } finally {
-      setAuthLoading(false)
+  const getTierIcon = (tierType: string) => {
+    switch (tierType) {
+      case 'BASIC': return '🥉'
+      case 'STANDARD': return '🥈'
+      case 'PREMIUM': return '🥇'
+      default: return '📦'
     }
   }
+
+  const getTierColor = (tierType: string) => {
+    switch (tierType) {
+      case 'BASIC': return 'from-gray-500 to-gray-600'
+      case 'STANDARD': return 'from-blue-500 to-indigo-600'
+      case 'PREMIUM': return 'from-amber-500 to-orange-600'
+      default: return 'from-gray-500 to-gray-600'
+    }
+  }
+
+  const getTierBorder = (tierType: string) => {
+    switch (tierType) {
+      case 'BASIC': return 'border-gray-200 hover:border-gray-400'
+      case 'STANDARD': return 'border-blue-200 hover:border-blue-400'
+      case 'PREMIUM': return 'border-amber-200 hover:border-amber-400 ring-2 ring-amber-100'
+      default: return 'border-gray-200'
+    }
+  }
+
+  useEffect(() => {
+    fetch('/api/services')
+      .then(res => res.json())
+      .then(data => {
+        setServices(data)
+        setLoading(false)
+      })
+      .catch(() => setLoading(false))
+  }, [])
+
 
   const handlePurchase = async () => {
     if (!selectedTier || !selectedConsultant || !selectedDate || selectedStartHour === null || selectedEndHour === null || submitting) return
@@ -298,32 +173,6 @@ export default function Services() {
     setScheduleStartDate(new Date(new Date().setHours(0,0,0,0)))
   }
 
-  const getTierIcon = (tierType: string) => {
-    switch (tierType) {
-      case 'BASIC': return '🥉'
-      case 'STANDARD': return '🥈'
-      case 'PREMIUM': return '🥇'
-      default: return '📦'
-    }
-  }
-
-  const getTierColor = (tierType: string) => {
-    switch (tierType) {
-      case 'BASIC': return 'from-gray-500 to-gray-600'
-      case 'STANDARD': return 'from-blue-500 to-indigo-600'
-      case 'PREMIUM': return 'from-amber-500 to-orange-600'
-      default: return 'from-gray-500 to-gray-600'
-    }
-  }
-
-  const getTierBorder = (tierType: string) => {
-    switch (tierType) {
-      case 'BASIC': return 'border-gray-200 hover:border-gray-400'
-      case 'STANDARD': return 'border-blue-200 hover:border-blue-400'
-      case 'PREMIUM': return 'border-amber-200 hover:border-amber-400 ring-2 ring-amber-100'
-      default: return 'border-gray-200'
-    }
-  }
 
   if (loading) {
     return <div className="py-20 text-center">Loading...</div>
@@ -375,28 +224,22 @@ export default function Services() {
                       {service.description}
                     </p>
                     <button 
-                      onClick={() => {
-                        if (isExpanded) {
-                          resetBooking()
-                        } else {
-                          setSelectedService(service)
-                          setSelectedTier(null)
-                          setSuccessOrder(null)
-                        }
+                    onClick={() => {
+                        router.push(`/solutions/${service.id}`)
                       }}
-                      className={`inline-flex items-center gap-3 px-8 py-4 rounded-xl font-bold shadow-sm transition-all duration-300 ${
-                        isExpanded 
-                          ? 'bg-gray-100 text-gray-800 hover:bg-gray-200 hover:shadow-md' 
-                          : 'bg-[#2B5A8E] text-white hover:bg-[#1d3d61] hover:shadow-lg hover:-translate-y-0.5'
-                      }`}
+                      className="inline-flex items-center gap-3 px-8 py-4 rounded-xl font-bold bg-[#2B5A8E] text-white hover:bg-[#1d3d61] shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
                     >
-                      {isExpanded ? 'Masquer les formules' : 'Voir les formules'}
-                      <svg className={`w-5 h-5 transition-transform duration-500 ${isExpanded ? 'rotate-180' : 'group-hover:translate-x-1'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                      En savoir plus & Réserver
+                      <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" className="hidden" /> {/* Hiding old icon part */}
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                       </svg>
                     </button>
                   </div>
-                  <div className={`relative h-[300px] sm:h-[400px] w-full rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgb(0,0,0,0.1)] group-hover:shadow-[0_20px_50px_rgb(43,90,142,0.15)] transition-shadow duration-500 ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
+                  <div 
+                    onClick={() => router.push(`/solutions/${service.id}`)}
+                    className={`relative h-[300px] sm:h-[400px] w-full rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgb(0,0,0,0.1)] group-hover:shadow-[0_20px_50px_rgb(43,90,142,0.15)] transition-shadow duration-500 cursor-pointer ${index % 2 === 1 ? 'lg:order-1' : ''}`}
+                  >
                     <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                     {service.image || service.logo ? (
                       <img src={service.image || service.logo} alt={service.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
@@ -407,311 +250,6 @@ export default function Services() {
                     )}
                   </div>
                 </div>
-
-                {/* Step 1: Tiers Selection */}
-                {isExpanded && showTiers && service.tiers && (
-                  <div className="mt-10">
-                    <div className="text-center mb-8">
-                      <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-xs font-bold mb-3">
-                        <span className="w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-[10px] font-black">1</span>
-                        ÉTAPE 1
-                      </div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">Choisissez votre formule</h3>
-                      <p className="text-gray-500 text-sm">Sélectionnez le plan qui correspond à vos besoins</p>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-                      {service.tiers.map((tier: any) => (
-                        <div 
-                          key={tier.id} 
-                          className={`relative bg-white rounded-2xl border-2 ${getTierBorder(tier.tierType)} p-6 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col`}
-                        >
-                          {tier.tierType === 'PREMIUM' && (
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-4 py-1 rounded-full shadow-lg">
-                              Populaire
-                            </div>
-                          )}
-                          <div className={`bg-gradient-to-r ${getTierColor(tier.tierType)} text-white rounded-xl p-4 mb-5 text-center`}>
-                            <div className="text-3xl mb-1">{getTierIcon(tier.tierType)}</div>
-                            <h4 className="text-lg font-bold">{tier.tierType}</h4>
-                          </div>
-                          <div className="text-center mb-5">
-                            <span className="text-4xl font-black text-gray-900">{Number(tier.price).toFixed(0)}</span>
-                            <span className="text-lg text-gray-500 ml-1">€</span>
-                            {tier.description && <p className="text-xs text-gray-400 mt-2">{tier.description}</p>}
-                          </div>
-                          <div className="space-y-3 mb-6 flex-1">
-                            <div className="flex items-center gap-3 text-sm">
-                              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                              </div>
-                              <span className="text-gray-700">{tier.maxMessages ? `${tier.maxMessages} messages` : 'Messages illimités'}</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-sm">
-                              <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                              </div>
-                              <span className="text-gray-700">{tier.maxCallDuration ? `${tier.maxCallDuration} min d'appels` : 'Appels illimités'}</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-sm">
-                              <div className={`w-6 h-6 ${tier.canSelectConsultant ? 'bg-green-100' : 'bg-gray-100'} rounded-full flex items-center justify-center flex-shrink-0`}>
-                                {tier.canSelectConsultant ? (
-                                  <svg className="w-3.5 h-3.5 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
-                                ) : (
-                                  <svg className="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
-                                )}
-                              </div>
-                              <span className={tier.canSelectConsultant ? 'text-gray-700' : 'text-gray-400'}>Choix du consultant</span>
-                            </div>
-                          </div>
-                          <button
-                            onClick={() => handleTierSelect(service, tier)}
-                            className={`w-full py-3 rounded-xl font-bold text-sm transition-all ${
-                              tier.tierType === 'PREMIUM'
-                                ? 'bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg hover:shadow-xl'
-                                : 'bg-[#2B5A8E] hover:bg-[#234a73] text-white'
-                            }`}
-                          >
-                            {isLoggedIn ? 'Choisir cette formule →' : 'Se connecter pour souscrire'}
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Step 2: Consultant & Schedule Selection */}
-                {isExpanded && selectedTier && selectedTier.serviceId === service.id && !successOrder && (
-                  <div className="mt-10">
-                    {/* Recap */}
-                    <div className="bg-white border border-gray-200 rounded-2xl p-5 mb-8 flex items-center justify-between shadow-sm">
-                      <div className="flex items-center gap-4">
-                        <div className={`bg-gradient-to-r ${getTierColor(selectedTier.tierType)} text-white w-12 h-12 rounded-xl flex items-center justify-center text-xl`}>
-                          {getTierIcon(selectedTier.tierType)}
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-900">{service.name}</div>
-                          <div className="text-sm text-gray-500">{selectedTier.tierType} — {Number(selectedTier.price).toFixed(0)}€</div>
-                        </div>
-                      </div>
-                      <button onClick={() => { setSelectedTier(null); setSelectedConsultant(''); setSelectedDate(null); setSelectedStartHour(null); setSelectedEndHour(null) }} className="text-sm text-blue-600 hover:underline font-medium">
-                        ← Changer de formule
-                      </button>
-                    </div>
-
-                    <div className="text-center mb-8">
-                      <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-xs font-bold mb-3">
-                        <span className="w-5 h-5 bg-green-600 text-white rounded-full flex items-center justify-center text-[10px] font-black">2</span>
-                        ÉTAPE 2
-                      </div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">Sélectionnez votre créneau</h3>
-                      <p className="text-gray-500 text-sm mb-6">Cliquez et glissez sur les cellules pour sélectionner votre créneau.</p>
-                      
-                      <div className="flex flex-col items-center gap-6 mb-10">
-                        {/* Quick Navigation Controls */}
-                        <div className="flex items-center gap-2 bg-gray-100/50 p-1.5 rounded-2xl border border-gray-200 shadow-inner">
-                          <button 
-                            onClick={() => navigateSchedule(-1)}
-                            disabled={scheduleStartDate <= new Date(new Date().setHours(0,0,0,0))}
-                            className="px-4 py-2 font-bold text-xs uppercase tracking-widest text-gray-500 hover:text-[#2B5A8E] hover:bg-white hover:shadow-sm rounded-xl transition-all disabled:opacity-30"
-                          >
-                            Jour
-                          </button>
-                          <button 
-                            onClick={() => navigateSchedule(-7)}
-                            disabled={scheduleStartDate <= new Date(new Date().setHours(0,0,0,0))}
-                            className="px-4 py-2 font-bold text-xs uppercase tracking-widest text-[#2B5A8E] bg-white shadow-sm rounded-xl transition-all disabled:opacity-30"
-                          >
-                            Semaine
-                          </button>
-                          <button 
-                            onClick={() => {
-                              const nextMonth = new Date(scheduleStartDate)
-                              nextMonth.setMonth(nextMonth.getMonth() + 1)
-                              setScheduleStartDate(nextMonth)
-                            }}
-                            className="px-4 py-2 font-bold text-xs uppercase tracking-widest text-gray-500 hover:text-[#2B5A8E] hover:bg-white hover:shadow-sm rounded-xl transition-all"
-                          >
-                            Mois
-                          </button>
-                        </div>
-
-                        {/* Main Date Display & Arrows */}
-                        <div className="flex items-center gap-4">
-                          <button 
-                            onClick={() => navigateSchedule(-7)}
-                            disabled={scheduleStartDate <= new Date(new Date().setHours(0,0,0,0))}
-                            className="w-12 h-12 flex items-center justify-center rounded-full border-2 border-gray-100 bg-white text-gray-400 hover:text-[#2B5A8E] hover:border-[#2B5A8E] hover:shadow-lg transition-all disabled:opacity-20 disabled:cursor-not-allowed group"
-                          >
-                            <svg className="w-6 h-6 group-hover:-translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
-                            </svg>
-                          </button>
-                          
-                          <div className="relative group">
-                            <div className="absolute inset-0 bg-blue-500/5 blur-2xl rounded-full group-hover:bg-blue-500/10 transition-colors"></div>
-                            <div className="relative flex flex-col items-center px-10 py-4 bg-white border-2 border-[#2B5A8E]/10 rounded-[2rem] shadow-[0_10px_40px_rgba(43,90,142,0.08)] min-w-[280px]">
-                              <div className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-1">Période de Consultation</div>
-                              <div className="text-2xl font-serif font-black text-gray-900 flex items-center gap-3">
-                                <span className="text-gray-400 text-lg font-sans">📅</span>
-                                {(() => {
-                                  const endDate = new Date(scheduleStartDate)
-                                  endDate.setDate(endDate.getDate() + 6)
-                                  const startStr = scheduleStartDate.toLocaleDateString('fr-FR', { day: 'numeric' })
-                                  const endStr = endDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-                                  // Simplified logic for month display if different
-                                  if (scheduleStartDate.getMonth() !== endDate.getMonth()) {
-                                    const startMonth = scheduleStartDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-                                    return `${startMonth} — ${endStr}`
-                                  }
-                                  return `${startStr} — ${endStr}`
-                                })()}
-                              </div>
-                            </div>
-                          </div>
-
-                          <button 
-                            onClick={() => navigateSchedule(7)}
-                            className="w-12 h-12 flex items-center justify-center rounded-full border-2 border-gray-100 bg-white text-gray-400 hover:text-[#2B5A8E] hover:border-[#2B5A8E] hover:shadow-lg transition-all group"
-                          >
-                            <svg className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-                            </svg>
-                          </button>
-                        </div>
-                        
-                        <div className="text-xs text-blue-500 font-bold bg-blue-50 px-4 py-1.5 rounded-full border border-blue-100 flex items-center gap-2">
-                           <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
-                           Zone horaire : Paris (GMT+1)
-                        </div>
-                      </div>
-                    </div>
-
-                    {loadingConsultants ? (
-                      <div className="text-center py-12 text-gray-500">Chargement des consultants...</div>
-                    ) : consultants.length === 0 ? (
-                      <div className="text-center py-12 text-gray-500">Aucun consultant disponible pour ce service.</div>
-                    ) : (
-                      <div className="space-y-8">
-                        {consultants.map(consultant => (
-                          <div key={consultant.id} className="bg-white border-2 rounded-2xl p-6 shadow-lg">
-                            <h3 className="text-xl font-bold mb-1 text-[#2B5A8E]">{consultant.name}</h3>
-                            {consultant.specialty && <p className="text-sm text-gray-500 mb-4">{consultant.specialty}</p>}
-                            
-                            <div className="overflow-x-auto">
-                              <table className="w-full border-collapse" onMouseLeave={() => setIsDragging(false)}>
-                                <thead>
-                                  <tr className="bg-gradient-to-r from-[#2B5A8E] to-blue-600 text-white">
-                                    <th className="border border-blue-400 p-3 text-left font-semibold text-sm">Date</th>
-                                    {hours.map(h => (
-                                      <th key={h} className="border border-blue-400 p-3 text-center font-semibold text-sm">{h}h</th>
-                                    ))}
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {dates.map(date => (
-                                    <tr key={date.toISOString()} className="hover:bg-gray-50">
-                                      <td className="border border-gray-200 p-3 font-medium bg-gray-50">
-                                        <div className="text-sm">{date.toLocaleDateString('fr-FR', { weekday: 'short' })}</div>
-                                        <div className="text-xs text-gray-500">{date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
-                                      </td>
-                                      {hours.map(hour => {
-                                        const blocked = isSlotBlocked(consultant.id, date, hour)
-                                        const isPast = new Date(date).setHours(hour) < new Date().getTime()
-                                        const isDisabled = blocked || isPast
-                                        const isInRange = selectedConsultant === consultant.id &&
-                                          selectedDate?.toDateString() === date.toDateString() &&
-                                          selectedStartHour !== null && selectedEndHour !== null &&
-                                          hour >= selectedStartHour && hour < selectedEndHour
-
-                                        return (
-                                          <td
-                                            key={hour}
-                                            onMouseDown={() => {
-                                              if (isDisabled) return
-                                              setSelectedConsultant(consultant.id)
-                                              setSelectedDate(date)
-                                              setSelectedStartHour(hour)
-                                              setSelectedEndHour(hour + 1)
-                                              setIsDragging(true)
-                                            }}
-                                            onMouseEnter={() => {
-                                              if (isDragging && selectedConsultant === consultant.id && selectedDate?.toDateString() === date.toDateString() && selectedStartHour !== null && hour >= selectedStartHour) {
-                                                setSelectedEndHour(hour + 1)
-                                              }
-                                            }}
-                                            onMouseUp={() => setIsDragging(false)}
-                                            className={`border border-gray-200 p-2 text-center text-sm font-medium transition-all select-none ${
-                                              isDisabled
-                                                ? 'bg-red-50 text-red-300 cursor-not-allowed'
-                                                : isInRange
-                                                ? 'bg-green-500 text-white cursor-pointer'
-                                                : 'bg-green-50 hover:bg-green-100 cursor-pointer hover:shadow-sm'
-                                            }`}
-                                          >
-                                            {isDisabled ? '✕' : isInRange ? (hour === selectedStartHour ? '▶' : '—') : '○'}
-                                          </td>
-                                        )
-                                      })}
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Sticky Confirm Bar */}
-                    {selectedConsultant && selectedDate && selectedStartHour !== null && selectedEndHour !== null && (
-                      <div className="fixed bottom-0 left-0 right-0 bg-white border-t-2 border-green-500 p-4 shadow-2xl z-40">
-                        <div className="max-w-7xl mx-auto flex items-center justify-between">
-                          <div className="text-sm">
-                            <span className="font-bold text-gray-900">Récapitulatif : </span>
-                            <span className="text-gray-600">
-                              {service.name} ({selectedTier.tierType}) · {consultants.find(c => c.id === selectedConsultant)?.name} · {selectedDate.toLocaleDateString('fr-FR')} de {selectedStartHour}h à {selectedEndHour}h ({selectedEndHour - selectedStartHour}h)
-                            </span>
-                            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs font-bold ${
-                              selectedMeetingType === 'SUR_PLACE' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                            }`}>
-                              {selectedMeetingType === 'SUR_PLACE' ? '🏢 Sur Place' : '🎥 Zoom'}
-                            </span>
-                          </div>
-                          <button
-                            onClick={handlePurchase}
-                            disabled={submitting}
-                            className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
-                          >
-                            {submitting ? 'Création...' : 'Confirmer la réservation'}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Success State */}
-                {isExpanded && successOrder && (
-                  <div className="mt-10 max-w-lg mx-auto text-center bg-white rounded-2xl border-2 border-green-200 p-10 shadow-lg">
-                    <div className="text-6xl mb-4">🎉</div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-2">Commande créée avec succès !</h3>
-                    <p className="text-gray-500 mb-6">Votre réservation est en attente de confirmation par le consultant.</p>
-                    <div className="flex gap-3 justify-center">
-                      <button
-                        onClick={() => router.push(`/client/orders/${successOrder.order.id}`)}
-                        className="bg-[#2B5A8E] hover:bg-[#234a73] text-white px-6 py-3 rounded-xl font-bold transition-all"
-                      >
-                        Voir ma commande
-                      </button>
-                      <button
-                        onClick={resetBooking}
-                        className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-6 py-3 rounded-xl font-bold transition-all"
-                      >
-                        Retour aux services
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             )
           })}
