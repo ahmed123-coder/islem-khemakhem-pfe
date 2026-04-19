@@ -138,7 +138,7 @@ export default function AdminDashboard() {
               <h3>${stats.services}</h3>
             </div>
             <div class="card">
-              <p class="label">Published Blogs</p>
+              <p class="label">Published Approches</p>
               <h3>${stats.blogs}</h3>
             </div>
           </div>
@@ -330,7 +330,7 @@ export default function AdminDashboard() {
         {/* Interactive Quick Actions */}
         <motion.div variants={item} className="md:col-span-2">
           <div className="grid grid-cols-2 gap-4 h-full">
-            <Link href="/admin/blogs" className="group">
+            <Link href="/admin/approches" className="group">
               <div className="h-full rounded-[32px] bg-white border border-slate-100 p-6 flex items-center gap-4 transition-all hover:bg-slate-50 hover:shadow-lg active:scale-95">
                 <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <FileEdit className="w-5 h-5 text-purple-600" />

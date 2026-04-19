@@ -62,7 +62,7 @@ export function AdminSidebar() {
 
   const contentItems = [
     { href: '/admin/content', label: 'Site Editor', icon: Settings2 },
-    { href: '/admin/blogs', label: 'Blogs', icon: FileEdit },
+    { href: '/admin/approches', label: 'Approches', icon: FileEdit },
     { href: '/admin/solution', label: 'Solutions', icon: Briefcase },
     { href: '/admin/contacts', label: 'Contacts', icon: Mail },
     { href: '/admin/faqs', label: 'FAQs', icon: HelpCircle },
