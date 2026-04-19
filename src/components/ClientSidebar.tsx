@@ -17,7 +17,7 @@ export default function ClientSidebar() {
 
   const links = [
     { href: '/client', label: 'Subscriptions', icon: Package },
-    { href: '/client/services', label: 'Services', icon: Search },
+    { href: '/client/solutions', label: 'Solutions', icon: Search },
     { href: '/client/settings', label: 'Settings', icon: Settings },
   ]
 

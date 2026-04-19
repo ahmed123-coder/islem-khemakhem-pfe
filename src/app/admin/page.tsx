@@ -285,7 +285,7 @@ export default function AdminDashboard() {
             </div>
             <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.2em] mb-2">Offerings</p>
             <h3 className="text-4xl font-black italic mb-auto">{stats.services}</h3>
-            <Link href="/admin/services" className="flex items-center gap-2 text-xs font-bold text-blue-400 hover:gap-3 transition-all relative z-10">
+            <Link href="/admin/solution" className="flex items-center gap-2 text-xs font-bold text-blue-400 hover:gap-3 transition-all relative z-10">
               Active Services <ArrowUpRight className="w-3 h-3" />
             </Link>
           </Card>

@@ -97,7 +97,7 @@ export default function ClientDashboard() {
                <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
                Current Service
              </h3>
-             <Link href="/client/services">
+             <Link href="/client/solutions">
                <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-black text-[10px] uppercase tracking-widest gap-2">
                  Explore Tiers <ArrowRight className="w-3 h-3" />
                </Button>
@@ -175,7 +175,7 @@ export default function ClientDashboard() {
                         Manage Subscriptions <ExternalLink className="w-4 h-4 ml-2 opacity-30 group-hover:opacity-100 transition-opacity" />
                      </Button>
                    </Link>
-                   <Link href="/client/services" className="w-full">
+                   <Link href="/client/solutions" className="w-full">
                      <Button variant="outline" className="w-full h-14 bg-white border-slate-200 hover:bg-slate-50 text-slate-900 rounded-[1.5rem] font-black uppercase text-xs tracking-widest shadow-sm transition-all active:scale-95">
                         Upgrade Experience
                      </Button>
@@ -190,7 +190,7 @@ export default function ClientDashboard() {
                </div>
                <h3 className="text-xl font-black text-slate-900 mb-2">No Active Membership</h3>
                <p className="text-slate-500 font-medium max-w-sm mx-auto mb-8 leading-relaxed">You haven't initialized a consulting stream yet. Browse our premium service tiers to start.</p>
-               <Link href="/client/services">
+               <Link href="/client/solutions">
                  <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-10 h-14 font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-100 active:scale-95 transition-all">
                     Discover Services
                  </Button>
@@ -291,7 +291,7 @@ export default function ClientDashboard() {
                     >
                        <Calendar className="w-12 h-12 text-slate-200 mx-auto mb-4" />
                        <p className="text-slate-500 font-bold text-sm">No upcoming face-to-face consulting sessions.</p>
-                       <Link href="/client/services" className="text-blue-600 hover:underline text-xs font-black uppercase tracking-widest mt-4 inline-block">Book Now</Link>
+                       <Link href="/client/solutions" className="text-blue-600 hover:underline text-xs font-black uppercase tracking-widest mt-4 inline-block">Book Now</Link>
                     </motion.div>
                   ) : (
                     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/20 overflow-hidden">
