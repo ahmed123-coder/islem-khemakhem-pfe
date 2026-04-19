@@ -193,7 +193,9 @@ export default function RegisterPage() {
           <div className="h-1.5 w-full bg-gradient-to-r from-[#1B3F7A] via-[#7AB648] to-[#1B3F7A]" />
           <div className="px-8 py-8 overflow-y-auto max-h-[88vh]">
             <div className="flex justify-center mb-6">
-              <Image src={logoUrl || "/logo-1772242356501-removebg-preview.png"} alt="DSL Consulting" width={130} height={65} className="object-contain" />
+              <Link href="/">
+                <Image src={logoUrl || "/logo-1772242356501-removebg-preview.png"} alt="DSL Consulting" width={130} height={65} className="object-contain hover:opacity-80 transition-opacity" />
+              </Link>
             </div>
 
             {/* CHOOSE STEP */}

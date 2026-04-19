@@ -26,13 +26,15 @@ export default function Footer() {
 
           {/* Col 1 - Logo + tagline */}
           <div className="flex flex-col gap-4">
-            <Image
-              src={logoUrl || "/logo-1772242356501-removebg-preview.png"}
-              alt="DSL Consulting"
-              width={120}
-              height={60}
-              className="object-contain"
-            />
+            <Link href="/">
+              <Image
+                src={logoUrl || "/logo-1772242356501-removebg-preview.png"}
+                alt="DSL Consulting"
+                width={120}
+                height={60}
+                className="object-contain hover:opacity-80 transition-opacity"
+              />
+            </Link>
             <p className="text-gray-500 text-sm leading-relaxed max-w-xs">
               Le partenaire stratégique pour une transformation humaine et performante.
             </p>

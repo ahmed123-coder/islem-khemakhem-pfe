@@ -72,7 +72,9 @@ export default function LoginPage() {
 
           <div className="px-8 py-10">
             <div className="flex justify-center mb-8">
-              <Image src={logoUrl || "/logo-1772242356501-removebg-preview.png"} alt="DSL Consulting" width={140} height={70} className="object-contain" />
+              <Link href="/">
+                <Image src={logoUrl || "/logo-1772242356501-removebg-preview.png"} alt="DSL Consulting" width={140} height={70} className="object-contain hover:opacity-80 transition-opacity" />
+              </Link>
             </div>
 
             <h1 className="text-2xl font-bold text-[#1B3F7A] text-center mb-2">Bienvenue</h1>
