@@ -4,7 +4,21 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Mail, Phone, MapPin, Globe, Settings, Users, TrendingUp, Shield } from 'lucide-react'
 
+import { useState, useEffect } from 'react'
+
 export default function Footer() {
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/content/logo')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.value && data.value.url) {
+          setLogoUrl(data.value.url)
+        }
+      })
+      .catch(() => setLogoUrl(null))
+  }, [])
   return (
     <footer className="bg-white text-gray-800">
       <div className="max-w-7xl mx-auto px-6 lg:px-16 pt-12 pb-8">
@@ -13,7 +27,7 @@ export default function Footer() {
           {/* Col 1 - Logo + tagline */}
           <div className="flex flex-col gap-4">
             <Image
-              src="/logo-1772242356501-removebg-preview.png"
+              src={logoUrl || "/logo-1772242356501-removebg-preview.png"}
               alt="DSL Consulting"
               width={120}
               height={60}

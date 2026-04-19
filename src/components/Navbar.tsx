@@ -18,11 +18,11 @@ export default function Navbar() {
   const pathname = usePathname()
 
   useEffect(() => {
-    fetch('/api/content/navbar')
+    fetch('/api/content/logo')
       .then(res => res.json())
       .then(data => {
-        if (data && data.value && data.value.logoUrl) {
-          setLogoUrl(data.value.logoUrl)
+        if (data && data.value && data.value.url) {
+          setLogoUrl(data.value.url)
         }
       })
       .catch(() => setLogoUrl(null))

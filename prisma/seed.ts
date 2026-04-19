@@ -214,17 +214,9 @@ async function main() {
   await prisma.siteContent.createMany({
     data: [
       {
-        key: 'navbar',
+        key: 'logo',
         value: {
-          logo: 'DSL Consulting',
-          logoUrl: '/logo-1772242356501-removebg-preview.png',
-          links: [
-            { label: 'Solutions', href: '/solutions' },
-            { label: 'Ressources', href: '/ressources' },
-            { label: 'Contact', href: '/contact' },
-            { label: 'Approches', href: '/approches' },
-            { label: 'Connexion', href: '/login' },
-          ],
+          url: '/logo-1772242356501-removebg-preview.png',
         },
       },
       {

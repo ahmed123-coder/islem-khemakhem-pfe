@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -10,7 +10,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    fetch('/api/content/logo')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.value && data.value.url) {
+          setLogoUrl(data.value.url)
+        }
+      })
+      .catch(() => setLogoUrl(null))
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -60,7 +72,7 @@ export default function LoginPage() {
 
           <div className="px-8 py-10">
             <div className="flex justify-center mb-8">
-              <Image src="/logo-1772242356501-removebg-preview.png" alt="DSL Consulting" width={140} height={70} className="object-contain" />
+              <Image src={logoUrl || "/logo-1772242356501-removebg-preview.png"} alt="DSL Consulting" width={140} height={70} className="object-contain" />
             </div>
 
             <h1 className="text-2xl font-bold text-[#1B3F7A] text-center mb-2">Bienvenue</h1>

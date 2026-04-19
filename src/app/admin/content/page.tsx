@@ -29,7 +29,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
-type Section = 'hero' | 'navbar' | 'footer'
+type Section = 'hero' | 'logo' | 'footer'
 
 export default function SiteVisualEditor() {
   const [activeTab, setActiveTab] = React.useState<Section>('hero')
@@ -76,8 +76,8 @@ export default function SiteVisualEditor() {
             <TabsTrigger value="hero" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
               <AppWindow className="w-4 h-4" /> Hero Section
             </TabsTrigger>
-            <TabsTrigger value="navbar" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
-              <Navigation className="w-4 h-4" /> Navigation
+            <TabsTrigger value="logo" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
+              <ImageIcon className="w-4 h-4" /> Global Logo
             </TabsTrigger>
             <TabsTrigger value="footer" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
               <Columns className="w-4 h-4" /> Global Footer
@@ -182,48 +182,48 @@ export default function SiteVisualEditor() {
           </div>
         </TabsContent>
 
-        {/* Similar redesign for Navbar and Footer contents */}
-        <TabsContent value="navbar" className="mt-0 outline-none">
+        {/* Logo settings */}
+        <TabsContent value="logo" className="mt-0 outline-none">
            <Card className="p-10 rounded-[40px] border-none bg-white shadow-[0_20px_50px_rgba(0,0,0,0.04)]">
              <div className="max-w-4xl space-y-10">
                 <div className="flex items-end justify-between">
                    <div>
-                      <h3 className="text-2xl font-black text-slate-900">Brand Elements</h3>
-                      <p className="text-sm font-medium text-slate-400 mt-1">Manage global navigation logo and identity.</p>
+                      <h3 className="text-2xl font-black text-slate-900">Brand Logo</h3>
+                      <p className="text-sm font-medium text-slate-400 mt-1">Manage global brand logo.</p>
                    </div>
                    <div className="flex items-center gap-3">
                       <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden">
-                         <img src={logoUrl} className="w-full h-full object-contain p-2" alt="Current Logo" />
+                         <img src={content.url || logoUrl} className="w-full h-full object-contain p-2" alt="Current Logo" />
                       </div>
-                      <Button variant="outline" className="rounded-xl font-bold text-xs h-11 px-6 border-slate-200">Replace Logo</Button>
-                   </div>
-                </div>
-
-                <div className="space-y-6">
-                   <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Menu Navigation Flow</label>
-                   <div className="space-y-3">
-                      {(content.links || []).map((link: any, i: number) => (
-                        <div key={i} className="flex gap-4 p-4 rounded-3xl bg-slate-50 border border-slate-100 transition-all hover:bg-white hover:shadow-md group">
-                           <div className="flex-1 space-y-4 md:flex md:space-y-0 md:gap-4">
-                              <Input 
-                                placeholder="Menu Label" 
-                                value={link.label} 
-                                className="h-11 rounded-xl border-white bg-white/80 shadow-none focus:ring-4 focus:ring-blue-600/5 font-bold" 
-                              />
-                              <Input 
-                                placeholder="Link Link (/...)" 
-                                value={link.href} 
-                                className="h-11 rounded-xl border-white bg-white/80 shadow-none focus:ring-4 focus:ring-blue-600/5 font-bold" 
-                              />
-                           </div>
-                           <Button variant="ghost" size="icon" className="h-11 w-11 rounded-xl text-red-400 hover:text-red-500 hover:bg-red-50">
-                              <Trash2 className="w-5 h-5" />
-                           </Button>
-                        </div>
-                      ))}
-                      <Button variant="ghost" className="w-full h-16 rounded-3xl border-2 border-dashed border-slate-100 text-slate-400 font-bold gap-2 hover:bg-blue-50/30 hover:text-blue-600 hover:border-blue-200 transition-all">
-                         <Plus className="w-5 h-5" /> Add Navigation Node
-                      </Button>
+                      <div className="relative">
+                        <Button variant="outline" className="rounded-xl font-bold text-xs h-11 px-6 border-slate-200">Replace Logo</Button>
+                        <input 
+                          type="file" 
+                          className="absolute inset-0 opacity-0 cursor-pointer" 
+                          onChange={async (e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              setIsLoading(true)
+                              const formData = new FormData()
+                              formData.append('logo', e.target.files[0])
+                              try {
+                                const res = await fetch('/api/upload/logo', {
+                                  method: 'POST',
+                                  body: formData,
+                                })
+                                const data = await res.json()
+                                if (data.success) {
+                                  setContent({ ...content, url: data.logoUrl })
+                                  setLogoUrl(data.logoUrl)
+                                }
+                              } catch(error) {
+                                console.error(error)
+                              } finally {
+                                setIsLoading(false)
+                              }
+                            }
+                          }}
+                        />
+                      </div>
                    </div>
                 </div>
              </div>

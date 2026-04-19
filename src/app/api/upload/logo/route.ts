@@ -17,12 +17,19 @@ export async function POST(request: NextRequest) {
     // Upload logo to Cloudinary
     const logoUrl = await uploadImage(buffer, 'logos')
 
-    // Update navbar and footer with new logo URL
-    const navbar = await prisma.siteContent.findUnique({ where: { key: 'navbar' } })
-    if (navbar) {
+    // Update logo in siteContent
+    let siteLogo = await prisma.siteContent.findUnique({ where: { key: 'logo' } })
+    if (siteLogo) {
       await prisma.siteContent.update({
-        where: { key: 'navbar' },
-        data: { value: { ...(navbar.value as any), logoUrl } }
+        where: { key: 'logo' },
+        data: { value: { ...(siteLogo.value as any), url: logoUrl } }
+      })
+    } else {
+      await prisma.siteContent.create({
+        data: {
+          key: 'logo',
+          value: { url: logoUrl }
+        }
       })
     }
 
@@ -30,7 +37,7 @@ export async function POST(request: NextRequest) {
     if (footer) {
       await prisma.siteContent.update({
         where: { key: 'footer' },
-        data: { value: { ...(footer.value as any), logoUrl } }
+        data: { value: { ...(footer.value as any), logoUrl: logoUrl } }
       })
     }
 

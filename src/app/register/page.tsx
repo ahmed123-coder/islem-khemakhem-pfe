@@ -23,7 +23,19 @@ export default function RegisterPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
+  const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    fetch('/api/content/logo')
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.value && data.value.url) {
+          setLogoUrl(data.value.url)
+        }
+      })
+      .catch(() => setLogoUrl(null))
+  }, [])
 
   const [client, setClient] = useState({ lastName: '', firstName: '', email: '', phone: '', company: '', sector: '', address: '', needs: '', password: '', confirm: '', privacy: false })
   const [consultant, setConsultant] = useState({ lastName: '', firstName: '', email: '', phone: '', competences: '', password: '', confirm: '', privacy: false })
@@ -181,7 +193,7 @@ export default function RegisterPage() {
           <div className="h-1.5 w-full bg-gradient-to-r from-[#1B3F7A] via-[#7AB648] to-[#1B3F7A]" />
           <div className="px-8 py-8 overflow-y-auto max-h-[88vh]">
             <div className="flex justify-center mb-6">
-              <Image src="/logo-1772242356501-removebg-preview.png" alt="DSL Consulting" width={130} height={65} className="object-contain" />
+              <Image src={logoUrl || "/logo-1772242356501-removebg-preview.png"} alt="DSL Consulting" width={130} height={65} className="object-contain" />
             </div>
 
             {/* CHOOSE STEP */}
