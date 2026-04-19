@@ -8,14 +8,20 @@ export async function GET() {
       services,
       contacts,
       clients,
+      activeClients,
+      inactiveClients,
       consultants,
+      activeConsultants,
       pendingContacts
     ] = await Promise.all([
       prisma.blog.count(),
       prisma.service.count(),
       prisma.contact.count(),
       prisma.user.count({ where: { role: 'CLIENT' } }),
+      prisma.user.count({ where: { role: 'CLIENT', isActive: true } }),
+      prisma.user.count({ where: { role: 'CLIENT', isActive: false } }),
       prisma.consultant.count(),
+      prisma.consultant.count({ where: { isActive: true } }),
       prisma.contact.count({ where: { status: 'new' } })
     ])
 
@@ -37,7 +43,10 @@ export async function GET() {
       services, 
       contacts,
       clients,
+      activeClients,
+      inactiveClients,
       consultants,
+      activeConsultants,
       pendingContacts,
       growth
     })
@@ -47,7 +56,10 @@ export async function GET() {
       services: 0, 
       contacts: 0,
       clients: 0,
+      activeClients: 0,
+      inactiveClients: 0,
       consultants: 0,
+      activeConsultants: 0,
       pendingContacts: 0
     })
   }

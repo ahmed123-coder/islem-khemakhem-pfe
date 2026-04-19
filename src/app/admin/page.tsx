@@ -47,8 +47,12 @@ export default function AdminDashboard() {
     services: 0, 
     contacts: 0,
     clients: 0,
+    activeClients: 0,
+    inactiveClients: 0,
     consultants: 0,
-    pendingContacts: 0
+    activeConsultants: 0,
+    pendingContacts: 0,
+    growth: "0"
   })
 
   React.useEffect(() => {
@@ -60,9 +64,12 @@ export default function AdminDashboard() {
           services: data.services || 0,
           contacts: data.contacts || 0,
           clients: data.clients || 0,
+          activeClients: data.activeClients || 0,
+          inactiveClients: data.inactiveClients || 0,
           consultants: data.consultants || 0,
+          activeConsultants: data.activeConsultants || 0,
           pendingContacts: data.pendingContacts || 0,
-          growth: data.growth || 0
+          growth: data.growth || "0"
         })
       })
       .catch(() => {})
@@ -134,7 +141,14 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <div>
-                <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em] mb-1">Total Active Clients</p>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em]">Total Clients</p>
+                  <div className="flex gap-2 text-xs font-bold bg-slate-50 px-2 py-1 rounded-lg">
+                    <span className="text-emerald-500">{stats.activeClients} Active</span>
+                    <span className="text-slate-300">|</span>
+                    <span className="text-amber-500">{stats.inactiveClients} Inactive</span>
+                  </div>
+                </div>
                 <div className="flex items-baseline gap-4">
                   <h3 className="text-5xl font-black text-slate-900 leading-none">{stats.clients}</h3>
                   <div className="h-24 flex-1">
@@ -170,7 +184,10 @@ export default function AdminDashboard() {
               <UserSquare2 className="w-6 h-6 text-emerald-600" />
             </div>
             <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em] mb-2">Team Size</p>
-            <h3 className="text-4xl font-black text-slate-900 italic mb-auto">{stats.consultants}</h3>
+            <div className="flex items-end gap-3 mb-auto">
+              <h3 className="text-4xl font-black text-slate-900 italic leading-none">{stats.consultants}</h3>
+              <span className="text-xs font-bold text-emerald-500 mb-1">{stats.activeConsultants} Active</span>
+            </div>
             <Link href="/admin/consultants" className="flex items-center gap-2 text-xs font-bold text-blue-600 hover:gap-3 transition-all">
               Manage Experts <ArrowUpRight className="w-3 h-3" />
             </Link>
