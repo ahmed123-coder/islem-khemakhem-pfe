@@ -75,6 +75,88 @@ export default function AdminDashboard() {
       .catch(() => {})
   }, [])
 
+  const handleDownloadReport = () => {
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <title>DSL Consulting - Analytics Report</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+          body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #0f172a; padding: 40px; margin: 0; }
+          .container { max-width: 900px; margin: 0 auto; }
+          .header { text-align: center; margin-bottom: 40px; }
+          .header h1 { font-size: 2.5rem; font-weight: 900; color: #1e293b; margin-bottom: 8px; }
+          .header p { color: #64748b; font-size: 1rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; }
+          .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+          .card { background: white; padding: 32px; border-radius: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.04); }
+          .card h3 { font-size: 3rem; font-weight: 900; margin: 0; color: #0f172a; line-height: 1; margin-bottom: 16px; }
+          .card p.label { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.2em; margin-top: 0; }
+          .tag-row { display: flex; gap: 8px; }
+          .tag { padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
+          .tag-green { background: #dcfce7; color: #166534; }
+          .tag-orange { background: #ffedd5; color: #9a3412; }
+          .tag-blue { background: #dbeafe; color: #1e40af; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1>DSL Consulting</h1>
+            <p>Performance Report — ${new Date().toLocaleDateString()}</p>
+          </div>
+          <div class="grid">
+            <div class="card">
+              <p class="label">Total Clients</p>
+              <h3>${stats.clients}</h3>
+              <div class="tag-row">
+                <span class="tag tag-green">${stats.activeClients} Active</span>
+                <span class="tag tag-orange">${stats.inactiveClients} Inactive</span>
+              </div>
+            </div>
+            <div class="card">
+              <p class="label">Consultants Staff</p>
+              <h3>${stats.consultants}</h3>
+              <div class="tag-row">
+                <span class="tag tag-green">${stats.activeConsultants} Active</span>
+              </div>
+            </div>
+            <div class="card">
+              <p class="label">Client Growth (30 days)</p>
+              <h3 style="color: #2563eb">+${stats.growth}%</h3>
+            </div>
+            <div class="card">
+              <p class="label">Inquiries & Contacts</p>
+              <h3>${stats.contacts}</h3>
+              <div class="tag-row">
+                 <span class="tag tag-orange">${stats.pendingContacts} Pending</span>
+              </div>
+            </div>
+            <div class="card">
+              <p class="label">Active Services</p>
+              <h3>${stats.services}</h3>
+            </div>
+            <div class="card">
+              <p class="label">Published Blogs</p>
+              <h3>${stats.blogs}</h3>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `dsl-analytics-report-${new Date().toISOString().split('T')[0]}.html`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   const container = {
     hidden: { opacity: 0 },
     show: {
@@ -110,10 +192,10 @@ export default function AdminDashboard() {
           <p className="text-slate-500 font-medium">Welcome back, here's what's happening with DSL Consulting today.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="outline" className="rounded-2xl border-slate-200 bg-white/50 backdrop-blur-sm font-bold text-xs px-5">
-            View Analytics
-          </Button>
-          <Button className="rounded-2xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 font-bold text-xs px-5">
+          <Button 
+            onClick={handleDownloadReport}
+            className="rounded-2xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 font-bold text-xs px-5"
+          >
             Download Report
           </Button>
         </div>
@@ -214,8 +296,15 @@ export default function AdminDashboard() {
           <Card className="rounded-[32px] border-none bg-white shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 group">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em] mb-1">Inquiries Received</p>
-                <h3 className="text-3xl font-black text-slate-900">{stats.contacts}</h3>
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em]">Inquiries Received</p>
+                  <div className="flex gap-2 text-xs font-bold bg-slate-50 px-2 py-1 rounded-lg">
+                    <span className="text-blue-500">{stats.contacts - stats.pendingContacts} Replied</span>
+                    <span className="text-slate-300">|</span>
+                    <span className="text-orange-500">{stats.pendingContacts} Pending</span>
+                  </div>
+                </div>
+                <h3 className="text-3xl font-black text-slate-900">{stats.contacts} Total</h3>
               </div>
               <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
                 <Mail className="w-5 h-5 text-orange-600" />

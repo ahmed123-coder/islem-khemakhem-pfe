@@ -33,7 +33,10 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import Link from 'next/link'
 
+import { useRouter } from 'next/navigation'
+
 export function AdminTopBar() {
+  const router = useRouter()
   const [mounted, setMounted] = React.useState(false)
   const [notifications, setNotifications] = React.useState<any[]>([])
   const [unreadCount, setUnreadCount] = React.useState(0)
@@ -191,17 +194,20 @@ export function AdminTopBar() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl shadow-2xl border-slate-200 bg-white/95 backdrop-blur-xl">
             <DropdownMenuLabel className="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">My Account</DropdownMenuLabel>
-            <DropdownMenuItem className="rounded-xl px-3 py-2 cursor-pointer transition-colors focus:bg-blue-50 focus:text-blue-600">
+            <DropdownMenuItem 
+              onClick={() => router.push('/admin/profile')}
+              className="rounded-xl px-3 py-2 cursor-pointer transition-colors focus:bg-blue-50 focus:text-blue-600"
+            >
               <UserIcon className="w-4 h-4 mr-2" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem className="rounded-xl px-3 py-2 cursor-pointer transition-colors focus:bg-blue-50 focus:text-blue-600">
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
-            </DropdownMenuItem>
             <DropdownMenuSeparator className="my-1 bg-slate-100" />
             <DropdownMenuItem 
-              onClick={() => fetch('/api/auth/logout', { method: 'POST' }).then(() => window.location.href = '/login')}
+              onClick={async () => {
+                await fetch('/api/auth/logout', { method: 'POST' })
+                router.push('/login')
+                router.refresh()
+              }}
               className="rounded-xl px-3 py-2 cursor-pointer transition-colors focus:bg-red-50 focus:text-red-600"
             >
               <LogOut className="w-4 h-4 mr-2" />
