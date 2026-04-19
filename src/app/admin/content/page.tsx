@@ -29,7 +29,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
-type Section = 'hero' | 'logo' | 'footer'
+type Section = 'hero' | 'logo' | 'footer' | 'hero-solutions' | 'hero-approches'
 
 export default function SiteVisualEditor() {
   const [activeTab, setActiveTab] = React.useState<Section>('hero')
@@ -74,7 +74,13 @@ export default function SiteVisualEditor() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <TabsList className="bg-white/50 backdrop-blur-md border border-slate-100 p-1.5 rounded-[24px] shadow-sm">
             <TabsTrigger value="hero" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
-              <AppWindow className="w-4 h-4" /> Hero Section
+              <AppWindow className="w-4 h-4" /> Home Hero
+            </TabsTrigger>
+            <TabsTrigger value="hero-solutions" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
+              <AppWindow className="w-4 h-4" /> Solutions Hero
+            </TabsTrigger>
+            <TabsTrigger value="hero-approches" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
+              <AppWindow className="w-4 h-4" /> Approches Hero
             </TabsTrigger>
             <TabsTrigger value="logo" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
               <ImageIcon className="w-4 h-4" /> Global Logo
@@ -98,7 +104,8 @@ export default function SiteVisualEditor() {
           </div>
         </div>
 
-        <TabsContent value="hero" className="mt-0 outline-none">
+        <TabsContent value={activeTab} className="mt-0 outline-none">
+          {['hero', 'hero-solutions', 'hero-approches'].includes(activeTab) && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Control Panel */}
             <div className="lg:col-span-12 space-y-8">
@@ -116,7 +123,31 @@ export default function SiteVisualEditor() {
                       <div className="group relative h-48 rounded-[32px] border-2 border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/50 transition-all cursor-pointer overflow-hidden">
                         <CloudUpload className="w-12 h-12 text-slate-300 mb-3 group-hover:text-blue-600 transition-colors" />
                         <span className="text-xs font-bold text-slate-500">Drag & Drop new visual assets</span>
-                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" />
+                        <input 
+                          type="file" 
+                          className="absolute inset-0 opacity-0 cursor-pointer" 
+                          onChange={async (e) => {
+                            if (e.target.files && e.target.files[0]) {
+                              setIsLoading(true)
+                              const formData = new FormData()
+                              formData.append('image', e.target.files[0])
+                              try {
+                                const res = await fetch('/api/upload/image', {
+                                  method: 'POST',
+                                  body: formData,
+                                })
+                                const data = await res.json()
+                                if (data.success) {
+                                  setContent({ ...content, image: data.imageUrl })
+                                }
+                              } catch(error) {
+                                console.error(error)
+                              } finally {
+                                setIsLoading(false)
+                              }
+                            }
+                          }}
+                        />
                       </div>
                    </div>
                 </Card>
@@ -180,6 +211,7 @@ export default function SiteVisualEditor() {
               </div>
             </div>
           </div>
+          )}
         </TabsContent>
 
         {/* Logo settings */}

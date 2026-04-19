@@ -9,11 +9,18 @@ export default function Services() {
   const [services, setServices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
+  const [heroData, setHeroData] = useState<any>(null)
+
   useEffect(() => {
-    fetch('/api/services')
-      .then(res => res.json())
-      .then(data => {
+    Promise.all([
+      fetch('/api/services').then(res => res.json()),
+      fetch('/api/content/hero-solutions').then(res => res.ok ? res.json() : null)
+    ])
+      .then(([data, heroJSON]) => {
         setServices(data)
+        if (heroJSON && heroJSON.value) {
+          setHeroData(heroJSON.value)
+        }
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -33,16 +40,20 @@ export default function Services() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-[#2B5A8E] text-white py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section 
+        className="bg-[#2B5A8E] text-white py-20 relative bg-cover bg-center"
+        style={heroData?.image ? { backgroundImage: `url(${heroData.image})` } : {}}
+      >
+        {heroData?.image && <div className="absolute inset-0 bg-[#2B5A8E]/80 mix-blend-multiply" />}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="inline-block bg-[#F59E0B]/20 text-[#FCD34D] px-4 py-2 rounded-full text-sm font-medium mb-6">
             Nos Solutions
           </div>
           <h1 className="text-5xl md:text-6xl font-serif font-bold mb-6 max-w-4xl">
-            Des expertises au service de votre performance
+            {heroData?.title || 'Des expertises au service de votre performance'}
           </h1>
-          <p className="text-xl text-blue-100 max-w-3xl leading-relaxed">
-            Quatre domaines d&apos;intervention complémentaires pour une transformation globale et pérenne de votre entreprise.
+          <p className="text-xl text-blue-100 max-w-3xl leading-relaxed whitespace-pre-line">
+            {heroData?.subtitle || 'Quatre domaines d\'intervention complémentaires pour une transformation globale et pérenne de votre entreprise.'}
           </p>
         </div>
       </section>

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { CheckCircle2, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
+import { prisma } from '@/lib/prisma'
 
 export const metadata: Metadata = {
   title: 'Nos Approches - DSL Conseil',
@@ -23,21 +24,34 @@ async function getFaqs() {
 
 export default async function ApprochesPage() {
   const faqs = await getFaqs();
+  let heroData: any = null;
+  try {
+    const heroContent = await prisma.siteContent.findUnique({ where: { key: 'hero-approches' } })
+    if (heroContent && heroContent.value) {
+      heroData = heroContent.value
+    }
+  } catch(e) {
+    console.error(e)
+  }
 
   return (
     <>
       {/* Hero Section */}
-      <section className="relative bg-[#2B4F8A] text-white overflow-hidden min-h-[400px]">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600')] bg-cover opacity-20" style={{backgroundPosition: 'center 30%'}}></div>
+      <section 
+        className="relative bg-[#2B4F8A] text-white overflow-hidden min-h-[400px]"
+        style={heroData?.image ? { backgroundImage: `url(${heroData.image})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+      >
+        {!heroData?.image && <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1552664730-d307ca884978?w=1600')] bg-cover opacity-20" style={{backgroundPosition: 'center 30%'}}></div>}
+        {heroData?.image && <div className="absolute inset-0 bg-[#2B4F8A]/80 mix-blend-multiply" />}
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
           <div className="max-w-3xl">
             <h1 className="text-5xl lg:text-6xl font-serif font-bold mb-6 leading-tight tracking-tight text-white">
-              Nos approches
+              {heroData?.title || 'Nos approches'}
               <div className="w-22 h-1 bg-[#7AB648] rounded-full mt-4"></div>
             </h1>
-            <p className="text-lg text-white/90 leading-relaxed border-l-4 border-[#7AB648] pl-4">
-              Depuis 2018, nous accompagnons les entreprises dans le renforcement de la réussite de leurs projets, grâce à trois approches complémentaires.
+            <p className="text-lg text-white/90 leading-relaxed border-l-4 border-[#7AB648] pl-4 whitespace-pre-line">
+              {heroData?.subtitle || 'Depuis 2018, nous accompagnons les entreprises dans le renforcement de la réussite de leurs projets, grâce à trois approches complémentaires.'}
             </p>
           </div>
         </div>
