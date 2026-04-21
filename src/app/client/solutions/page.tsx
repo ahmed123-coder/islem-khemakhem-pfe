@@ -96,8 +96,8 @@ export default function ServicesPage() {
         body: JSON.stringify({
           serviceTierId: selectedTier.id,
           consultantId: selection.consultantId,
-          startTime: selection.date.toISOString(),
-          endTime: new Date(new Date(selection.date).setHours(selection.endHour)).toISOString(),
+          startTime: selection.startTime,
+          endTime: selection.endTime,
           meetingType: selectedMeetingType || 'ZOOM'
         })
       })
@@ -224,6 +224,8 @@ export default function ServicesPage() {
               consultants={consultants} 
               onSelect={setSelection}
               scheduleStartDate={scheduleStartDate}
+              requiredDuration={selectedTier?.maxCallDuration ? selectedTier.maxCallDuration / 60 : 1.5}
+              onJumpToDate={setScheduleStartDate}
               onNavigate={(days) => {
                 const newDate = new Date(scheduleStartDate)
                 newDate.setDate(newDate.getDate() + days)
@@ -242,7 +244,9 @@ export default function ServicesPage() {
                       <div className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Confirmation de séance</div>
                       <div className="font-bold text-gray-900">
                         {consultants.find(c => c.id === selection.consultantId)?.name} · {selection.date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                        <span className="text-blue-600 ml-2">({selection.startHour}h – {selection.endHour}h)</span>
+                        <span className="text-blue-600 ml-2">
+                          ({new Date(selection.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} – {new Date(selection.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })})
+                        </span>
                       </div>
                     </div>
                   </div>

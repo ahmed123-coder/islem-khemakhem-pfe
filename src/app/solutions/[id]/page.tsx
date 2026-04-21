@@ -84,26 +84,55 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
     if (!selectedTier || !selection || !isPaid) return
 
     try {
-      const res = await fetch('/api/client/purchase', {
+      console.log("Starting purchase process...");
+      
+      // Parse sessions safely for the label
+      let sessions = [];
+      try {
+        sessions = typeof selectedTier?.sessionsConfig === 'string' 
+          ? JSON.parse(selectedTier.sessionsConfig) 
+          : (selectedTier?.sessionsConfig || []);
+      } catch (e) {
+        console.error("Error parsing sessions for purchase:", e);
+      }
+
+      const payload = {
+        serviceTierId: selectedTier.id,
+        consultantId: selection.consultantId,
+        startTime: selection.startTime,
+        endTime: selection.endTime,
+        meetingType: selectedMeetingType || 'ZOOM',
+        sessionIndex: 0,
+        sessionLabel: Array.isArray(sessions) && sessions.length > 0 ? sessions[0].label : null
+      };
+
+      console.log("Sending payload:", payload);
+
+      const apiUrl = `${window.location.origin}/api/client/purchase`;
+      const res = await fetch(apiUrl, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          serviceTierId: selectedTier.id,
-          consultantId: selection.consultantId,
-          startTime: selection.startTime,
-          endTime: selection.endTime,
-          meetingType: selectedMeetingType || 'ZOOM'
-        })
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
       })
 
+      console.log("Response status:", res.status);
+
       if (res.ok) {
+        const result = await res.json();
+        console.log("Purchase successful:", result);
         toast.success('Commande créée avec succès !')
         router.push('/client')
       } else {
-        toast.error('Une erreur est survenue lors de la réservation.')
+        const errorData = await res.json().catch(() => ({}));
+        console.error("Purchase API error data:", errorData);
+        toast.error(errorData.error || 'Une erreur est survenue lors de la réservation.')
       }
-    } catch (error) {
-      toast.error('Erreur de connexion au serveur.')
+    } catch (error: any) {
+      console.error('CRITICAL FETCH ERROR:', error)
+      toast.error('Erreur de connexion fatale : ' + (error.message || 'Check browser console'))
     }
   }
 
@@ -182,28 +211,59 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
               <p className="text-gray-500 font-medium">Réservez dès maintenant votre première session stratégique.</p>
             </div>
 
-            <AvailabilityCalendar 
-              consultants={consultants} 
-              onSelect={setSelection}
-              scheduleStartDate={scheduleStartDate}
-              requiredDuration={
-                selectedTier?.sessionsConfig?.length > 0 
-                  ? selectedTier.sessionsConfig[0].duration / 60 
-                  : (selectedTier?.tierType === 'BASIC' || selectedTier?.tierType === 'ULTIMATE' ? 1.5 : 3)
-              }
-              onNavigate={(days) => {
-                const newDate = new Date(scheduleStartDate)
-                newDate.setDate(newDate.getDate() + days)
-                const today = new Date()
-                today.setHours(0,0,0,0)
-                setScheduleStartDate(newDate < today ? today : newDate)
-              }}
-              onJumpToDate={(date) => {
-                const d = new Date(date)
-                d.setHours(0, 0, 0, 0)
-                setScheduleStartDate(d)
-              }}
-            />
+            {consultants.length === 0 ? (
+               <div className="bg-amber-50 border-2 border-amber-100 rounded-[2.5rem] p-12 text-center">
+                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <span className="text-3xl">👤</span>
+                  </div>
+                  <h4 className="text-xl font-bold text-amber-900 mb-2">Aucun consultant disponible</h4>
+                  <p className="text-amber-700/70 text-sm max-w-md mx-auto">
+                    Nos experts sont actuellement tous occupés ou non assignés à ce service spécifique. Veuillez réessayer plus tard ou contacter le support.
+                  </p>
+               </div>
+            ) : (
+              <AvailabilityCalendar 
+                consultants={consultants} 
+                onSelect={setSelection}
+                scheduleStartDate={scheduleStartDate}
+                requiredDuration={(() => {
+                  let finalDuration = 1.5; // Default fallback
+                  try {
+                    const sessions = typeof selectedTier?.sessionsConfig === 'string' 
+                      ? JSON.parse(selectedTier.sessionsConfig) 
+                      : selectedTier?.sessionsConfig;
+                    
+                    if (Array.isArray(sessions) && sessions.length > 0) {
+                      const firstSessionDuration = Number(sessions[0].duration);
+                      if (!isNaN(firstSessionDuration) && firstSessionDuration > 0) {
+                        finalDuration = firstSessionDuration / 60;
+                        return finalDuration;
+                      }
+                    }
+
+                    // Secondary fallback based on tier type if sessionsConfig is empty/invalid
+                    if (selectedTier?.tierType === 'STANDARD' || selectedTier?.tierType === 'PREMIUM') {
+                      finalDuration = 3;
+                    }
+                  } catch (e) {
+                    console.error("Error determining requiredDuration:", e);
+                  }
+                  return finalDuration;
+                })()}
+                onNavigate={(days) => {
+                  const newDate = new Date(scheduleStartDate)
+                  newDate.setDate(newDate.getDate() + days)
+                  const today = new Date()
+                  today.setHours(0,0,0,0)
+                  setScheduleStartDate(newDate < today ? today : newDate)
+                }}
+                onJumpToDate={(date) => {
+                  const d = new Date(date)
+                  d.setHours(0, 0, 0, 0)
+                  setScheduleStartDate(d)
+                }}
+              />
+            )}
 
             {selection && (
               <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 z-40">

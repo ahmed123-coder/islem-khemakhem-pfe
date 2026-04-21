@@ -20,6 +20,8 @@ interface Selection {
   date: Date
   startTime: string // ISO string
   endTime: string // ISO string
+  startHour: number
+  endHour: number
 }
 
 interface AvailabilityCalendarProps {
@@ -89,13 +91,24 @@ export default function AvailabilityCalendar({
 
     const slotStart = new Date(date)
     slotStart.setHours(Math.floor(startHour), (startHour % 1) * 60, 0, 0)
-    const slotEnd = new Date(slotStart.getTime() + requiredDuration * 60 * 60 * 1000)
+    
+    // Ensure duration is a valid number
+    const duration = isNaN(requiredDuration) || requiredDuration <= 0 ? 1.5 : requiredDuration
+    const slotEnd = new Date(slotStart.getTime() + duration * 60 * 60 * 1000)
+
+    // Check if dates are valid before toISOString()
+    if (isNaN(slotStart.getTime()) || isNaN(slotEnd.getTime())) {
+      console.error("Invalid appointment dates detected", { slotStart, slotEnd })
+      return
+    }
 
     const sel: Selection = {
       consultantId,
       date,
       startTime: slotStart.toISOString(),
-      endTime: slotEnd.toISOString()
+      endTime: slotEnd.toISOString(),
+      startHour: startHour,
+      endHour: startHour + duration
     }
     setLocalSelection(sel)
     onSelect(sel)

@@ -189,6 +189,8 @@ model Reservation {
   endTime       DateTime
   status        ReservationStatus @default(PENDING)
   meetingType   MeetingType       @default(ZOOM)
+  sessionIndex  Int               @default(0)
+  sessionLabel  String?
   zoomJoinUrl   String?
   zoomPassword  String?
   createdAt     DateTime          @default(now())

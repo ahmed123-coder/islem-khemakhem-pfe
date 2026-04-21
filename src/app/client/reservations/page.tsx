@@ -166,32 +166,39 @@ export default function ClientReservations() {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Consultant</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Meeting</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phase / Service</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expert</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Heure</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">État</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lien Direct</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {reservations.map(reservation => (
                   <tr key={reservation.id}>
                     <td className="px-6 py-4">
-                      <div className="font-medium">{reservation.serviceTier.service.name}</div>
-                      <div className="text-sm text-gray-500">{reservation.serviceTier.tierType}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="font-medium">{reservation.consultant.name}</div>
-                      <div className="text-sm text-gray-500">{reservation.consultant.specialty}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div>{new Date(reservation.startTime).toLocaleDateString()}</div>
-                      <div className="text-sm text-gray-500">
-                        {new Date(reservation.startTime).toLocaleTimeString()} - {new Date(reservation.endTime).toLocaleTimeString()}
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-500 border border-slate-200">
+                           {reservation.sessionIndex + 1}
+                        </div>
+                        <div>
+                          <div className="font-bold text-gray-900">{reservation.sessionLabel || 'Consultation'}</div>
+                          <div className="text-xs text-gray-500 italic">{reservation.serviceTier.service.name}</div>
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getReservationStatusColor(reservation.status)}`}>
+                      <div className="font-bold text-gray-900">{reservation.consultant.name}</div>
+                      <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{reservation.consultant.specialty}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="font-bold">{new Date(reservation.startTime).toLocaleDateString('fr-FR')}</div>
+                      <div className="text-[10px] text-gray-400 font-bold uppercase">
+                        {new Date(reservation.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - {new Date(reservation.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getReservationStatusColor(reservation.status)}`}>
                         {reservation.status}
                       </span>
                     </td>
