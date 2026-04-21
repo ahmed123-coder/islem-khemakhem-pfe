@@ -90,8 +90,8 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
         body: JSON.stringify({
           serviceTierId: selectedTier.id,
           consultantId: selection.consultantId,
-          startTime: selection.date.toISOString(), // Simplified logic for demonstration, would usually combine with startHour
-          endTime: new Date(new Date(selection.date).setHours(selection.endHour)).toISOString(),
+          startTime: selection.startTime,
+          endTime: selection.endTime,
           meetingType: selectedMeetingType || 'ZOOM'
         })
       })
@@ -186,12 +186,22 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
               consultants={consultants} 
               onSelect={setSelection}
               scheduleStartDate={scheduleStartDate}
+              requiredDuration={
+                selectedTier?.sessionsConfig?.length > 0 
+                  ? selectedTier.sessionsConfig[0].duration / 60 
+                  : (selectedTier?.tierType === 'BASIC' || selectedTier?.tierType === 'ULTIMATE' ? 1.5 : 3)
+              }
               onNavigate={(days) => {
                 const newDate = new Date(scheduleStartDate)
                 newDate.setDate(newDate.getDate() + days)
                 const today = new Date()
                 today.setHours(0,0,0,0)
                 setScheduleStartDate(newDate < today ? today : newDate)
+              }}
+              onJumpToDate={(date) => {
+                const d = new Date(date)
+                d.setHours(0, 0, 0, 0)
+                setScheduleStartDate(d)
               }}
             />
 
@@ -200,7 +210,10 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
                 <div className="bg-[#2B5A8E] text-white p-6 rounded-[2rem] shadow-2xl flex items-center justify-between border border-white/10 backdrop-blur-md">
                   <div>
                     <div className="text-[10px] font-black text-blue-300 uppercase tracking-widest mb-1">Créneau sélectionné</div>
-                    <div className="font-bold">{selection.date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' })} à {selection.startHour}h</div>
+                    <div className="font-bold">
+                      {new Date(selection.startTime).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' })} à {new Date(selection.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                    <div className="text-[10px] opacity-60">Fin prévue à {new Date(selection.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
                   </div>
                   <button onClick={handlePurchase} className="bg-white text-blue-900 px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-amber-400 transition-colors">Confirmer la réservation</button>
                 </div>
@@ -212,7 +225,7 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
         {showMeetingModal && (
           <MeetingTypeModal 
             serviceName={selectedService?.name}
-            tierName={selectedTier?.name}
+            tierName={selectedTier?.tierType}
             onConfirm={handleMeetingTypeConfirm}
             onClose={() => setShowMeetingModal(false)}
           />
@@ -221,7 +234,7 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
         {showPaymentModal && selectedTier && (
           <PaymentModal 
             price={selectedTier.price}
-            tierName={selectedTier.name}
+            tierName={selectedTier.tierType}
             onSuccess={handlePaymentSuccess}
             onClose={() => setShowPaymentModal(false)}
           />

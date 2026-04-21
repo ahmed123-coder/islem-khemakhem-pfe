@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -48,7 +48,7 @@ async function main() {
     },
   });
 
-    const client2 = await prisma.user.create({
+  const client2 = await prisma.user.create({
     data: {
       email: 'client2@consultpro.com',
       password: hashedClientPassword,
@@ -71,7 +71,7 @@ async function main() {
       isActive: true,
     },
   });
-  
+
   const consultant2 = await prisma.consultant.create({
     data: {
       email: 'consultant2@consultpro.com',
@@ -112,7 +112,67 @@ async function main() {
   });
   console.log('✅ Created consultants');
 
-  // Create services with tiers
+  // Helper to create the 4 packs for each service
+  const createPacks = async (serviceId: string) => {
+    await prisma.serviceTier.createMany({
+      data: [
+        { 
+          serviceId, 
+          tierType: 'BASIC', 
+          price: 150, 
+          maxMessages: 20, 
+          maxCallDuration: 90, 
+          description: 'Pack 1 : Séance de découverte (1h30m)',
+          sessionsConfig: [
+            { label: 'Audit Initial', duration: 90 }
+          ]
+        },
+        { 
+          serviceId, 
+          tierType: 'STANDARD', 
+          price: 300, 
+          maxMessages: 50, 
+          maxCallDuration: 180, 
+          description: 'Pack 2 : Formation (3h)',
+          sessionsConfig: [
+            { label: 'Formation intensive', duration: 180 }
+          ]
+        },
+        { 
+          serviceId, 
+          tierType: 'PREMIUM', 
+          price: 750, 
+          maxMessages: 100, 
+          maxCallDuration: 450, 
+          canSelectConsultant: true,
+          description: 'Pack 3 : Formation + 3 séances (3h + 3x1h30m)',
+          sessionsConfig: [
+            { label: 'Formation de base', duration: 180 },
+            { label: 'Session de Suivi 1', duration: 90 },
+            { label: 'Session de Suivi 2', duration: 90 },
+            { label: 'Session de Suivi 3', duration: 90 }
+          ]
+        },
+        { 
+          serviceId, 
+          tierType: 'ULTIMATE', 
+          price: 1500, 
+          maxMessages: null, 
+          maxCallDuration: null, 
+          canSelectConsultant: true,
+          description: 'Pack 4 : Mise totale du projet',
+          sessionsConfig: [
+            { label: 'Kick-off Projet', duration: 180 },
+            { label: 'Accompagnement Hebdo 1', duration: 120 },
+            { label: 'Accompagnement Hebdo 2', duration: 120 },
+            { label: 'Accompagnement Hebdo 3', duration: 120 },
+            { label: 'Phase de Clôture', duration: 180 }
+          ]
+        },
+      ],
+    });
+  };
+
   const service1 = await prisma.service.create({
     data: {
       name: 'Management de la performance cachée',
@@ -124,14 +184,7 @@ async function main() {
       }
     },
   });
-
-  await prisma.serviceTier.createMany({
-    data: [
-      { serviceId: service1.id, tierType: 'BASIC', price: 300, maxMessages: 50, maxCallDuration: 60, description: 'Basic tier' },
-      { serviceId: service1.id, tierType: 'STANDARD', price: 500, maxMessages: 150, maxCallDuration: 180, canSelectConsultant: true, description: 'Standard tier' },
-      { serviceId: service1.id, tierType: 'PREMIUM', price: 800, maxMessages: null, maxCallDuration: null, canSelectConsultant: true, description: 'Premium tier' },
-    ],
-  });
+  await createPacks(service1.id);
 
   const service2 = await prisma.service.create({
     data: {
@@ -144,14 +197,7 @@ async function main() {
       }
     },
   });
-
-  await prisma.serviceTier.createMany({
-    data: [
-      { serviceId: service2.id, tierType: 'BASIC', price: 250, maxMessages: 40, maxCallDuration: 45, description: 'Basic tier' },
-      { serviceId: service2.id, tierType: 'STANDARD', price: 400, maxMessages: 120, maxCallDuration: 150, canSelectConsultant: true, description: 'Standard tier' },
-      { serviceId: service2.id, tierType: 'PREMIUM', price: 650, maxMessages: null, maxCallDuration: null, canSelectConsultant: true, description: 'Premium tier' },
-    ],
-  });
+  await createPacks(service2.id);
 
   const service3 = await prisma.service.create({
     data: {
@@ -164,14 +210,7 @@ async function main() {
       }
     },
   });
-
-  await prisma.serviceTier.createMany({
-    data: [
-      { serviceId: service3.id, tierType: 'BASIC', price: 300, maxMessages: 50, maxCallDuration: 60, description: 'Basic tier' },
-      { serviceId: service3.id, tierType: 'STANDARD', price: 450, maxMessages: 130, maxCallDuration: 150, canSelectConsultant: true, description: 'Standard tier' },
-      { serviceId: service3.id, tierType: 'PREMIUM', price: 700, maxMessages: null, maxCallDuration: null, canSelectConsultant: true, description: 'Premium tier' },
-    ],
-  });
+  await createPacks(service3.id);
 
   const service4 = await prisma.service.create({
     data: {
@@ -181,16 +220,9 @@ async function main() {
       isActive: true,
     },
   });
+  await createPacks(service4.id);
 
-  await prisma.serviceTier.createMany({
-    data: [
-      { serviceId: service4.id, tierType: 'BASIC', price: 200, maxMessages: 30, maxCallDuration: 45, description: 'Basic tier' },
-      { serviceId: service4.id, tierType: 'STANDARD', price: 350, maxMessages: 100, maxCallDuration: 120, canSelectConsultant: true, description: 'Standard tier' },
-      { serviceId: service4.id, tierType: 'PREMIUM', price: 550, maxMessages: null, maxCallDuration: null, canSelectConsultant: true, description: 'Premium tier' },
-    ],
-  });
-
-  console.log('✅ Created services with tiers');
+  console.log('✅ Created services with 4-pack system');
 
   // Create blogs
   await prisma.blog.createMany({
@@ -238,6 +270,7 @@ async function main() {
           phone: '+33 1 23 45 67 89',
           address: 'Paris, France',
         },
+      },
       {
         key: 'hero-solutions',
         value: {

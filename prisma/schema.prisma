@@ -76,6 +76,7 @@ model ServiceTier {
   maxCallDuration     Int?
   canSelectConsultant Boolean       @default(false)
   description         String?
+  sessionsConfig      Json?
   createdAt           DateTime      @default(now())
   orders              Order[]
   reservations        Reservation[]
@@ -270,6 +271,7 @@ enum TierType {
   BASIC
   STANDARD
   PREMIUM
+  ULTIMATE
 }
 
 enum OrderStatus {

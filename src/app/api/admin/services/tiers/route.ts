@@ -24,59 +24,71 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const body = await req.json()
-  const { serviceId, tierType, price, maxMessages, maxCallDuration, canSelectConsultant, description } = body
-
-  if (!serviceId || !tierType || price === undefined) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-  }
-
-  const tier = await prisma.serviceTier.create({
-    data: {
-      serviceId,
-      tierType: tierType as TierType,
-      price: Number(price),
-      maxMessages: maxMessages ? Number(maxMessages) : null,
-      maxCallDuration: maxCallDuration ? Number(maxCallDuration) : null,
-      canSelectConsultant: !!canSelectConsultant,
-      description
+  try {
+    const user = await getCurrentUser()
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-  })
 
-  return NextResponse.json(tier)
+    const body = await req.json()
+    const { serviceId, tierType, price, maxMessages, maxCallDuration, canSelectConsultant, description, sessionsConfig } = body
+
+    if (!serviceId || !tierType || price === undefined) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    }
+
+    const tier = await prisma.serviceTier.create({
+      data: {
+        serviceId,
+        tierType: tierType as TierType,
+        price: Number(price),
+        maxMessages: maxMessages ? Number(maxMessages) : null,
+        maxCallDuration: maxCallDuration ? Number(maxCallDuration) : null,
+        canSelectConsultant: !!canSelectConsultant,
+        description,
+        sessionsConfig: sessionsConfig ? (typeof sessionsConfig === 'string' ? JSON.parse(sessionsConfig) : sessionsConfig) : null
+      }
+    })
+
+    return NextResponse.json(tier)
+  } catch (error: any) {
+    console.error('Error creating tier:', error)
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 })
+  }
 }
 
 export async function PUT(req: NextRequest) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const body = await req.json()
-  const { id, tierType, price, maxMessages, maxCallDuration, canSelectConsultant, description } = body
-
-  if (!id) {
-    return NextResponse.json({ error: 'ID is required' }, { status: 400 })
-  }
-
-  const tier = await prisma.serviceTier.update({
-    where: { id },
-    data: {
-      tierType: tierType as TierType,
-      price: Number(price),
-      maxMessages: maxMessages ? Number(maxMessages) : null,
-      maxCallDuration: maxCallDuration ? Number(maxCallDuration) : null,
-      canSelectConsultant: !!canSelectConsultant,
-      description
+  try {
+    const user = await getCurrentUser()
+    if (!user || user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
-  })
 
-  return NextResponse.json(tier)
+    const body = await req.json()
+    const { id, tierType, price, maxMessages, maxCallDuration, canSelectConsultant, description, sessionsConfig } = body
+
+    if (!id) {
+      return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+    }
+
+    const tier = await prisma.serviceTier.update({
+      where: { id },
+      data: {
+        tierType: tierType as TierType,
+        price: Number(price),
+        maxMessages: maxMessages ? Number(maxMessages) : null,
+        maxCallDuration: maxCallDuration ? Number(maxCallDuration) : null,
+        canSelectConsultant: !!canSelectConsultant,
+        description,
+        sessionsConfig: sessionsConfig ? (typeof sessionsConfig === 'string' ? JSON.parse(sessionsConfig) : sessionsConfig) : null
+      }
+    })
+
+    return NextResponse.json(tier)
+  } catch (error: any) {
+    console.error('Error updating tier:', error)
+    return NextResponse.json({ error: error.message || 'Internal Server Error' }, { status: 500 })
+  }
 }
 
 export async function DELETE(req: NextRequest) {

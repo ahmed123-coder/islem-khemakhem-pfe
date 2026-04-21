@@ -33,17 +33,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Consultant not found' }, { status: 404 })
     }
 
-    // Check for overlapping reservations
+    // Check for overlapping reservations with a 15-minute buffer
+    const BUFFER_MS = 15 * 60 * 1000
+    const bufferStartTime = new Date(new Date(startTime).getTime() - BUFFER_MS)
+    const bufferEndTime = new Date(new Date(endTime).getTime() + BUFFER_MS)
+
     const overlapping = await prisma.reservation.findFirst({
       where: {
         consultantId: consultantId,
-        OR: [
-          {
-            AND: [
-              { startTime: { lt: new Date(endTime) } },
-              { endTime: { gt: new Date(startTime) } }
-            ]
-          }
+        AND: [
+          { startTime: { lt: bufferEndTime } },
+          { endTime: { gt: bufferStartTime } }
         ]
       }
     })
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
         userId: user.id,
         type: 'ORDER',
         title: 'Commande créée',
-        message: `Votre commande pour ${serviceTier.service.name} (${serviceTier.tierType}) a été créée. Appel prévu le ${new Date(startTime).toLocaleDateString()} de ${new Date(startTime).getHours()}h à ${new Date(endTime).getHours()}h.`
+        message: `Votre commande pour ${serviceTier.service.name} (${serviceTier.tierType}) a été créée. RDV prévu le ${new Date(startTime).toLocaleDateString('fr-FR')} de ${new Date(startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} à ${new Date(endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}.`
       }
     })
 

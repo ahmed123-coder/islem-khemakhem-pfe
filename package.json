@@ -8,11 +8,11 @@
     "start": "NODE_ENV=production node server.js",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts",
+    "seed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" prisma/seed.ts",
     "test-zoom": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" src/scripts/test-zoom.ts"
   },
   "prisma": {
-    "seed": "ts-node --compiler-options {\"module\":\"CommonJS\"} prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.19.0",

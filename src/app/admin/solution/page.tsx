@@ -48,12 +48,13 @@ type Service = {
 type Tier = { 
   id: string; 
   serviceId: string; 
-  tierType: 'BASIC' | 'STANDARD' | 'PREMIUM'; 
+  tierType: 'BASIC' | 'STANDARD' | 'PREMIUM' | 'ULTIMATE'; 
   price: number; 
   maxMessages: number | null; 
   maxCallDuration: number | null; 
   canSelectConsultant: boolean; 
   description: string | null;
+  sessionsConfig?: { duration: number; label: string }[];
 }
 
 export default function ServicesCMS() {
@@ -78,7 +79,8 @@ export default function ServicesCMS() {
     maxMessages: null,
     maxCallDuration: null,
     canSelectConsultant: false,
-    description: ''
+    description: '',
+    sessionsConfig: []
   })
 
   React.useEffect(() => { 
@@ -476,6 +478,7 @@ export default function ServicesCMS() {
                                     <option value="BASIC">BASIC</option>
                                     <option value="STANDARD">STANDARD</option>
                                     <option value="PREMIUM">PREMIUM</option>
+                                    <option value="ULTIMATE">ULTIMATE</option>
                                   </select>
                                </div>
                                <div className="space-y-2">
@@ -488,8 +491,99 @@ export default function ServicesCMS() {
                                </div>
                                <div className="space-y-2">
                                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Call Quota (Min)</label>
-                                 <Input placeholder="None" type="number" value={tierForm.maxCallDuration || ''} onChange={e => setTierForm({ ...tierForm, maxCallDuration: e.target.value ? Number(e.target.value) : null })} className="h-12 rounded-2xl bg-white font-bold" />
+                                 <Input 
+                                   placeholder={tierForm.tierType === 'ULTIMATE' ? 'Unlimited' : 'None'} 
+                                   type="number" 
+                                   disabled={tierForm.tierType === 'ULTIMATE'}
+                                   value={tierForm.tierType === 'ULTIMATE' ? '' : (tierForm.maxCallDuration || '')} 
+                                   onChange={e => setTierForm({ ...tierForm, maxCallDuration: e.target.value ? Number(e.target.value) : null })} 
+                                   className="h-12 rounded-2xl bg-white font-bold disabled:bg-slate-50 disabled:text-slate-400" 
+                                 />
                                </div>
+
+                               {/* Sessions Config Section */}
+                               <div className="col-span-2 space-y-4 pt-4 border-t border-slate-50">
+                                 <div className="flex items-center justify-between">
+                                    <div className="flex flex-col">
+                                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-900">Config: Reservation Pipeline</label>
+                                      <p className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Define sequence of engagement sessions</p>
+                                    </div>
+                                    <Button 
+                                      type="button"
+                                      variant="ghost" 
+                                      size="sm" 
+                                      onClick={() => setTierForm({ 
+                                        ...tierForm, 
+                                        sessionsConfig: [...(tierForm.sessionsConfig || []), { duration: 60, label: `Session ${(tierForm.sessionsConfig?.length || 0) + 1}` }] 
+                                      })}
+                                      className="text-blue-600 font-bold text-[10px] h-8 rounded-lg bg-blue-50 hover:bg-blue-100"
+                                    >
+                                      <Plus className="w-3 h-3 mr-1" /> Add Phase
+                                    </Button>
+                                 </div>
+
+                                 <div className="space-y-3">
+                                   {tierForm.sessionsConfig?.map((session, idx) => (
+                                     <div key={idx} className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 duration-300">
+                                       <div className="flex-1 flex items-center gap-2">
+                                          <div className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400">{idx + 1}</div>
+                                          <Input 
+                                              placeholder="Label (e.g. Kickoff)" 
+                                              value={session.label} 
+                                              onChange={e => {
+                                                const newCfg = [...(tierForm.sessionsConfig || [])]
+                                                newCfg[idx].label = e.target.value
+                                                setTierForm({ ...tierForm, sessionsConfig: newCfg })
+                                              }}
+                                              className="h-10 rounded-xl bg-white/50 text-xs font-bold" 
+                                          />
+                                       </div>
+                                       <div className="flex items-center gap-2 bg-slate-100 rounded-xl px-2">
+                                          <Input 
+                                            type="number" 
+                                            value={session.duration} 
+                                            onChange={e => {
+                                              const newCfg = [...(tierForm.sessionsConfig || [])]
+                                              newCfg[idx].duration = Number(e.target.value)
+                                              setTierForm({ ...tierForm, sessionsConfig: newCfg })
+                                            }}
+                                            className="w-20 h-8 border-none bg-transparent text-xs font-black text-center" 
+                                          />
+                                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter pr-2">Min</span>
+                                       </div>
+                                       <Button 
+                                         type="button"
+                                         variant="ghost" 
+                                         size="icon" 
+                                         onClick={() => {
+                                           const newCfg = (tierForm.sessionsConfig || []).filter((_, i) => i !== idx)
+                                           setTierForm({ ...tierForm, sessionsConfig: newCfg })
+                                          }}
+                                         className="h-10 w-10 text-red-500 hover:bg-red-50 rounded-xl flex-shrink-0"
+                                       >
+                                         <Trash2 className="w-4 h-4" />
+                                       </Button>
+                                     </div>
+                                   ))}
+                                 </div>
+                                 
+                                 {/* Validation Message */}
+                                 {tierForm.sessionsConfig && tierForm.sessionsConfig.length > 0 && (
+                                   <div className={cn(
+                                     "p-3 rounded-xl border flex items-center gap-2",
+                                     tierForm.tierType !== 'ULTIMATE' && tierForm.maxCallDuration && tierForm.sessionsConfig.reduce((acc, s) => acc + s.duration, 0) > tierForm.maxCallDuration
+                                       ? "bg-red-50 border-red-100 text-red-600"
+                                       : "bg-emerald-50 border-emerald-100 text-emerald-600"
+                                   )}>
+                                      <AlertCircle className="w-4 h-4" />
+                                      <span className="text-[10px] font-bold uppercase tracking-tight">
+                                        Pipeline Total: {tierForm.sessionsConfig.reduce((acc, s) => acc + s.duration, 0)} min 
+                                        {tierForm.tierType === 'ULTIMATE' ? ' (Illimité autorisé)' : ` / ${tierForm.maxCallDuration || 0} min allocation`}
+                                      </span>
+                                   </div>
+                                 )}
+                               </div>
+
                                <div className="col-span-2 flex items-center gap-3 p-4 bg-white/50 rounded-2xl border border-slate-100/50">
                                   <input 
                                     type="checkbox" 
