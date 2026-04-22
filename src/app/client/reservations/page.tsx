@@ -194,7 +194,7 @@ export default function ClientReservations() {
                     <td className="px-6 py-4">
                       <div className="font-bold">{new Date(reservation.startTime).toLocaleDateString('fr-FR')}</div>
                       <div className="text-[10px] text-gray-400 font-bold uppercase">
-                        {new Date(reservation.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - {new Date(reservation.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(reservation.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - {new Date(new Date(reservation.endTime).getTime() - 15 * 60 * 1000).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                       </div>
                     </td>
                     <td className="px-6 py-4">

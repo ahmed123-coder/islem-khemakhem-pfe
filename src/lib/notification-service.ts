@@ -71,6 +71,16 @@ export async function notifyReservationUpdate(reservationId: string, status: str
     `Your reservation has been ${status.toLowerCase()}`,
     reservation.orderId ?? undefined
   )
+
+  if (reservation.orderId) {
+    emitToRoom(`order:${reservation.orderId}`, 'notification', {
+      type: 'RESERVATION',
+      orderId: reservation.orderId,
+      title: 'Reservation Updated',
+      message: `Reservation status changed to ${status.toLowerCase()}`,
+      timestamp: new Date().toISOString()
+    })
+  }
 }
 
 export async function notifyOrderStatusUpdate(orderId: string, status: string) {
@@ -127,14 +137,29 @@ export async function notifyNewReservation(reservationId: string) {
   })
   if (!reservation || !reservation.consultantId) return
 
+  const payload = {
+    id: reservation.id,
+    type: 'RESERVATION',
+    orderId: reservation.orderId,
+    title: 'New Reservation Request',
+    message: `New reservation from ${reservation.client.name || reservation.client.email} for ${new Date(reservation.startTime).toLocaleString()}`,
+    timestamp: new Date().toISOString()
+  }
+
   await createNotification(
     reservation.consultantId,
     'CONSULTANT',
     'RESERVATION',
-    'New Reservation Request',
-    `New reservation from ${reservation.client.name || reservation.client.email} for ${new Date(reservation.startTime).toLocaleString()}`,
+    payload.title,
+    payload.message,
     reservation.orderId ?? undefined
   )
+
+  // Double emission for maximum reliability
+  emitToRoom(`user:${reservation.consultantId}`, 'notification', payload)
+  if (reservation.orderId) {
+    emitToRoom(`order:${reservation.orderId}`, 'notification', payload)
+  }
 }
 
 export async function notifyReservationDelete(reservationId: string, deletedBy: 'CLIENT' | 'CONSULTANT') {
@@ -156,5 +181,15 @@ export async function notifyReservationDelete(reservationId: string, deletedBy: 
     `A reservation with your ${senderLabel} has been deleted.`,
     reservation.orderId ?? undefined
   )
+
+  if (reservation.orderId) {
+    emitToRoom(`order:${reservation.orderId}`, 'notification', {
+      type: 'RESERVATION',
+      orderId: reservation.orderId,
+      title: 'Reservation Cancelled',
+      message: `A reservation has been deleted by the ${senderLabel}`,
+      timestamp: new Date().toISOString()
+    })
+  }
 }
 

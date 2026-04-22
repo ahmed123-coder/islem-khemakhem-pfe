@@ -35,6 +35,7 @@ export default function NotificationProvider({ children }: { children: React.Rea
 
       socketInstance = initSocketClient(userId, role)
       if (socketInstance) {
+        console.log(`[Socket] Initializing for ${role}: ${userId}`)
         socketInstance.on('notification', handler)
         window.dispatchEvent(new CustomEvent('socket-ready'))
       }
@@ -42,10 +43,16 @@ export default function NotificationProvider({ children }: { children: React.Rea
 
     setupSocket()
 
+    const handleAuthChange = () => setupSocket()
+    window.addEventListener('storage', handleAuthChange)
+    window.addEventListener('auth-change', handleAuthChange)
+
     return () => { 
       if (socketInstance) {
         socketInstance.off('notification', handler)
       }
+      window.removeEventListener('storage', handleAuthChange)
+      window.removeEventListener('auth-change', handleAuthChange)
     }
   }, [])
 

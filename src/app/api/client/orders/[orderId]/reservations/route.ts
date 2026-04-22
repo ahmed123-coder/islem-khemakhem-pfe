@@ -106,9 +106,8 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       const nextIndex = completedCount
       const sessionLabel = sessionsConfig[nextIndex]?.label || `Séance ${nextIndex + 1}`
 
-      // 3. Check for consultant availability (overlapping) with 15min buffer
+      // 3. Check for consultant availability (overlapping)
       const BUFFER_MS = 15 * 60 * 1000
-      const bufferStart = new Date(new Date(startTime).getTime() - BUFFER_MS)
       const bufferEnd = new Date(new Date(endTime).getTime() + BUFFER_MS)
 
       const overlapping = await tx.reservation.findFirst({
@@ -116,9 +115,9 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
           consultantId: order.consultantId,
           AND: [
             { startTime: { lt: bufferEnd } },
-            { endTime: { gt: bufferStart } }
+            { endTime: { gt: new Date(startTime) } }
           ],
-          NOT: { status: 'CANCELLED' } // Don't block if it was just a cancelled slot
+          NOT: { status: 'CANCELLED' }
         }
       })
 
@@ -126,7 +125,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         return NextResponse.json({ error: 'Ce créneau est déjà réservé par un autre client.' }, { status: 409 })
       }
 
-      // 4. Create the reservation
+      // 4. Create the reservation with 15-minute buffer
       const reservation = await tx.reservation.create({
         data: {
           orderId: order.id,
@@ -134,7 +133,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
           consultantId: order.consultantId,
           serviceTierId: order.serviceTierId,
           startTime: new Date(startTime),
-          endTime: new Date(endTime),
+          endTime: bufferEnd, // This already has the 15min buffer from step 3 above
           meetingType: meetingType === 'SUR_PLACE' ? 'SUR_PLACE' : 'ZOOM',
           sessionIndex: nextIndex,
           sessionLabel: sessionLabel,

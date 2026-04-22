@@ -34,6 +34,7 @@ import {
   Menu,
   X
 } from 'lucide-react'
+import { format, isSameDay } from 'date-fns'
 import { toast } from 'react-hot-toast'
 import { JoinZoomButton } from '@/components/JoinZoomButton'
 import { getSocket } from '@/lib/socket-client'
@@ -74,7 +75,7 @@ export default function OrderDetails() {
     return date.getTime()
   })
 
-  const HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17]
+  const SLOTS = Array.from({ length: 36 }, (_, i) => i * 0.25 + 9) // 9:00 to 18:00 in 15min steps
   const DAYS = useMemo(() => {
     const days = []
     const start = new Date(currentWeekStart)
@@ -182,9 +183,9 @@ export default function OrderDetails() {
     if (order.status !== 'ACTIVE' || reserving) return
 
     const startTime = new Date(date)
-    startTime.setHours(startHour, 0, 0, 0)
+    startTime.setHours(Math.floor(startHour), Math.round((startHour % 1) * 60), 0, 0)
     const endTime = new Date(date)
-    endTime.setHours(endHour, 0, 0, 0)
+    endTime.setHours(Math.floor(endHour), Math.round((endHour % 1) * 60), 0, 0)
 
     if (startTime < new Date()) {
       toast.error('Vous ne pouvez pas réserver un créneau dans le passé')
@@ -237,16 +238,16 @@ export default function OrderDetails() {
     }
   }
 
-  const getReservationAt = (date: Date, hour: number) => {
+  const getReservationAt = (date: Date, slot: number) => {
     return reservations.find(r => {
       const rStart = new Date(r.startTime)
       const rEnd = new Date(r.endTime)
-      const cellStart = new Date(date)
-      cellStart.setHours(hour, 0, 0, 0)
-      const cellEnd = new Date(date)
-      cellEnd.setHours(hour + 1, 0, 0, 0)
-      return rStart.toDateString() === date.toDateString() &&
-             cellStart < rEnd && cellEnd > rStart
+      
+      const slotTime = new Date(date)
+      slotTime.setHours(Math.floor(slot), Math.round((slot % 1) * 60), 0, 0)
+      
+      const slotMs = slotTime.getTime()
+      return isSameDay(rStart, date) && slotMs >= rStart.getTime() && slotMs < rEnd.getTime()
     })
   }
 
@@ -339,6 +340,39 @@ export default function OrderDetails() {
   if (!order) return <div className="p-20 text-center font-bold">Subscription not found.</div>
 
   const myReservations = reservations.filter(r => r.orderId === orderId)
+
+  // Logic to determine the next session to book
+  const getNextSessionInfo = () => {
+    if (!order?.serviceTier) return { label: 'Séance', duration: 1 }
+    
+    // Example: Discovery (1h), Training (2h), Specialized (3h)
+    // We look at the order's tier to decide
+    const tier = order.serviceTier.tierType
+    const durations: Record<string, number[]> = {
+      'DISCOVERY': [1],
+      'TRAINING': [2],
+      'TRAINING_PLUS': [2, 2],
+      'TOTAL_PROJECT': [3, 3, 3]
+    }
+    
+    const sessionDurations = durations[tier] || [1]
+    
+    // Check how many successful/pending sessions we have
+    const activeRes = myReservations.filter(r => 
+      ['COMPLETED', 'CONFIRMED', 'PENDING'].includes(r.status)
+    ).sort((a, b) => a.sessionIndex - b.sessionIndex)
+    
+    const nextIndex = activeRes.length
+    const duration = sessionDurations[nextIndex] || sessionDurations[sessionDurations.length - 1]
+    
+    return {
+      index: nextIndex,
+      label: `Séance ${nextIndex + 1}`,
+      duration: duration
+    }
+  }
+
+  const nextSession = getNextSessionInfo()
 
   return (
     <div className="min-h-full bg-[#F8FAFC] p-6 lg:p-12 font-sans overflow-x-hidden">
@@ -438,7 +472,7 @@ export default function OrderDetails() {
                                        <td className="px-8 py-6">
                                           <div className="font-bold text-slate-900 text-sm font-sans">{new Date(reservation.startTime).toLocaleDateString()}</div>
                                           <div className="text-[11px] text-slate-400 font-bold uppercase mt-0.5 tracking-tight font-sans">
-                                             {new Date(reservation.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} – {new Date(reservation.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                              {format(new Date(reservation.startTime), 'HH:mm')} – {format(new Date(new Date(reservation.endTime).getTime() - 15 * 60 * 1000), 'HH:mm')}
                                           </div>
                                        </td>
                                        <td className="px-8 py-6">
@@ -514,11 +548,17 @@ export default function OrderDetails() {
                            <thead className="bg-slate-50/50">
                               <tr className="border-b border-slate-100">
                                  <th className="p-6 text-slate-400 font-black text-[10px] uppercase tracking-widest text-left border-r border-slate-100 sticky left-0 z-20 bg-slate-50/80 backdrop-blur-sm">Jour / Heure</th>
-                                 {HOURS.map(hour => (
-                                    <th key={hour} className="p-6 text-slate-400 font-black text-[10px] uppercase tracking-widest text-center border-r border-slate-100 min-w-[100px]">
-                                       {hour}:00
-                                    </th>
-                                 ))}
+                                 {SLOTS.map(slot => {
+                                    const isHour = slot % 1 === 0
+                                    return (
+                                       <th key={slot} className={cn(
+                                          "p-4 text-center font-black text-[9px] uppercase tracking-tighter border-r border-slate-100 min-w-[70px]",
+                                          isHour ? "text-blue-600 bg-blue-50/30" : "text-slate-300"
+                                       )}>
+                                          {isHour ? `${slot}:00` : Math.round((slot % 1) * 60)}
+                                       </th>
+                                    )
+                                 })}
                               </tr>
                            </thead>
                            <tbody>
@@ -531,19 +571,23 @@ export default function OrderDetails() {
                                     {(() => {
                                        const cells = []
                                        let i = 0
-                                       while (i < HOURS.length) {
-                                          const hour = HOURS[i]
-                                          const res = getReservationAt(day, hour)
-                                          const isPast = new Date(day).setHours(hour) < new Date().getTime()
+                                       while (i < SLOTS.length) {
+                                          const slot = SLOTS[i]
+                                          const res = getReservationAt(day, slot)
+                                          const isPast = new Date(day).setHours(Math.floor(slot), Math.round((slot % 1) * 60)) < new Date().getTime()
                                           const isSelectable = !res && order.status === 'ACTIVE' && !isPast
                                           const isSameDay = dragStart && dragStart.day.toDateString() === day.toDateString()
-                                          const isInDrag = isSameDay && dragStart && dragEnd && hour >= dragStart.hour && hour <= dragEnd.hour
+                                          const isInDrag = isSameDay && dragStart && dragEnd && slot >= dragStart.hour && slot <= dragEnd.hour
 
                                           if (res) {
-                                             const resStart = new Date(res.startTime).getHours()
-                                             const resEnd = new Date(res.endTime).getHours()
+                                             const rStart = new Date(res.startTime)
+                                             const rEnd = new Date(res.endTime)
+                                             
+                                             const startHour = rStart.getHours() + rStart.getMinutes() / 60
+                                             const endHour = rEnd.getHours() + rEnd.getMinutes() / 60
+                                             
                                              let span = 0
-                                             while (i + span < HOURS.length && HOURS[i + span] >= resStart && HOURS[i + span] < resEnd) span++
+                                             while (i + span < SLOTS.length && SLOTS[i + span] < endHour) span++
                                              if (span === 0) span = 1
 
                                              const isOwn = res.orderId === orderId
@@ -551,41 +595,22 @@ export default function OrderDetails() {
 
                                              cells.push(
                                                 <td
-                                                   key={hour}
+                                                   key={slot}
                                                    colSpan={span}
                                                    className="h-16 p-1 border-r border-slate-50 relative group/cell"
                                                    onClick={() => isOwn && setSelectedRes(res)}
                                                 >
                                                    <div className={cn(
                                                       bgColor,
-                                                      "h-full rounded-2xl flex flex-col items-center justify-center transition-all shadow-md group-hover/cell:scale-[1.02] group-hover/cell:shadow-xl",
+                                                      "h-full rounded-2xl flex flex-col items-center justify-center transition-all shadow-md group-hover/cell:scale-[1.01] group-hover/cell:shadow-xl",
                                                       isOwn ? 'cursor-pointer' : 'cursor-help opacity-70 grayscale-[0.3]'
                                                    )}>
-                                                      <span className="text-white font-black text-[10px] uppercase tracking-[0.15em] drop-shadow-sm">
+                                                      <span className="text-white font-black text-[9px] uppercase tracking-[0.15em] drop-shadow-sm">
                                                          {isOwn ? 'Ma Session' : 'Occupé'}
                                                       </span>
-                                                      <span className="text-white/90 text-[9px] font-bold mt-0.5 tracking-tighter">
-                                                         {resStart}h \u2013 {resEnd}h
+                                                      <span className="text-white/90 text-[8px] font-bold mt-0.5 tracking-tighter">
+                                                         {format(rStart, 'HH:mm')} – {format(new Date(rEnd.getTime() - (isOwn ? 15*60*1000 : 0)), 'HH:mm')}
                                                       </span>
-                                                   </div>
-                                                   {/* Details Tooltip */}
-                                                   <div className="hidden group-hover/cell:block absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-4 w-56 bg-white border border-slate-100 rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.1)] p-4 text-left pointer-events-none transition-all">
-                                                      <div className="font-black text-slate-900 text-[10px] uppercase tracking-widest mb-2 pb-2 border-b border-slate-50">{isOwn ? 'Détails de ma session' : 'Créneau non-disponible'}</div>
-                                                      <div className="space-y-2">
-                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Statut</span>
-                                                            <Badge className={cn("text-[8px] font-black uppercase px-2 py-0.5 rounded-md border-none", getBadgeStatusColor(res.status))}>{res.status}</Badge>
-                                                         </div>
-                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Planning</span>
-                                                            <span className="text-[9px] font-black text-slate-900">{resStart}h – {resEnd}h</span>
-                                                         </div>
-                                                         <div className="flex items-center justify-between">
-                                                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Type</span>
-                                                            <span className="text-[9px] font-black text-blue-500 uppercase">{res.meetingType}</span>
-                                                         </div>
-                                                      </div>
-                                                      <div className="absolute top-full left-1/2 -translate-x-1/2 border-[8px] border-transparent border-t-white"></div>
                                                    </div>
                                                 </td>
                                              )
@@ -593,22 +618,40 @@ export default function OrderDetails() {
                                           } else {
                                              cells.push(
                                                 <td
-                                                   key={hour}
-                                                   className="h-16 p-1 border-r border-slate-50 min-w-[90px] group/cell select-none"
+                                                   key={slot}
+                                                   className="h-16 p-1 border-r border-slate-50 min-w-[70px] group/cell select-none"
                                                    onMouseDown={() => {
                                                       if (!isSelectable) return
-                                                      setDragStart({ day, hour })
-                                                      setDragEnd({ day, hour })
+                                                      
+                                                      const duration = nextSession.duration
+                                                      const calculatedEndHour = slot + duration
+                                                      
+                                                      let finalEndHour = calculatedEndHour
+                                                      for(let h = slot; h < calculatedEndHour; h += 0.25) {
+                                                         if (getReservationAt(day, h)) {
+                                                            finalEndHour = h
+                                                            break
+                                                         }
+                                                      }
+                                                      
+                                                      if (finalEndHour > slot) {
+                                                         setPendingSlot({ day, startHour: slot, endHour: finalEndHour })
+                                                      } else {
+                                                         toast.error('Pas assez d\'espace pour cette séance')
+                                                      }
+
+                                                      setDragStart({ day, hour: slot })
+                                                      setDragEnd({ day, hour: slot })
                                                       setIsDragging(true)
                                                    }}
                                                    onMouseEnter={() => {
-                                                      if (isDragging && dragStart && dragStart.day.toDateString() === day.toDateString() && hour >= dragStart.hour) {
-                                                         setDragEnd({ day, hour })
+                                                      if (isDragging && dragStart && dragStart.day.toDateString() === day.toDateString() && slot >= dragStart.hour) {
+                                                         setDragEnd({ day, hour: slot })
                                                       }
                                                    }}
                                                    onMouseUp={() => {
                                                       if (isDragging && dragStart && dragEnd) {
-                                                         setPendingSlot({ day: dragStart.day, startHour: dragStart.hour, endHour: dragEnd.hour + 1 })
+                                                         setPendingSlot({ day: dragStart.day, startHour: dragStart.hour, endHour: dragEnd.hour + 0.25 })
                                                       }
                                                       setIsDragging(false)
                                                       setDragStart(null)
@@ -625,9 +668,9 @@ export default function OrderDetails() {
                                                          "text-[10px] font-black transition-colors",
                                                          isPast ? 'text-slate-200' :
                                                          isInDrag ? 'text-white' :
-                                                         'text-slate-100 group-hover/cell:text-blue-400'
+                                                         'text-slate-50 group-hover/cell:text-blue-400'
                                                       )}>
-                                                         {isInDrag ? (hour === dragStart?.hour ? '\u25B6' : '\u2014') : '\u25CB'}
+                                                         {isInDrag ? (slot === dragStart?.hour ? '\u25B6' : '\u2014') : '\u25CB'}
                                                       </span>
                                                    </div>
                                                 </td>

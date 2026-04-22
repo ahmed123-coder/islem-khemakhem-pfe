@@ -47,6 +47,7 @@ export default function LoginPage() {
 
       localStorage.setItem('userId', data.user.id)
       localStorage.setItem('role', role)
+      window.dispatchEvent(new CustomEvent('auth-change'))
       router.push(redirectPath)
       router.refresh()
     } else {

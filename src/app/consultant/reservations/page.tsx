@@ -59,7 +59,7 @@ import {
   DialogContent,
 } from '@/components/ui/dialog'
 
-const HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17]
+const SLOTS = Array.from({ length: 36 }, (_, i) => i * 0.25 + 9) // 9:00 to 18:00 in 15min steps
 
 function getMonday(date: Date) {
   const d = new Date(date)
@@ -154,13 +154,16 @@ export default function ConsultantReservations() {
     setCurrentWeekStart(d)
   }
 
-  const getReservationAt = (date: Date, hour: number) => {
+  const getReservationAt = (date: Date, slot: number) => {
     return reservations.find(r => {
       const rStart = new Date(r.startTime)
       const rEnd = new Date(r.endTime)
-      const cellStart = new Date(date); cellStart.setHours(hour, 0, 0, 0)
-      const cellEnd = new Date(date); cellEnd.setHours(hour + 1, 0, 0, 0)
-      return isSameDay(rStart, date) && cellStart < rEnd && cellEnd > rStart
+      
+      const slotTime = new Date(date)
+      slotTime.setHours(Math.floor(slot), Math.round((slot % 1) * 60), 0, 0)
+      
+      const slotMs = slotTime.getTime()
+      return isSameDay(rStart, date) && slotMs >= rStart.getTime() && slotMs < rEnd.getTime()
     })
   }
 
@@ -266,11 +269,17 @@ export default function ConsultantReservations() {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100">
                   <th className="py-6 px-8 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 border-r border-slate-100 w-44">Timeline / Day</th>
-                  {HOURS.map(h => (
-                    <th key={h} className="py-6 text-center text-xs font-black text-slate-900 border-r border-slate-100 last:border-r-0">
-                      {h}:00
-                    </th>
-                  ))}
+                  {SLOTS.map(s => {
+                    const isHour = s % 1 === 0
+                    return (
+                      <th key={s} className={cn(
+                        "py-4 text-center text-[9px] font-black border-r border-slate-100 last:border-r-0 min-w-[60px]",
+                        isHour ? "text-slate-900 bg-slate-100/50" : "text-slate-300"
+                      )}>
+                        {isHour ? `${s}:00` : Math.round((s % 1) * 60)}
+                      </th>
+                    )
+                  })}
                 </tr>
               </thead>
               <tbody>
@@ -283,36 +292,47 @@ export default function ConsultantReservations() {
                     {(() => {
                       const cells = []
                       let i = 0
-                      while (i < HOURS.length) {
-                        const hour = HOURS[i]
-                        const res = getReservationAt(day, hour)
+                      while (i < SLOTS.length) {
+                        const slot = SLOTS[i]
+                        const res = getReservationAt(day, slot)
                         if (res) {
-                          const resStart = new Date(res.startTime).getHours()
-                          const resEnd = new Date(res.endTime).getHours()
+                          const rStart = new Date(res.startTime)
+                          const rEnd = new Date(res.endTime)
+                          
+                          // Calculate how many 15min slots this reservation covers
+                          const startHour = rStart.getHours() + rStart.getMinutes() / 60
+                          const endHour = rEnd.getHours() + rEnd.getMinutes() / 60
+                          
                           let span = 0
-                          while (i + span < HOURS.length && HOURS[i + span] >= resStart && HOURS[i + span] < resEnd) span++
+                          while (i + span < SLOTS.length && SLOTS[i + span] < endHour) {
+                            span++
+                          }
+                          
                           if (span === 0) span = 1
+                          
                           cells.push(
-                            <td key={hour} colSpan={span} className="p-1.5 border-r border-slate-100 last:border-r-0 relative">
+                            <td key={slot} colSpan={span} className="p-1.5 border-r border-slate-100 last:border-r-0 relative">
                               <button
                                 onClick={() => setSelectedRes(res)}
                                 className={cn(
                                   getStatusColorClass(res.status),
-                                  "w-full h-16 rounded-2xl flex flex-col items-center justify-center transition-all hover:scale-[1.02] active:scale-95 shadow-lg group relative overflow-hidden"
+                                  "w-full h-16 rounded-2xl flex flex-col items-center justify-center transition-all hover:scale-[1.01] active:scale-95 shadow-lg group relative overflow-hidden"
                                 )}
                               >
                                 <div className="absolute top-0 right-0 w-12 h-12 bg-white/10 rounded-full blur-xl -mr-6 -mt-6" />
-                                <span className="font-black text-[10px] uppercase tracking-widest leading-none z-10 truncate max-w-full px-2">{res.client?.name || 'Client'}</span>
-                                <span className="text-[9px] font-black opacity-60 z-10">{resStart}:00 – {resEnd}:00</span>
+                                <span className="font-black text-[9px] uppercase tracking-widest leading-none z-10 truncate max-w-full px-2">{res.client?.name || 'Client'}</span>
+                                <span className="text-[8px] font-black opacity-60 z-10 mt-1">
+                                  {format(rStart, 'HH:mm')} – {format(rEnd, 'HH:mm')}
+                                </span>
                               </button>
                             </td>
                           )
                           i += span
                         } else {
                           cells.push(
-                            <td key={hour} className="p-2 border-r border-slate-100 last:border-r-0 h-20">
-                              <div className="w-full h-full rounded-2xl border border-dashed border-slate-50 flex items-center justify-center group-hover:border-emerald-100 transition-colors">
-                                 <div className="w-1.5 h-1.5 rounded-full bg-slate-50 group-hover:bg-emerald-100 transition-all" />
+                            <td key={slot} className="p-0 border-r border-slate-100 last:border-r-0 h-20 min-w-[60px]">
+                              <div className="w-full h-full border-dashed border-slate-50 flex items-center justify-center group-hover:bg-emerald-50/20 transition-colors">
+                                 <div className="w-1 h-1 rounded-full bg-slate-100 opacity-20" />
                               </div>
                             </td>
                           )

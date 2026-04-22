@@ -21,12 +21,18 @@ app.prepare().then(() => {
 
   io.on('connection', (socket) => {
     socket.on('join', ({ userId, role }) => {
-      if (userId) socket.join(`user:${userId}`)
+      if (userId) {
+        socket.join(`user:${userId}`)
+        console.log(`[Socket] User ${userId} (${role}) joined room user:${userId}`)
+      }
       if (role) socket.join(`role:${role}`)
     })
 
     socket.on('join:order', (orderId) => {
-      if (orderId) socket.join(`order:${orderId}`)
+      if (orderId) {
+        socket.join(`order:${orderId}`)
+        console.log(`[Socket] Joined order room: order:${orderId}`)
+      }
     })
   })
 

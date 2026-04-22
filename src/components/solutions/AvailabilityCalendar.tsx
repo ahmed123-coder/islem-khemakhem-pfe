@@ -52,8 +52,8 @@ export default function AvailabilityCalendar({
       .catch(() => {})
   }, [])
 
-  // Slots in 30 minute increments (9:00 to 18:00)
-  const slots = Array.from({ length: 18 }, (_, i) => i * 0.5 + 9)
+  // Slots in 15 minute increments (9:00 to 18:00)
+  const slots = Array.from({ length: 36 }, (_, i) => i * 0.25 + 9)
   
   const dates = Array.from({ length: 7 }, (_, i) => {
     const d = new Date(scheduleStartDate)
@@ -66,13 +66,12 @@ export default function AvailabilityCalendar({
     const consultant = consultants.find(c => c.id === consultantId)
     if (!consultant) return { blocked: false }
     
-    // Calculate start/end dates for the requested slot
+    // Calculate the actual end time of the requested slot including the 15-minute buffer
+    const BUFFER_MS = 15 * 60 * 1000
     const slotStart = new Date(date)
     slotStart.setHours(Math.floor(startHour), (startHour % 1) * 60, 0, 0)
     const slotEnd = new Date(slotStart.getTime() + duration * 60 * 60 * 1000)
-
-    // 15 minutes buffer in milliseconds
-    const BUFFER_MS = 15 * 60 * 1000
+    const slotEndWithBuffer = new Date(slotEnd.getTime() + BUFFER_MS)
 
     if (slotEnd.getHours() > 18 || (slotEnd.getHours() === 18 && slotEnd.getMinutes() > 0)) {
       return { blocked: true, reason: 'La séance se termine après 18h00' }
@@ -82,7 +81,9 @@ export default function AvailabilityCalendar({
       const resStart = new Date(r.startTime).getTime()
       const resEnd = new Date(r.endTime).getTime()
       
-      return (slotStart.getTime() < resEnd + BUFFER_MS && slotEnd.getTime() > resStart - BUFFER_MS)
+      // New slot [slotStart, slotEndWithBuffer] conflicts with existing [resStart, resEnd] if:
+      // slotStart < resEnd AND slotEndWithBuffer > resStart
+      return (slotStart.getTime() < resEnd && slotEndWithBuffer.getTime() > resStart)
     })
 
     if (overlap) {
@@ -292,11 +293,17 @@ export default function AvailabilityCalendar({
                 <thead>
                   <tr className="bg-gray-50/50 text-gray-400">
                     <th className="p-4 text-left font-black text-[9px] uppercase tracking-widest bg-white/80 sticky left-0 z-20 backdrop-blur-md border-b border-r border-gray-100">Date</th>
-                    {slots.map(s => (
-                      <th key={s} className="p-3 text-center font-black text-[9px] uppercase tracking-widest border-b border-gray-100 min-w-[70px]">
-                        {formatTime(s)}
-                      </th>
-                    ))}
+                    {slots.map(s => {
+                      const isHour = s % 1 === 0
+                      return (
+                        <th key={s} className={cn(
+                          "p-2 text-center font-black text-[8px] uppercase tracking-tighter border-b border-gray-100 min-w-[50px]",
+                          isHour ? "text-blue-600 bg-blue-50/30" : "text-gray-300"
+                        )}>
+                          {formatTime(s)}
+                        </th>
+                      )
+                    })}
                   </tr>
                 </thead>
                 <tbody>
@@ -310,19 +317,18 @@ export default function AvailabilityCalendar({
                         const { blocked } = isSlotBlocked(consultant.id, date, slot, requiredDuration)
                         const isPast = new Date(date).setHours(Math.floor(slot), (slot % 1) * 60) < new Date().getTime()
                         const isDisabled = blocked || isPast
-                        
                         const isSelected = localSelection?.consultantId === consultant.id && 
-                                         new Date(localSelection?.startTime).getTime() <= new Date(date).setHours(Math.floor(slot), (slot % 1) * 60) &&
-                                         new Date(localSelection?.endTime).getTime() > new Date(date).setHours(Math.floor(slot), (slot % 1) * 60)
+                                         new Date(localSelection?.startTime).getTime() <= new Date(date).setHours(Math.floor(slot), (slot % 1) * 60, 0, 0) &&
+                                         new Date(localSelection?.endTime).getTime() > new Date(date).setHours(Math.floor(slot), (slot % 1) * 60, 0, 0)
                         
                         return (
                           <td key={slot}
                             onClick={() => { if (!isDisabled) handleSlotClick(consultant.id, date, slot) }}
                             className={cn(
-                              "p-3 text-center transition-all duration-300 select-none border-r border-b border-gray-50 cursor-pointer",
+                              "p-2 text-center transition-all duration-300 select-none border-r border-b border-gray-100 cursor-pointer h-10 min-w-[50px]",
                               isDisabled ? "bg-gray-50/70 text-gray-200 cursor-not-allowed opacity-40" : "",
                               isSelected 
-                                ? "bg-blue-600 text-white shadow-xl scale-[1.05] z-30 rounded-xl ring-4 ring-blue-100" 
+                                ? "bg-blue-600 text-white shadow-xl scale-[1.05] z-30 rounded-lg ring-2 ring-blue-100" 
                                 : "hover:bg-blue-50/50"
                             )}
                           >

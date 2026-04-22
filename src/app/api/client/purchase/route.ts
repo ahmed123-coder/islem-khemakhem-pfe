@@ -33,17 +33,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Consultant not found' }, { status: 404 })
     }
 
-    // Check for overlapping reservations with a 15-minute buffer
+    // Check for overlapping reservations
+    // We compare the new reservation (including its 15min buffer) against existing ones
     const BUFFER_MS = 15 * 60 * 1000
-    const bufferStartTime = new Date(new Date(startTime).getTime() - BUFFER_MS)
-    const bufferEndTime = new Date(new Date(endTime).getTime() + BUFFER_MS)
+    const newReservationEndTime = new Date(new Date(endTime).getTime() + BUFFER_MS)
 
     const overlapping = await prisma.reservation.findFirst({
       where: {
         consultantId: consultantId,
         AND: [
-          { startTime: { lt: bufferEndTime } },
-          { endTime: { gt: bufferStartTime } }
+          { startTime: { lt: newReservationEndTime } },
+          { endTime: { gt: new Date(startTime) } }
         ]
       }
     })
@@ -62,7 +62,9 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Create reservation
+    // Create reservation with 15-minute buffer
+    const reservationEndTime = new Date(new Date(endTime).getTime() + BUFFER_MS)
+
     const reservation = await prisma.reservation.create({
       data: {
         orderId: order.id,
@@ -70,7 +72,7 @@ export async function POST(request: NextRequest) {
         consultantId: consultantId,
         serviceTierId: serviceTierId,
         startTime: new Date(startTime),
-        endTime: new Date(endTime),
+        endTime: reservationEndTime,
         meetingType: meetingType === 'SUR_PLACE' ? 'SUR_PLACE' : 'ZOOM',
         sessionIndex: sessionIndex || 0,
         sessionLabel: sessionLabel || null,
@@ -80,7 +82,7 @@ export async function POST(request: NextRequest) {
 
     // Note: Zoom meeting will be created when consultant confirms the reservation
 
-    // Create notification
+    // Create notification using original endTime for display
     await prisma.notification.create({
       data: {
         userId: user.id,
