@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { toast } from 'react-hot-toast'
 
 interface Reservation {
   id: string
@@ -63,7 +64,7 @@ export default function AvailabilityCalendar({
 
   const isSlotBlocked = (consultantId: string, date: Date, startHour: number, duration: number) => {
     const consultant = consultants.find(c => c.id === consultantId)
-    if (!consultant) return false
+    if (!consultant) return { blocked: false }
     
     // Calculate start/end dates for the requested slot
     const slotStart = new Date(date)
@@ -73,21 +74,33 @@ export default function AvailabilityCalendar({
     // 15 minutes buffer in milliseconds
     const BUFFER_MS = 15 * 60 * 1000
 
-    if (slotEnd.getHours() > 18 || (slotEnd.getHours() === 18 && slotEnd.getMinutes() > 0)) return true
+    if (slotEnd.getHours() > 18 || (slotEnd.getHours() === 18 && slotEnd.getMinutes() > 0)) {
+      return { blocked: true, reason: 'La séance se termine après 18h00' }
+    }
 
-    return consultant.reservations.some(r => {
+    const overlap = consultant.reservations.find(r => {
       const resStart = new Date(r.startTime).getTime()
       const resEnd = new Date(r.endTime).getTime()
       
-      // Check for overlap with buffer:
-      // New slot [slotStart, slotEnd] conflicts with existing [resStart, resEnd] if:
-      // slotStart < resEnd + buffer AND slotEnd > resStart - buffer
       return (slotStart.getTime() < resEnd + BUFFER_MS && slotEnd.getTime() > resStart - BUFFER_MS)
     })
+
+    if (overlap) {
+       return { 
+         blocked: true, 
+         reason: `Collision avec une réservation existante (${new Date(overlap.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - ${new Date(overlap.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })})` 
+       }
+    }
+
+    return { blocked: false }
   }
 
   const handleSlotClick = (consultantId: string, date: Date, startHour: number) => {
-    if (isSlotBlocked(consultantId, date, startHour, requiredDuration)) return
+    const { blocked, reason } = isSlotBlocked(consultantId, date, startHour, requiredDuration)
+    if (blocked) {
+      toast.error(reason || "Ce créneau n'est pas disponible pour la durée choisie.")
+      return
+    }
 
     const slotStart = new Date(date)
     slotStart.setHours(Math.floor(startHour), (startHour % 1) * 60, 0, 0)
@@ -294,7 +307,7 @@ export default function AvailabilityCalendar({
                         <div className="text-[11px] text-blue-600 font-black">{date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
                       </td>
                       {slots.map(slot => {
-                        const blocked = isSlotBlocked(consultant.id, date, slot, requiredDuration)
+                        const { blocked } = isSlotBlocked(consultant.id, date, slot, requiredDuration)
                         const isPast = new Date(date).setHours(Math.floor(slot), (slot % 1) * 60) < new Date().getTime()
                         const isDisabled = blocked || isPast
                         

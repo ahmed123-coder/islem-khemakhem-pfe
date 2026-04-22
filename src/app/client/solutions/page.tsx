@@ -26,6 +26,29 @@ export default function ServicesPage() {
   const [isPaid, setIsPaid] = useState(false)
   const [loading, setLoading] = useState(true)
 
+  const getRequiredDuration = () => {
+    if (!selectedTier) return 1.5
+    
+    let config = selectedTier.sessionsConfig
+    if (typeof config === 'string') {
+      try {
+        config = JSON.parse(config)
+      } catch (e) {
+        config = null
+      }
+    }
+    
+    if (Array.isArray(config) && config.length > 0 && config[0].duration) {
+      return Number(config[0].duration) / 60
+    }
+    
+    if (selectedTier.maxCallDuration) {
+      return Number(selectedTier.maxCallDuration) / 60
+    }
+    
+    return 1.5
+  }
+
   const [scheduleStartDate, setScheduleStartDate] = useState<Date>(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
@@ -224,7 +247,7 @@ export default function ServicesPage() {
               consultants={consultants} 
               onSelect={setSelection}
               scheduleStartDate={scheduleStartDate}
-              requiredDuration={selectedTier?.maxCallDuration ? selectedTier.maxCallDuration / 60 : 1.5}
+              requiredDuration={getRequiredDuration()}
               onJumpToDate={setScheduleStartDate}
               onNavigate={(days) => {
                 const newDate = new Date(scheduleStartDate)

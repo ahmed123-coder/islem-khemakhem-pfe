@@ -57,66 +57,99 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     const { startTime, endTime, meetingType } = await req.json()
 
     if (!startTime || !endTime) {
-      return NextResponse.json({ error: 'Missing start or end time' }, { status: 400 })
+      return NextResponse.json({ error: 'Champs requis manquants (startTime/endTime)' }, { status: 400 })
     }
 
-    const order = await prisma.order.findUnique({
-      where: { id: params.orderId },
-      include: { 
-        serviceTier: { include: { service: true } },
-        consultant: true
-      }
-    })
-
-    if (!order || order.clientId !== user.id || order.status !== 'ACTIVE') {
-      return NextResponse.json({ error: 'Order is not active or unauthorized' }, { status: 403 })
-    }
-
-    if (!order.consultantId) {
-      return NextResponse.json({ error: 'No consultant assigned to this order' }, { status: 400 })
-    }
-
-    // Check for overlapping CONFIRMED reservations for this consultant
-    const overlapping = await prisma.reservation.findFirst({
-      where: {
-        consultantId: order.consultantId,
-        status: 'CONFIRMED',
-        OR: [
-          {
-            AND: [
-              { startTime: { lt: new Date(endTime) } },
-              { endTime: { gt: new Date(startTime) } }
-            ]
+    return await prisma.$transaction(async (tx) => {
+      const order = await tx.order.findUnique({
+        where: { id: params.orderId },
+        include: { 
+          serviceTier: true,
+          consultant: true,
+          reservations: {
+            orderBy: { sessionIndex: 'desc' }
           }
-        ]
+        }
+      })
+
+      if (!order || order.clientId !== user.id) {
+        return NextResponse.json({ error: 'Commande non trouvée' }, { status: 404 })
       }
-    })
 
-    if (overlapping) {
-      return NextResponse.json({ error: 'Le consultant a déjà une réservation confirmée sur ce créneau' }, { status: 409 })
-    }
-
-    // Create reservation
-    const reservation = await prisma.reservation.create({
-      data: {
-        orderId: order.id,
-        clientId: user.id,
-        consultantId: order.consultantId,
-        serviceTierId: order.serviceTierId,
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
-        meetingType: meetingType === 'SUR_PLACE' ? 'SUR_PLACE' : 'ZOOM',
-        status: 'PENDING'
+      if (order.status !== 'ACTIVE') {
+        return NextResponse.json({ error: 'Cette commande n\'est plus active' }, { status: 403 })
       }
+
+      if (!order.consultantId) {
+        return NextResponse.json({ error: 'Aucun consultant n\'est assigné à cette commande' }, { status: 400 })
+      }
+
+      // 1. Check for active (PENDING or CONFIRMED) reservations
+      const activeReservation = order.reservations.find(r => 
+        r.status === 'PENDING' || r.status === 'CONFIRMED'
+      )
+
+      if (activeReservation) {
+        return NextResponse.json({ 
+          error: 'Vous avez déjà une réservation en cours. Terminez-la ou annulez-la avant d\'en prévoir une autre.' 
+        }, { status: 400 })
+      }
+
+      // 2. Calculate next session index
+      const completedCount = order.reservations.filter(r => r.status === 'COMPLETED').length
+      const sessionsConfig = (order.serviceTier.sessionsConfig as any[]) || []
+
+      if (completedCount >= sessionsConfig.length) {
+        return NextResponse.json({ error: 'Toutes les séances de ce pack ont été consommées.' }, { status: 400 })
+      }
+
+      const nextIndex = completedCount
+      const sessionLabel = sessionsConfig[nextIndex]?.label || `Séance ${nextIndex + 1}`
+
+      // 3. Check for consultant availability (overlapping) with 15min buffer
+      const BUFFER_MS = 15 * 60 * 1000
+      const bufferStart = new Date(new Date(startTime).getTime() - BUFFER_MS)
+      const bufferEnd = new Date(new Date(endTime).getTime() + BUFFER_MS)
+
+      const overlapping = await tx.reservation.findFirst({
+        where: {
+          consultantId: order.consultantId,
+          AND: [
+            { startTime: { lt: bufferEnd } },
+            { endTime: { gt: bufferStart } }
+          ],
+          NOT: { status: 'CANCELLED' } // Don't block if it was just a cancelled slot
+        }
+      })
+
+      if (overlapping) {
+        return NextResponse.json({ error: 'Ce créneau est déjà réservé par un autre client.' }, { status: 409 })
+      }
+
+      // 4. Create the reservation
+      const reservation = await tx.reservation.create({
+        data: {
+          orderId: order.id,
+          clientId: user.id,
+          consultantId: order.consultantId,
+          serviceTierId: order.serviceTierId,
+          startTime: new Date(startTime),
+          endTime: new Date(endTime),
+          meetingType: meetingType === 'SUR_PLACE' ? 'SUR_PLACE' : 'ZOOM',
+          sessionIndex: nextIndex,
+          sessionLabel: sessionLabel,
+          status: 'PENDING'
+        }
+      })
+
+      // Notify the consultant
+      const { notifyNewReservation } = await import('@/lib/notification-service')
+      await notifyNewReservation(reservation.id)
+
+      return NextResponse.json(reservation)
     })
-
-    // Notify the consultant
-    const { notifyNewReservation } = await import('@/lib/notification-service')
-    await notifyNewReservation(reservation.id)
-
-    return NextResponse.json(reservation)
   } catch (error) {
     console.error('Reservation error:', error)
-    return NextResponse.json({ error: 'Failed to create reservation' }, { status: 500 })
+    return NextResponse.json({ error: 'Échec de la création de la réservation' }, { status: 500 })
   }
 }
