@@ -576,8 +576,10 @@ export default function OrderDetails() {
                                           const res = getReservationAt(day, slot)
                                           const isPast = new Date(day).setHours(Math.floor(slot), Math.round((slot % 1) * 60)) < new Date().getTime()
                                           const isSelectable = !res && order.status === 'ACTIVE' && !isPast
-                                          const isSameDay = dragStart && dragStart.day.toDateString() === day.toDateString()
-                                          const isInDrag = isSameDay && dragStart && dragEnd && slot >= dragStart.hour && slot <= dragEnd.hour
+                                          const isSameDayDrag = dragStart && dragStart.day.toDateString() === day.toDateString()
+                                          const isSameDayPending = pendingSlot && new Date(pendingSlot.day).toDateString() === day.toDateString()
+                                          const isInDrag = (isSameDayDrag && dragStart && dragEnd && slot >= dragStart.hour && slot <= dragEnd.hour) ||
+                                                           (isSameDayPending && pendingSlot && slot >= pendingSlot.startHour && slot < pendingSlot.endHour)
 
                                           if (res) {
                                              const rStart = new Date(res.startTime)
@@ -636,12 +638,13 @@ export default function OrderDetails() {
                                                       
                                                       if (finalEndHour > slot) {
                                                          setPendingSlot({ day, startHour: slot, endHour: finalEndHour })
+                                                         setDragStart({ day, hour: slot })
+                                                         setDragEnd({ day, hour: finalEndHour - 0.25 })
                                                       } else {
                                                          toast.error('Pas assez d\'espace pour cette séance')
+                                                         setDragStart(null)
+                                                         setDragEnd(null)
                                                       }
-
-                                                      setDragStart({ day, hour: slot })
-                                                      setDragEnd({ day, hour: slot })
                                                       setIsDragging(true)
                                                    }}
                                                    onMouseEnter={() => {

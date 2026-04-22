@@ -23,6 +23,8 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedMeetingType, setSelectedMeetingType] = useState<'ZOOM' | 'SUR_PLACE' | null>(null)
   const [isPaid, setIsPaid] = useState(false)
+  const [currentUser, setCurrentUser] = useState<any>(null)
+  const [authLoading, setAuthLoading] = useState(true)
 
   const [scheduleStartDate, setScheduleStartDate] = useState<Date>(() => {
     const d = new Date()
@@ -32,6 +34,16 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
 
   useEffect(() => {
     setLoading(true)
+    
+    // Fetch Auth State
+    fetch('/api/auth/me')
+      .then(r => r.json())
+      .then(user => {
+        if (!user.error) setCurrentUser(user)
+        setAuthLoading(false)
+      })
+      .catch(() => setAuthLoading(false))
+
     fetch('/api/services/with-tiers')
       .then(r => r.json())
       .then(data => {
@@ -64,6 +76,12 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
   }, [step, scheduleStartDate, selectedTier])
 
   const handleTierSelect = (tier: any) => {
+    if (!currentUser || currentUser.role !== 'CLIENT') {
+      toast.error('Veuillez vous connecter en tant que client pour continuer.')
+      router.push(`/login?redirect=/solutions/${serviceId}`)
+      return
+    }
+
     setSelectedTier(tier)
     setShowPaymentModal(true)
   }
