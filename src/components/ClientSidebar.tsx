@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Package, Search, Settings, LogOut, Home, Sparkles } from 'lucide-react'
+import { Package, Search, Settings, LogOut, Home, Sparkles, CreditCard } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
 
@@ -18,6 +18,7 @@ export default function ClientSidebar() {
   const links = [
     { href: '/client', label: 'Subscriptions', icon: Package },
     { href: '/client/solutions', label: 'Solutions', icon: Search },
+    { href: '/client/billing', label: 'Billing', icon: CreditCard },
     { href: '/client/settings', label: 'Settings', icon: Settings },
   ]
 

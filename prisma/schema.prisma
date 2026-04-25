@@ -27,6 +27,7 @@ model User {
   notifications Notification[]
   orders        Order[]
   reservations  Reservation[]
+  invoices      Invoice[]
 }
 
 model Consultant {
@@ -103,6 +104,8 @@ model Order {
   client          User        @relation(fields: [clientId], references: [id])
   consultant      Consultant? @relation(fields: [consultantId], references: [id])
   serviceTier     ServiceTier @relation(fields: [serviceTierId], references: [id])
+
+  invoices        Invoice[]
 
   @@index([clientId])
   @@index([consultantId])
@@ -333,4 +336,50 @@ enum PaymentMethod {
   CARD
   VIREMENT
   SUR_PLACE
+}
+
+model Invoice {
+  id              String        @id @default(cuid())
+  invoiceNumber   String        @unique
+  clientId        String
+  orderId         String?
+  amount          Decimal       @db.Decimal(10, 2)
+  status          InvoiceStatus @default(PENDING)
+  issueDate       DateTime      @default(now())
+  dueDate         DateTime
+  paidAt          DateTime?
+  pdfUrl          String?
+  
+  client          User          @relation(fields: [clientId], references: [id])
+  order           Order?        @relation(fields: [orderId], references: [id])
+  payments        Payment[]
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([clientId])
+  @@index([orderId])
+  @@index([status])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  invoiceId     String
+  amount        Decimal       @db.Decimal(10, 2)
+  method        PaymentMethod 
+  status        String        
+  transactionId String?       @unique
+  
+  invoice       Invoice       @relation(fields: [invoiceId], references: [id])
+  
+  createdAt     DateTime      @default(now())
+
+  @@index([invoiceId])
+}
+
+enum InvoiceStatus {
+  PAID
+  UNPAID
+  PENDING
+  CANCELLED
 }

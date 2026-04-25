@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getCurrentUser } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { createZoomMeeting } from '@/lib/zoom'
+import { BillingService } from '@/lib/billing'
 
 export async function POST(request: NextRequest) {
   try {
@@ -80,6 +81,9 @@ export async function POST(request: NextRequest) {
         }
       })
 
+      // Generate Invoice
+      await BillingService.createInvoiceForOrder(order.id)
+
       // Create reservation
       const reservationEndTime = new Date(new Date(endTime).getTime() + BUFFER_MS)
       const reservation = await prisma.reservation.create({
@@ -119,6 +123,9 @@ export async function POST(request: NextRequest) {
         paymentMethod: paymentMethod as any
       }
     })
+
+    // Generate Invoice
+    await BillingService.createInvoiceForOrder(order.id)
 
     const message = paymentMethod === 'VIREMENT' 
       ? `Commande créée via virement bancaire. En attente de validation du paiement.` 

@@ -34,6 +34,14 @@ export async function PUT(request: Request) {
         callMinutesUsed,
       },
     })
+
+    // If order is activated, mark its pending invoices as PAID
+    if (status === 'ACTIVE') {
+      await prisma.invoice.updateMany({
+        where: { orderId: id, status: 'PENDING' },
+        data: { status: 'PAID', paidAt: new Date() }
+      })
+    }
     
     return NextResponse.json(order)
   } catch (error) {
