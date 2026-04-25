@@ -10,10 +10,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { serviceTierId, consultantId, startTime, endTime, meetingType, sessionIndex, sessionLabel } = await request.json()
+    const { 
+      serviceTierId, 
+      consultantId, 
+      startTime, 
+      endTime, 
+      meetingType, 
+      sessionIndex, 
+      sessionLabel,
+      paymentMethod = 'CARD'
+    } = await request.json()
 
-    if (!serviceTierId || !consultantId || !startTime || !endTime) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+    if (!serviceTierId) {
+      return NextResponse.json({ error: 'Missing serviceTierId' }, { status: 400 })
     }
 
     const serviceTier = await prisma.serviceTier.findUnique({
@@ -25,71 +34,118 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Service tier not found' }, { status: 404 })
     }
 
-    const consultant = await prisma.consultant.findUnique({
-      where: { id: consultantId }
-    })
+    let consultant = null
+    if (consultantId) {
+      consultant = await prisma.consultant.findUnique({
+        where: { id: consultantId }
+      })
 
-    if (!consultant) {
-      return NextResponse.json({ error: 'Consultant not found' }, { status: 404 })
-    }
-
-    // Check for overlapping reservations
-    // We compare the new reservation (including its 15min buffer) against existing ones
-    const BUFFER_MS = 15 * 60 * 1000
-    const newReservationEndTime = new Date(new Date(endTime).getTime() + BUFFER_MS)
-
-    const overlapping = await prisma.reservation.findFirst({
-      where: {
-        consultantId: consultantId,
-        AND: [
-          { startTime: { lt: newReservationEndTime } },
-          { endTime: { gt: new Date(startTime) } }
-        ]
+      if (!consultant && paymentMethod === 'CARD') {
+        return NextResponse.json({ error: 'Consultant not found' }, { status: 404 })
       }
-    })
-
-    if (overlapping) {
-      return NextResponse.json({ error: 'Ce créneau est déjà réservé' }, { status: 409 })
     }
 
-    // Create order
+    // --- Logic for CARD Payment (Requires Slot Validation & Instant Reservation) ---
+    if (paymentMethod === 'CARD') {
+      if (!startTime || !endTime) {
+        return NextResponse.json({ error: 'Time slots are required for card payments' }, { status: 400 })
+      }
+
+      // Check for overlapping reservations
+      const BUFFER_MS = 15 * 60 * 1000
+      const newReservationEndTime = new Date(new Date(endTime).getTime() + BUFFER_MS)
+
+      const overlapping = await prisma.reservation.findFirst({
+        where: {
+          consultantId: consultantId,
+          AND: [
+            { startTime: { lt: newReservationEndTime } },
+            { endTime: { gt: new Date(startTime) } }
+          ]
+        }
+      })
+
+      if (overlapping) {
+        return NextResponse.json({ error: 'Ce créneau est déjà réservé' }, { status: 409 })
+      }
+
+      // Create ACTIVE order
+      const order = await prisma.order.create({
+        data: {
+          clientId: user.id,
+          consultantId: consultantId,
+          serviceTierId: serviceTierId,
+          status: 'ACTIVE',
+          paymentMethod: 'CARD'
+        }
+      })
+
+      // Create reservation
+      const reservationEndTime = new Date(new Date(endTime).getTime() + BUFFER_MS)
+      const reservation = await prisma.reservation.create({
+        data: {
+          orderId: order.id,
+          clientId: user.id,
+          consultantId: consultantId,
+          serviceTierId: serviceTierId,
+          startTime: new Date(startTime),
+          endTime: reservationEndTime,
+          meetingType: meetingType === 'SUR_PLACE' ? 'SUR_PLACE' : 'ZOOM',
+          sessionIndex: sessionIndex || 0,
+          sessionLabel: sessionLabel || null,
+          status: 'PENDING'
+        }
+      })
+
+      await prisma.notification.create({
+        data: {
+          userId: user.id,
+          type: 'ORDER',
+          title: 'Commande créée',
+          message: `Votre commande pour ${serviceTier.service.name} (${serviceTier.tierType}) a été validée. RDV le ${new Date(startTime).toLocaleDateString('fr-FR')} à ${new Date(startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}.`
+        }
+      })
+
+      return NextResponse.json({ order, reservation, consultant })
+    }
+
+    // --- Logic for VIREMENT or SUR_PLACE (Order created as PENDING, no reservation) ---
     const order = await prisma.order.create({
       data: {
         clientId: user.id,
         consultantId: consultantId,
         serviceTierId: serviceTierId,
-        status: 'ACTIVE'
+        status: 'PENDING',
+        paymentMethod: paymentMethod as any
       }
     })
 
-    // Create reservation with 15-minute buffer
-    const reservationEndTime = new Date(new Date(endTime).getTime() + BUFFER_MS)
+    const message = paymentMethod === 'VIREMENT' 
+      ? `Commande créée via virement bancaire. En attente de validation du paiement.` 
+      : `Commande créée (paiement sur place). En attente de validation.`;
 
-    const reservation = await prisma.reservation.create({
-      data: {
-        orderId: order.id,
-        clientId: user.id,
-        consultantId: consultantId,
-        serviceTierId: serviceTierId,
-        startTime: new Date(startTime),
-        endTime: reservationEndTime,
-        meetingType: meetingType === 'SUR_PLACE' ? 'SUR_PLACE' : 'ZOOM',
-        sessionIndex: sessionIndex || 0,
-        sessionLabel: sessionLabel || null,
-        status: 'PENDING'
-      }
-    })
-
-    // Note: Zoom meeting will be created when consultant confirms the reservation
-
-    // Create notification using original endTime for display
     await prisma.notification.create({
       data: {
         userId: user.id,
         type: 'ORDER',
-        title: 'Commande créée',
-        message: `Votre commande pour ${serviceTier.service.name} (${serviceTier.tierType}) a été créée. RDV prévu le ${new Date(startTime).toLocaleDateString('fr-FR')} de ${new Date(startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} à ${new Date(endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}.`
+        title: 'Commande en attente',
+        message
       }
+    })
+
+    const bankDetails = paymentMethod === 'VIREMENT' ? {
+      bankName: "Société Générale",
+      accountHolder: "EXPERT_LEARN_ADMIN",
+      iban: "FR76 3000 6000 0123 4567 8901 234",
+      bic: "SOGEFRRPXXX",
+      rib: "30006 00001 23456789012 34"
+    } : null;
+
+    return NextResponse.json({ 
+      order, 
+      bankDetails,
+      paymentMethod,
+      message: "Votre commande a été enregistrée. Elle sera activée dès réception de votre paiement."
     })
 
     return NextResponse.json({

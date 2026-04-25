@@ -9,6 +9,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 interface Order {
   id: string
   status: string
+  paymentMethod: string
   messagesUsed: number
   callMinutesUsed: number
   createdAt: string
@@ -126,6 +127,7 @@ export default function SubscriptionsPage() {
                       <Badge variant={order.status === 'ACTIVE' ? 'default' : order.status === 'COMPLETED' ? 'secondary' : 'outline'}>{order.status}</Badge>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
+                      <p>Paiement: <Badge variant="secondary" className="ml-1 uppercase text-[10px]">{order.paymentMethod}</Badge></p>
                       <p>Client: {order.client.name || order.client.email}</p>
                       <p>Consultant: {order.consultant?.name || 'Not assigned'}</p>
                       <p>Price: ${order.serviceTier.price}</p>

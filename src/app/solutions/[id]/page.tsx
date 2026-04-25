@@ -59,7 +59,7 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
   }, [serviceId, router])
 
   useEffect(() => {
-    if (step === 3 && selectedTier) {
+    if ((step === 3 || step === 4) && selectedTier) {
       const startDateStr = scheduleStartDate.toISOString().split('T')[0]
       const fetchUrl = `/api/consultants/schedule?startDate=${startDateStr}&days=7&serviceTierId=${selectedTier.id}`
       fetch(fetchUrl)
@@ -74,6 +74,8 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
         .catch(() => setConsultants([]))
     }
   }, [step, scheduleStartDate, selectedTier])
+
+  const [selectedConsultant, setSelectedConsultant] = useState<any>(null)
 
   const handleTierSelect = (tier: any) => {
     if (!currentUser || currentUser.role !== 'CLIENT') {
@@ -92,37 +94,43 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
     setStep(3)
   }
 
-  const handlePaymentSuccess = () => {
+  const [activePaymentMethod, setActivePaymentMethod] = useState<'CARD' | 'VIREMENT' | 'SUR_PLACE'>('CARD')
+
+  const handlePaymentSuccess = (method: 'CARD' | 'VIREMENT' | 'SUR_PLACE') => {
     setShowPaymentModal(false)
     setIsPaid(true)
-    setShowMeetingModal(true)
+    setActivePaymentMethod(method)
+    setSelectedMeetingType('ZOOM') // Default for non-card
+    
+    if (method === 'CARD') {
+      setShowMeetingModal(true)
+    } else {
+      // For Virement/Sur Place, let them pick a consultant first without a reservation
+      setStep(4)
+    }
   }
 
-  const handlePurchase = async () => {
-    if (!selectedTier || !selection || !isPaid) return
+  const handlePurchase = async (method: 'CARD' | 'VIREMENT' | 'SUR_PLACE' = 'CARD', consultantIdFromStep4?: string) => {
+    if (!selectedTier) return
 
     try {
-      console.log("Starting purchase process...");
+      console.log("Starting purchase process for method:", method);
       
-      // Parse sessions safely for the label
-      let sessions = [];
-      try {
-        sessions = typeof selectedTier?.sessionsConfig === 'string' 
-          ? JSON.parse(selectedTier.sessionsConfig) 
-          : (selectedTier?.sessionsConfig || []);
-      } catch (e) {
-        console.error("Error parsing sessions for purchase:", e);
-      }
-
       const payload = {
         serviceTierId: selectedTier.id,
-        consultantId: selection.consultantId,
-        startTime: selection.startTime,
-        endTime: selection.endTime,
-        meetingType: selectedMeetingType || 'ZOOM',
+        consultantId: method === 'CARD' ? selection?.consultantId : (consultantIdFromStep4 || null),
+        startTime: method === 'CARD' ? selection?.startTime : null,
+        endTime: method === 'CARD' ? selection?.endTime : null,
+        meetingType: method === 'CARD' ? (selectedMeetingType || 'ZOOM') : 'ZOOM',
         sessionIndex: 0,
-        sessionLabel: Array.isArray(sessions) && sessions.length > 0 ? sessions[0].label : null
+        sessionLabel: null,
+        paymentMethod: method
       };
+
+      if (method === 'CARD' && (!payload.startTime || !payload.consultantId)) {
+        toast.error("Veuillez sélectionner un créneau.");
+        return;
+      }
 
       console.log("Sending payload:", payload);
 
@@ -136,21 +144,24 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
         body: JSON.stringify(payload)
       })
 
-      console.log("Response status:", res.status);
-
       if (res.ok) {
         const result = await res.json();
         console.log("Purchase successful:", result);
-        toast.success('Commande créée avec succès !')
+        
+        if (method === 'CARD') {
+          toast.success('Commande et réservation validées !')
+        } else {
+          toast.success(result.message || 'Commande enregistrée, en attente de paiement.')
+        }
+        
         router.push('/client')
       } else {
         const errorData = await res.json().catch(() => ({}));
-        console.error("Purchase API error data:", errorData);
-        toast.error(errorData.error || 'Une erreur est survenue lors de la réservation.')
+        toast.error(errorData.error || 'Une erreur est survenue.')
       }
     } catch (error: any) {
       console.error('CRITICAL FETCH ERROR:', error)
-      toast.error('Erreur de connexion fatale : ' + (error.message || 'Check browser console'))
+      toast.error('Erreur : ' + (error.message || 'Check browser console'))
     }
   }
 
@@ -293,10 +304,41 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
                     </div>
                     <div className="text-[10px] opacity-60">Fin prévue à {new Date(selection.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
                   </div>
-                  <button onClick={handlePurchase} className="bg-white text-blue-900 px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-amber-400 transition-colors">Confirmer la réservation</button>
+                  <button onClick={() => handlePurchase('CARD')} className="bg-white text-blue-900 px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-amber-400 transition-colors">Confirmer la réservation</button>
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {step === 4 && (
+          <div className="space-y-12 animate-in fade-in duration-700">
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <h3 className="text-3xl font-serif font-black text-gray-900 mb-4">Choisissez votre Expert</h3>
+              <p className="text-gray-500 font-medium">Sélectionnez le consultant avec lequel vous souhaitez collaborer. Le rendez-vous sera fixé ultérieurement.</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20">
+              {consultants.map((c) => (
+                <div key={c.id} className="bg-white rounded-[2.5rem] border border-slate-100 p-8 shadow-xl hover:shadow-2xl transition-all group relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-full -mr-12 -mt-12 transition-transform group-hover:scale-150" />
+                  <div className="relative z-10 flex flex-col items-center text-center">
+                    <div className="w-24 h-24 rounded-[2rem] bg-blue-600 mb-6 flex items-center justify-center text-white text-3xl font-black shadow-xl shadow-blue-100">
+                      {c.name.substring(0, 1)}
+                    </div>
+                    <h4 className="text-xl font-black text-slate-900 mb-2">{c.name}</h4>
+                    <p className="text-blue-600 font-bold text-xs uppercase tracking-widest mb-4">{c.specialty}</p>
+                    <p className="text-slate-500 text-sm mb-8 line-clamp-3 leading-relaxed">{c.bio || "Expert consultant spécialisé dans l'accompagnement stratégique."}</p>
+                    <button 
+                      onClick={() => handlePurchase(activePaymentMethod, c.id)}
+                      className="w-full bg-[#2B5A8E] text-white py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-700 transition-all shadow-lg active:scale-95"
+                    >
+                      Sélectionner cet expert
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 

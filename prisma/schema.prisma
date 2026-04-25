@@ -91,6 +91,7 @@ model Order {
   consultantId    String?
   serviceTierId   String
   status          OrderStatus @default(PENDING)
+  paymentMethod   PaymentMethod @default(CARD)
   messagesUsed    Int         @default(0)
   callMinutesUsed Int         @default(0)
   createdAt       DateTime    @default(now())
@@ -326,4 +327,10 @@ enum NotificationType {
   MISSION
   SYSTEM
   RESERVATION
+}
+
+enum PaymentMethod {
+  CARD
+  VIREMENT
+  SUR_PLACE
 }
