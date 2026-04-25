@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { randomUUID } from 'crypto'
 
 export async function GET() {
   try {
     const invoices = await prisma.invoice.findMany({
       include: {
-        client: { select: { name: true, email: true } },
+        client: { select: { id: true, name: true, email: true } },
         order: { 
           include: { 
             serviceTier: { 
@@ -21,6 +22,37 @@ export async function GET() {
     return NextResponse.json(invoices)
   } catch (error) {
     return NextResponse.json({ error: 'Failed' }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { clientId, orderId, amount, dueDate, status } = await request.json()
+    
+    // Generate a unique invoice number (e.g., INV-20260426-XXXX)
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '')
+    const shortId = randomUUID().split('-')[0].toUpperCase()
+    const invoiceNumber = `INV-${dateStr}-${shortId}`
+
+    const invoice = await prisma.invoice.create({
+      data: {
+        invoiceNumber,
+        clientId,
+        orderId: orderId || null,
+        amount: Number(amount),
+        dueDate: new Date(dueDate),
+        status: status || 'PENDING',
+        issueDate: new Date()
+      },
+      include: {
+        client: { select: { id: true, name: true, email: true } }
+      }
+    })
+
+    return NextResponse.json(invoice)
+  } catch (error) {
+    console.error('Invoice creation error:', error)
+    return NextResponse.json({ error: 'Failed to create invoice' }, { status: 500 })
   }
 }
 

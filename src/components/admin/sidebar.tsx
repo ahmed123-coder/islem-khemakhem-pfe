@@ -15,7 +15,8 @@ import {
   LogOut,
   ChevronRight,
   Sparkles,
-  HelpCircle
+  HelpCircle,
+  Receipt
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
@@ -58,6 +59,7 @@ export function AdminSidebar() {
     { href: '/admin/users', label: 'Users', icon: Users },
     { href: '/admin/consultants', label: 'Consultants', icon: UserSquare2 },
     { href: '/admin/subscriptions', label: 'Subscriptions', icon: CreditCard },
+    { href: '/admin/billing', label: 'Billing', icon: Receipt },
   ]
 
   const contentItems = [
