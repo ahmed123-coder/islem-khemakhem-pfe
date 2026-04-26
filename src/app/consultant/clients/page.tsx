@@ -10,6 +10,7 @@ import {
   Layout, CalendarDays, Target, CheckSquare, Trash, AlertTriangle
 } from 'lucide-react'
 import { getSocket } from '@/lib/socket-client'
+import { toast } from 'react-hot-toast'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -47,6 +48,8 @@ export default function ConsultantClients() {
   const [isMissionModalOpen, setIsMissionModalOpen] = useState(false)
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
+  const [targetStatus, setTargetStatus] = useState<'ACTIVE' | 'CANCELLED' | null>(null)
   
   const [activeMissionId, setActiveMissionId] = useState<string | null>(null)
   const [deleteContext, setDeleteContext] = useState<{ id: string, type: 'mission' | 'milestone' } | null>(null)
@@ -236,6 +239,29 @@ export default function ConsultantClients() {
     } catch (error) { console.error(error) }
   }
 
+  const updateOrderStatus = async (orderId: string, status: string) => {
+    try {
+      console.log('Attempting to update order status:', orderId, status)
+      const res = await fetch(`/api/consultant/orders/${orderId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      })
+      if (res.ok) {
+        setIsStatusModalOpen(false)
+        setTargetStatus(null)
+        fetchClients()
+        toast.success(`Order ${status.toLowerCase()} successfully`)
+      } else {
+        const errorData = await res.json()
+        toast.error(errorData.error || 'Failed to update order status')
+      }
+    } catch (error) { 
+      console.error('Order status update error:', error)
+      toast.error('A connection error occurred')
+    }
+  }
+
   const performDelete = async () => {
     if (!deleteContext) return
     try {
@@ -423,6 +449,32 @@ export default function ConsultantClients() {
                   )}>
                     {selectedClientData?.status}
                   </Badge>
+                  {selectedClientData?.status === 'ACTIVE' && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => {
+                        setTargetStatus('CANCELLED')
+                        setIsStatusModalOpen(true)
+                      }}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50 font-black text-[9px] uppercase tracking-widest h-6 rounded-lg px-2"
+                    >
+                      <XCircle className="h-3 w-3 mr-1" /> Cancel Order
+                    </Button>
+                  )}
+                  {selectedClientData?.status === 'CANCELLED' && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => {
+                        setTargetStatus('ACTIVE')
+                        setIsStatusModalOpen(true)
+                      }}
+                      className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 font-black text-[9px] uppercase tracking-widest h-6 rounded-lg px-2"
+                    >
+                      <CheckCircle className="h-3 w-3 mr-1" /> Reactivate Order
+                    </Button>
+                  )}
                 </div>
               </header>
 
@@ -701,39 +753,6 @@ export default function ConsultantClients() {
                             </DialogFooter>
                           </DialogContent>
                         </Dialog>
-
-                        {/* Delete Confirmation Modal */}
-                        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
-                          <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 bg-white max-w-sm overflow-hidden">
-                            <div className="p-8 pb-4 text-center">
-                              <div className="h-20 w-20 rounded-3xl bg-red-50 flex items-center justify-center mx-auto mb-6">
-                                <AlertTriangle className="h-10 w-10 text-red-500" />
-                              </div>
-                              <DialogTitle className="text-2xl font-black text-slate-900 mb-2">Are you sure?</DialogTitle>
-                              <DialogDescription className="text-slate-500 font-medium leading-relaxed px-4">
-                                This action is permanent and will remove this {deleteContext?.type} from the client history.
-                              </DialogDescription>
-                            </div>
-                            <div className="p-8 flex flex-col gap-3">
-                              <Button 
-                                onClick={performDelete}
-                                className="w-full h-14 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-red-100 transition-all active:scale-95"
-                              >
-                                Yes, Delete Forever
-                              </Button>
-                              <Button 
-                                variant="ghost"
-                                onClick={() => {
-                                  setIsDeleteModalOpen(false)
-                                  setDeleteContext(null)
-                                }}
-                                className="w-full h-12 rounded-2xl font-bold text-slate-400 hover:text-slate-600 transition-all"
-                              >
-                                Cancel Action
-                              </Button>
-                            </div>
-                          </DialogContent>
-                        </Dialog>
                       </TabsContent>
 
                       <TabsContent value="calls" className="m-0 focus-visible:ring-0">
@@ -849,6 +868,87 @@ export default function ConsultantClients() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Global Dialogs */}
+        {/* Delete Confirmation Modal */}
+        <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+          <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 bg-white max-w-sm overflow-hidden">
+            <div className="p-8 pb-4 text-center">
+              <div className="h-20 w-20 rounded-3xl bg-red-50 flex items-center justify-center mx-auto mb-6">
+                <AlertTriangle className="h-10 w-10 text-red-500" />
+              </div>
+              <DialogTitle className="text-2xl font-black text-slate-900 mb-2">Are you sure?</DialogTitle>
+              <DialogDescription className="text-slate-500 font-medium leading-relaxed px-4">
+                This action is permanent and will remove this {deleteContext?.type} from the client history.
+              </DialogDescription>
+            </div>
+            <div className="p-8 flex flex-col gap-3">
+              <Button 
+                onClick={performDelete}
+                className="w-full h-14 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-red-100 transition-all active:scale-95"
+              >
+                Yes, Delete Forever
+              </Button>
+              <Button 
+                variant="ghost"
+                onClick={() => {
+                  setIsDeleteModalOpen(false)
+                  setDeleteContext(null)
+                }}
+                className="w-full h-12 rounded-2xl font-bold text-slate-400 hover:text-slate-600 transition-all"
+              >
+                Cancel Action
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Status Change Confirmation Modal */}
+        <Dialog open={isStatusModalOpen} onOpenChange={setIsStatusModalOpen}>
+          <DialogContent className="rounded-[2.5rem] border-none shadow-2xl p-0 bg-white max-w-sm overflow-hidden">
+            <div className="p-8 pb-4 text-center">
+              <div className={cn(
+                "h-20 w-20 rounded-3xl flex items-center justify-center mx-auto mb-6",
+                targetStatus === 'CANCELLED' ? "bg-red-50" : "bg-emerald-50"
+              )}>
+                {targetStatus === 'CANCELLED' ? (
+                  <XCircle className="h-10 w-10 text-red-500" />
+                ) : (
+                  <CheckCircle className="h-10 w-10 text-emerald-500" />
+                )}
+              </div>
+              <DialogTitle className="text-2xl font-black text-slate-900 mb-2">
+                {targetStatus === 'CANCELLED' ? 'Cancel Order?' : 'Reactivate Order?'}
+              </DialogTitle>
+              <DialogDescription className="text-slate-500 font-medium leading-relaxed px-4">
+                {targetStatus === 'CANCELLED' 
+                  ? 'Are you sure you want to cancel this order? This will stop all active missions and services.'
+                  : 'Are you sure you want to reactivate this order? This will restore access to missions and services.'}
+              </DialogDescription>
+            </div>
+            <div className="p-8 flex flex-col gap-3">
+              <Button 
+                onClick={() => selectedClient && targetStatus && updateOrderStatus(selectedClient, targetStatus)}
+                className={cn(
+                  "w-full h-14 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg transition-all active:scale-95",
+                  targetStatus === 'CANCELLED' ? "bg-red-500 hover:bg-red-600 shadow-red-100" : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100"
+                )}
+              >
+                {targetStatus === 'CANCELLED' ? 'Yes, Cancel Order' : 'Yes, Reactivate Order'}
+              </Button>
+              <Button 
+                variant="ghost"
+                onClick={() => {
+                  setIsStatusModalOpen(false)
+                  setTargetStatus(null)
+                }}
+                className="w-full h-12 rounded-2xl font-bold text-slate-400 hover:text-slate-600 transition-all"
+              >
+                Go Back
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
       
       {/* Dynamic Background Elements */}

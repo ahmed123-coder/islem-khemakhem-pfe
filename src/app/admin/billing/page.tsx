@@ -43,6 +43,8 @@ export default function AdminBillingPage() {
       const res = await fetch('/api/admin/billing')
       const data = await res.json()
       setInvoices(data)
+    } catch (error) {
+        console.error('Failed to fetch invoices')
     } finally {
       setLoading(false)
     }
