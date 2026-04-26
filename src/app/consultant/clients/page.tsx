@@ -28,6 +28,12 @@ import {
   DialogDescription,
   DialogTrigger
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 
 export default function ConsultantClients() {
@@ -49,7 +55,7 @@ export default function ConsultantClients() {
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
-  const [targetStatus, setTargetStatus] = useState<'ACTIVE' | 'CANCELLED' | null>(null)
+  const [targetStatus, setTargetStatus] = useState<string | null>(null)
   
   const [activeMissionId, setActiveMissionId] = useState<string | null>(null)
   const [deleteContext, setDeleteContext] = useState<{ id: string, type: 'mission' | 'milestone' } | null>(null)
@@ -443,38 +449,40 @@ export default function ConsultantClients() {
                   <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200 text-[9px] font-black uppercase px-2 py-0.5">
                     {selectedClientData?.serviceTier.tierType}
                   </Badge>
-                  <Badge className={cn(
-                    "border-none text-[9px] font-black uppercase px-2 py-0.5",
-                    selectedClientData?.status === 'ACTIVE' ? "bg-emerald-600 text-white shadow-emerald-100 shadow-md" : "bg-slate-200 text-slate-500"
-                  )}>
-                    {selectedClientData?.status}
-                  </Badge>
-                  {selectedClientData?.status === 'ACTIVE' && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => {
-                        setTargetStatus('CANCELLED')
-                        setIsStatusModalOpen(true)
-                      }}
-                      className="text-red-500 hover:text-red-600 hover:bg-red-50 font-black text-[9px] uppercase tracking-widest h-6 rounded-lg px-2"
-                    >
-                      <XCircle className="h-3 w-3 mr-1" /> Cancel Order
-                    </Button>
-                  )}
-                  {selectedClientData?.status === 'CANCELLED' && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => {
-                        setTargetStatus('ACTIVE')
-                        setIsStatusModalOpen(true)
-                      }}
-                      className="text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 font-black text-[9px] uppercase tracking-widest h-6 rounded-lg px-2"
-                    >
-                      <CheckCircle className="h-3 w-3 mr-1" /> Reactivate Order
-                    </Button>
-                  )}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button className="flex items-center gap-2 group outline-none">
+                        <Badge className={cn(
+                          "border-none text-[9px] font-black uppercase px-2 py-0.5 cursor-pointer transition-all group-hover:scale-105 active:scale-95",
+                          selectedClientData?.status === 'ACTIVE' ? "bg-emerald-600 text-white shadow-emerald-100 shadow-md" : 
+                          selectedClientData?.status === 'COMPLETED' ? "bg-blue-600 text-white shadow-blue-100 shadow-md" :
+                          selectedClientData?.status === 'PENDING' ? "bg-amber-500 text-white shadow-amber-100 shadow-md" :
+                          "bg-slate-200 text-slate-500"
+                        )}>
+                          {selectedClientData?.status}
+                        </Badge>
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="rounded-2xl border-slate-100 shadow-2xl p-1.5 w-40 bg-white/95 backdrop-blur-md">
+                      {['PENDING', 'ACTIVE', 'COMPLETED', 'CANCELLED'].map((status) => (
+                        <DropdownMenuItem 
+                          key={status}
+                          onClick={() => {
+                            if (status !== selectedClientData?.status) {
+                              setTargetStatus(status)
+                              setIsStatusModalOpen(true)
+                            }
+                          }}
+                          className={cn(
+                            "rounded-xl px-3 py-2 text-[10px] font-black uppercase tracking-widest cursor-pointer transition-all",
+                            status === selectedClientData?.status ? "bg-slate-50 text-slate-400 pointer-events-none" : "hover:bg-slate-50 text-slate-700"
+                          )}
+                        >
+                          {status}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </header>
 
@@ -909,21 +917,25 @@ export default function ConsultantClients() {
             <div className="p-8 pb-4 text-center">
               <div className={cn(
                 "h-20 w-20 rounded-3xl flex items-center justify-center mx-auto mb-6",
-                targetStatus === 'CANCELLED' ? "bg-red-50" : "bg-emerald-50"
+                targetStatus === 'CANCELLED' ? "bg-red-50" : 
+                targetStatus === 'ACTIVE' ? "bg-emerald-50" :
+                targetStatus === 'COMPLETED' ? "bg-blue-50" : "bg-amber-50"
               )}>
                 {targetStatus === 'CANCELLED' ? (
                   <XCircle className="h-10 w-10 text-red-500" />
-                ) : (
+                ) : targetStatus === 'ACTIVE' ? (
                   <CheckCircle className="h-10 w-10 text-emerald-500" />
+                ) : targetStatus === 'COMPLETED' ? (
+                  <CheckCircle2 className="h-10 w-10 text-blue-500" />
+                ) : (
+                  <Clock className="h-10 w-10 text-amber-500" />
                 )}
               </div>
               <DialogTitle className="text-2xl font-black text-slate-900 mb-2">
-                {targetStatus === 'CANCELLED' ? 'Cancel Order?' : 'Reactivate Order?'}
+                Update to {targetStatus}?
               </DialogTitle>
               <DialogDescription className="text-slate-500 font-medium leading-relaxed px-4">
-                {targetStatus === 'CANCELLED' 
-                  ? 'Are you sure you want to cancel this order? This will stop all active missions and services.'
-                  : 'Are you sure you want to reactivate this order? This will restore access to missions and services.'}
+                Are you sure you want to change this order status to <span className="font-bold text-slate-900">{targetStatus}</span>? This will affect client access and notifications.
               </DialogDescription>
             </div>
             <div className="p-8 flex flex-col gap-3">
@@ -931,10 +943,13 @@ export default function ConsultantClients() {
                 onClick={() => selectedClient && targetStatus && updateOrderStatus(selectedClient, targetStatus)}
                 className={cn(
                   "w-full h-14 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg transition-all active:scale-95",
-                  targetStatus === 'CANCELLED' ? "bg-red-500 hover:bg-red-600 shadow-red-100" : "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100"
+                  targetStatus === 'CANCELLED' ? "bg-red-500 hover:bg-red-600 shadow-red-100" : 
+                  targetStatus === 'ACTIVE' ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100" :
+                  targetStatus === 'COMPLETED' ? "bg-blue-600 hover:bg-blue-700 shadow-blue-100" :
+                  "bg-amber-500 hover:bg-amber-600 shadow-amber-100"
                 )}
               >
-                {targetStatus === 'CANCELLED' ? 'Yes, Cancel Order' : 'Yes, Reactivate Order'}
+                Yes, Update Status
               </Button>
               <Button 
                 variant="ghost"
