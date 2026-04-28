@@ -22,6 +22,7 @@ import {
   Layout
 } from 'lucide-react'
 import { JoinZoomButton } from '@/components/JoinZoomButton'
+import { ReviewDialog } from '@/components/reviews/review-dialog'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -375,13 +376,45 @@ export default function ClientDashboard() {
                              </div>
                              <Badge className={cn(
                                 "border-none px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full",
-                                order.status === 'ACTIVE' ? "bg-emerald-100 text-emerald-600" : "bg-slate-100 text-slate-500"
+                                order.status === 'ACTIVE' ? "bg-emerald-100 text-emerald-600" : 
+                                order.status === 'COMPLETED' ? "bg-blue-100 text-blue-600" : "bg-slate-100 text-slate-500"
                              )}>
                                 {order.status}
                              </Badge>
                           </div>
                           <div className="flex items-center justify-between pt-6 border-t border-slate-50">
-                             <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{order.serviceTier.tierType} Stream</span>
+                             <div className="flex items-center gap-2">
+                               <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{order.serviceTier.tierType} Stream</span>
+                               
+                               {order.status === 'COMPLETED' && (
+                                 <div className="flex gap-3 ml-4">
+                                   {!order.reviews.some((r: any) => r.type === 'SERVICE') && (
+                                     <ReviewDialog 
+                                       type="SERVICE"
+                                       targetId={order.id}
+                                       title={order.serviceTier.service.name}
+                                       trigger={
+                                         <button className="text-[9px] font-black text-blue-600 hover:underline uppercase tracking-widest">
+                                           Avis Service
+                                         </button>
+                                       }
+                                     />
+                                   )}
+                                   {!order.reviews.some((r: any) => r.type === 'CONSULTANT') && (
+                                     <ReviewDialog 
+                                       type="CONSULTANT"
+                                       targetId={order.id}
+                                       title={order.consultant?.name || "Consultant"}
+                                       trigger={
+                                         <button className="text-[9px] font-black text-emerald-600 hover:underline uppercase tracking-widest">
+                                           Avis Expert
+                                         </button>
+                                       }
+                                     />
+                                   )}
+                                 </div>
+                               )}
+                             </div>
                              <Link href={`/client/orders/${order.id}`}>
                                <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-blue-600 hover:underline p-0">Detailed View</Button>
                              </Link>

@@ -13,7 +13,8 @@ import {
   Briefcase,
   Zap,
   TrendingUp,
-  Award
+  Award,
+  MessageSquare
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { motion } from 'framer-motion'
@@ -55,6 +56,7 @@ export function ConsultantSidebar() {
     { href: '/consultant', label: 'Workspace', icon: LayoutDashboard },
     { href: '/consultant/reservations', label: 'Reservations', icon: Calendar },
     { href: '/consultant/clients', label: 'Clients', icon: Users },
+    { href: '/consultant/reviews', label: 'Reviews', icon: MessageSquare },
     { href: '/consultant/portfolio', label: 'Portfolio', icon: Award },
   ]
 

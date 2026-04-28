@@ -29,6 +29,17 @@ export async function GET() {
       orderBy: { createdAt: 'desc' }
     })
 
+    // Manually fetch reviews to avoid Prisma Client sync issues
+    const orderIds = orders.map(o => o.id)
+    const reviews = await prisma.review.findMany({
+      where: { orderId: { in: orderIds } }
+    })
+
+    const ordersWithReviews = orders.map(order => ({
+      ...order,
+      reviews: reviews.filter(r => r.orderId === order.id)
+    }))
+
     const reservations = await prisma.reservation.findMany({
       where: { clientId: user.id },
       include: {
@@ -38,8 +49,9 @@ export async function GET() {
       orderBy: { startTime: 'desc' }
     })
 
-    return NextResponse.json({ orders, reservations })
+    return NextResponse.json({ orders: ordersWithReviews, reservations })
   } catch (error) {
+    console.error('[ORDERS_GET]', error)
     return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })
   }
 }

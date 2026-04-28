@@ -32,11 +32,13 @@ import {
   Table,
   CalendarDays,
   Menu,
-  X
+  X,
+  Star
 } from 'lucide-react'
 import { format, isSameDay } from 'date-fns'
 import { toast } from 'react-hot-toast'
 import { JoinZoomButton } from '@/components/JoinZoomButton'
+import { ReviewDialog } from '@/components/reviews/review-dialog'
 import { getSocket } from '@/lib/socket-client'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -151,7 +153,7 @@ export default function OrderDetails() {
     try {
       const res = await fetch(`/api/client/orders/${orderId}/reservations`)
       const data = await res.json()
-      setReservations(data)
+      setReservations(Array.isArray(data) ? data : [])
     } catch (error) { console.error(error) }
   }
 
@@ -405,14 +407,44 @@ export default function OrderDetails() {
                   <p className="text-sm font-black text-slate-900 leading-none font-sans">{order.consultant?.name || 'Assigned Pending'}</p>
                </div>
             </div>
-            <div>
+            <div className="flex flex-col gap-2">
                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1 font-sans">Status</p>
-               <Badge className={cn(
-                  "border-none px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] rounded-full font-sans",
-                  order.status === 'ACTIVE' ? "bg-emerald-100 text-emerald-600 shadow-sm" : "bg-slate-100 text-slate-500"
-               )}>
-                  {order.status}
-               </Badge>
+               <div className="flex items-center gap-3">
+                 <Badge className={cn(
+                    "border-none px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] rounded-full font-sans",
+                    order.status === 'ACTIVE' ? "bg-emerald-100 text-emerald-600 shadow-sm" : "bg-slate-100 text-slate-500"
+                 )}>
+                    {order.status}
+                 </Badge>
+                 {order.status === 'COMPLETED' && (
+                    <div className="flex gap-4">
+                      {!order.reviews?.some((r: any) => r.type === 'SERVICE') && (
+                        <ReviewDialog 
+                          type="SERVICE"
+                          targetId={orderId}
+                          title={order.serviceTier?.service?.name}
+                          trigger={
+                            <button className="text-[10px] font-black text-blue-600 hover:underline uppercase tracking-widest">
+                              Évaluer le service
+                            </button>
+                          }
+                        />
+                      )}
+                      {!order.reviews?.some((r: any) => r.type === 'CONSULTANT') && (
+                        <ReviewDialog 
+                          type="CONSULTANT"
+                          targetId={orderId}
+                          title={order.consultant?.name || "Consultant"}
+                          trigger={
+                            <button className="text-[10px] font-black text-emerald-600 hover:underline uppercase tracking-widest">
+                              Évaluer l'expert
+                            </button>
+                          }
+                        />
+                      )}
+                    </div>
+                  )}
+               </div>
             </div>
           </Card>
         </header>
@@ -497,7 +529,7 @@ export default function OrderDetails() {
                                           ) : (
                                              <div className="flex flex-col items-end gap-1.5 font-sans">
                                                 <span className="text-[10px] text-slate-300 font-bold italic">
-                                                   {reservation.status === 'CONFIRMED' ? 'Disponible 15m avant' : 'En attente de confirmation'}
+                                                     {reservation.status === 'CONFIRMED' ? 'Disponible 15m avant' : (reservation.status === 'COMPLETED' ? 'Session terminée' : 'En attente de confirmation')}
                                                 </span>
                                                 {reservation.status === 'PENDING' && (
                                                    <button 

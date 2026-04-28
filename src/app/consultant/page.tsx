@@ -18,7 +18,8 @@ import {
   Play,
   Award,
   CircleDashed,
-  LayoutDashboard
+  LayoutDashboard,
+  Star
 } from 'lucide-react'
 import { 
   AreaChart, 
@@ -223,24 +224,32 @@ export default function ConsultantWorkspace() {
           </section>
         </motion.div>
 
-        {/* Portfolio & Earnings Area */}
+        {/* Reputation & Ratings */}
         <motion.div variants={item} className="lg:col-span-1">
-           <Card className="h-full rounded-[40px] border-none bg-emerald-50 shadow-sm p-8 flex flex-col group relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-200/20 rounded-full blur-2xl" />
-              <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center mb-6">
-                 <Award className="w-6 h-6 text-emerald-600" />
+           <Card className="h-full rounded-[40px] border-none bg-blue-50 shadow-sm p-8 flex flex-col group relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/20 rounded-full blur-2xl" />
+              <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center mb-6 shadow-sm">
+                 <Award className="w-6 h-6 text-blue-600" />
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 mb-2">Portfolio Quick-Look</p>
-              <div className="grid grid-cols-2 gap-2 mb-6">
-                 {[1,2,3,4].map(i => (
-                   <div key={i} className="aspect-square rounded-xl bg-white/60 p-1 flex items-center justify-center overflow-hidden border border-white">
-                      <Zap className="w-4 h-4 text-emerald-300" />
-                   </div>
-                 ))}
+              <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 mb-2">Reputation</p>
+              
+              <div className="flex items-baseline gap-2 mb-1">
+                <h4 className="text-4xl font-black text-slate-900">{stats?.ratings?.avgRating?.toFixed(1) || '0.0'}</h4>
+                <div className="flex text-yellow-400">
+                  <Star className="w-4 h-4 fill-current" />
+                </div>
               </div>
-              <Button variant="ghost" className="mt-auto w-full rounded-xl bg-white/50 text-emerald-700 font-bold text-[10px] uppercase tracking-widest h-10">
-                Update Case Studies
-              </Button>
+              <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-6">
+                Based on {stats?.ratings?.reviewCount || 0} reviews
+              </p>
+
+              <div className="space-y-3 mt-auto">
+                <Link href="/consultant/reviews">
+                  <Button variant="ghost" className="w-full rounded-xl bg-white/50 text-blue-700 font-bold text-[10px] uppercase tracking-widest h-10 hover:bg-white transition-all">
+                    View All Feedback
+                  </Button>
+                </Link>
+              </div>
            </Card>
         </motion.div>
       </motion.section>

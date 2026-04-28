@@ -20,7 +20,7 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
     }
 
     if (!order.consultantId) {
-      return NextResponse.json({ error: 'No consultant assigned to this order' }, { status: 400 })
+      return NextResponse.json([])
     }
 
     // Fetch all reservations for this consultant to show availability in the calendar grid
@@ -36,7 +36,11 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
         orderId: true,
         meetingType: true,
         zoomJoinUrl: true,
-        zoomPassword: true
+        zoomPassword: true,
+        consultantId: true,
+        consultant: {
+          select: { name: true }
+        }
       },
       orderBy: { startTime: 'asc' }
     })

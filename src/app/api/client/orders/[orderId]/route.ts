@@ -26,7 +26,16 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
       return NextResponse.json({ error: 'Order not found' }, { status: 403 })
     }
 
-    return NextResponse.json(order)
+    const reviews = await prisma.review.findMany({
+      where: { orderId: order.id }
+    })
+
+    const orderWithReviews = {
+      ...order,
+      reviews
+    }
+
+    return NextResponse.json(orderWithReviews)
   } catch (error) {
     return NextResponse.json({ error: 'Failed to fetch order' }, { status: 500 })
   }

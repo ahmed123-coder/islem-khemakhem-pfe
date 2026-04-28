@@ -26,7 +26,8 @@ export async function GET() {
       totalClients,
       nextAppointment,
       recentClientGrowth,
-      todayMissions
+      todayMissions,
+      consultantRatings
     ] = await Promise.all([
       // Appointments today
       prisma.reservation.count({
@@ -85,6 +86,11 @@ export async function GET() {
         },
         orderBy: { startTime: 'asc' },
         include: { client: { select: { name: true } } }
+      }),
+      // Consultant Ratings
+      prisma.consultant.findUnique({
+        where: { id: consultantId },
+        select: { avgRating: true, reviewCount: true }
       })
     ])
 
@@ -104,7 +110,8 @@ export async function GET() {
       totalClients: totalClients.length,
       nextAppointment,
       clientGrowth: recentClientGrowth,
-      todayMissions
+      todayMissions,
+      ratings: consultantRatings
     })
   } catch (error) {
     console.error('Stats error:', error)
