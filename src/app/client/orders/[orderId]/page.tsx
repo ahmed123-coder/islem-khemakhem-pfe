@@ -505,6 +505,9 @@ export default function OrderDetails() {
                 <TabsTrigger value="missions" className="rounded-xl lg:px-8 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all font-sans">
                    Missions
                 </TabsTrigger>
+                <TabsTrigger value="reviews" className="rounded-xl lg:px-8 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all font-sans flex items-center gap-2">
+                   Feedback <Badge variant="secondary" className="px-1.5 py-0 bg-blue-50 text-blue-600 border-none text-[8px]">{order.reviews?.length || 0}</Badge>
+                </TabsTrigger>
              </TabsList>
              
              <div className="hidden md:flex items-center gap-4 text-xs font-black uppercase tracking-widest text-slate-400 font-sans">
@@ -951,6 +954,82 @@ export default function OrderDetails() {
                             )
                         })}
                      </div>
+                   )}
+                </div>
+             </TabsContent>
+
+             <TabsContent value="reviews" className="m-0 flex-1 p-4 md:p-10 focus-visible:ring-0 overflow-y-auto">
+                <div className="max-w-4xl mx-auto space-y-10">
+                   <div className="flex flex-col gap-2">
+                      <h3 className="text-2xl font-black text-slate-900 tracking-tight font-sans uppercase">Votre Feedback</h3>
+                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest font-sans">Consultez et modifiez les avis laissés pour cette commande</p>
+                   </div>
+
+                   {order.reviews && order.reviews.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                         {order.reviews.map((review: any) => (
+                            <Card key={review.id} className="border-none shadow-xl shadow-slate-200/40 rounded-[2.5rem] bg-white overflow-hidden p-8 group relative hover:shadow-2xl transition-all duration-300">
+                               <div className="flex justify-between items-start mb-6">
+                                  <div className="flex flex-col gap-1">
+                                     <Badge className={cn(
+                                        "w-fit border-none px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full font-sans",
+                                        review.type === 'SERVICE' ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"
+                                     )}>
+                                        {review.type === 'SERVICE' ? 'Qualité Service' : 'Expertise Consultant'}
+                                     </Badge>
+                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight mt-1 font-sans">
+                                        Posté le {new Date(review.createdAt).toLocaleDateString()}
+                                     </span>
+                                  </div>
+                                  <ReviewDialog
+                                    type={review.type}
+                                    targetId={order.id}
+                                    title={review.type === 'SERVICE' ? order.serviceTier.service.name : (order.consultant?.name || "Consultant")}
+                                    initialRating={review.rating}
+                                    initialComment={review.comment}
+                                    reviewId={review.id}
+                                    onSuccess={fetchOrder}
+                                    trigger={
+                                      <button className="h-10 w-10 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-300 hover:text-blue-600 hover:bg-blue-50 transition-all group/edit">
+                                         <Pencil className="w-4 h-4" />
+                                      </button>
+                                    }
+                                  />
+                               </div>
+
+                               <div className="flex items-center gap-1 mb-6">
+                                  {[...Array(5)].map((_, i) => (
+                                     <Star key={i} className={cn("w-5 h-5", i < review.rating ? "fill-amber-400 text-amber-400" : "text-slate-100")} />
+                                  ))}
+                               </div>
+
+                               {review.comment ? (
+                                  <div className="relative">
+                                     <div className="absolute -left-2 -top-2 text-slate-50 text-4xl font-serif">“</div>
+                                     <p className="text-slate-600 font-medium italic relative z-10 pl-2 leading-relaxed">
+                                        {review.comment}
+                                     </p>
+                                  </div>
+                               ) : (
+                                  <p className="text-slate-300 italic font-medium">Aucun commentaire écrit.</p>
+                               )}
+
+                               {/* Decorative background shape */}
+                               <div className={cn(
+                                  "absolute -bottom-6 -right-6 w-24 h-24 rounded-full blur-3xl opacity-10 transition-opacity group-hover:opacity-20",
+                                  review.type === 'SERVICE' ? "bg-blue-600" : "bg-emerald-600"
+                               )} />
+                            </Card>
+                         ))}
+                      </div>
+                   ) : (
+                      <Card className="border-2 border-dashed border-slate-200 rounded-[3rem] p-20 text-center bg-white/40">
+                         <div className="h-20 w-20 bg-white rounded-full flex items-center justify-center shadow-sm mx-auto mb-6">
+                            <Star className="w-8 h-8 text-slate-200" />
+                         </div>
+                         <h4 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight font-sans">Aucun avis encore</h4>
+                         <p className="text-slate-400 font-medium max-w-xs mx-auto font-sans">Une fois la commande terminée, vous pourrez évaluer notre service et votre expert.</p>
+                      </Card>
                    )}
                 </div>
              </TabsContent>
