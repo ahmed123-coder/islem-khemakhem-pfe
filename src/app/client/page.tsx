@@ -20,7 +20,8 @@ import {
   ExternalLink,
   Zap,
   Layout,
-  Star
+  Star,
+  Pencil
 } from 'lucide-react'
 import { JoinZoomButton } from '@/components/JoinZoomButton'
 import { ReviewDialog } from '@/components/reviews/review-dialog'
@@ -173,10 +174,26 @@ export default function ClientDashboard() {
                                 )}>
                                   {review.type}
                                 </Badge>
-                                <div className="flex items-center gap-0.5">
-                                  {[...Array(5)].map((_, i) => (
-                                    <Star key={i} className={cn("w-2.5 h-2.5", i < review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200")} />
-                                  ))}
+                                <div className="flex items-center gap-1.5">
+                                  <div className="flex items-center gap-0.5">
+                                    {[...Array(5)].map((_, i) => (
+                                      <Star key={i} className={cn("w-2.5 h-2.5", i < review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200")} />
+                                    ))}
+                                  </div>
+                                  <ReviewDialog
+                                    type={review.type}
+                                    targetId={activeOrder.id}
+                                    title={review.type === 'SERVICE' ? activeOrder.serviceTier.service.name : (activeOrder.consultant?.name || "Consultant")}
+                                    initialRating={review.rating}
+                                    initialComment={review.comment}
+                                    reviewId={review.id}
+                                    onSuccess={fetchData}
+                                    trigger={
+                                      <button className="p-1 hover:bg-blue-50 rounded-md transition-colors group/edit">
+                                        <Pencil className="w-2.5 h-2.5 text-slate-300 group-hover:text-blue-500" />
+                                      </button>
+                                    }
+                                  />
                                 </div>
                               </div>
                               {review.comment && <p className="text-[10px] font-bold text-slate-600 italic leading-relaxed line-clamp-2">"{review.comment}"</p>}
@@ -424,6 +441,7 @@ export default function ClientDashboard() {
                                        type="SERVICE"
                                        targetId={order.id}
                                        title={order.serviceTier.service.name}
+                                       onSuccess={fetchData}
                                        trigger={
                                          <button className="text-[9px] font-black text-blue-600 hover:underline uppercase tracking-widest">
                                            Avis Service
@@ -436,6 +454,7 @@ export default function ClientDashboard() {
                                        type="CONSULTANT"
                                        targetId={order.id}
                                        title={order.consultant?.name || "Consultant"}
+                                       onSuccess={fetchData}
                                        trigger={
                                          <button className="text-[9px] font-black text-emerald-600 hover:underline uppercase tracking-widest">
                                            Avis Expert
@@ -471,16 +490,32 @@ export default function ClientDashboard() {
                                           {review.type === 'SERVICE' ? 'Service Quality' : 'Expert Expertise'}
                                         </span>
                                       </div>
-                                      <div className="flex items-center gap-0.5">
-                                        {[...Array(5)].map((_, i) => (
-                                          <Star 
-                                            key={i} 
-                                            className={cn(
-                                              "w-3 h-3", 
-                                              i < review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"
-                                            )} 
-                                          />
-                                        ))}
+                                      <div className="flex items-center gap-1.5">
+                                        <div className="flex items-center gap-0.5">
+                                          {[...Array(5)].map((_, i) => (
+                                            <Star 
+                                              key={i} 
+                                              className={cn(
+                                                "w-3 h-3", 
+                                                i < review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"
+                                              )} 
+                                            />
+                                          ))}
+                                        </div>
+                                        <ReviewDialog
+                                          type={review.type}
+                                          targetId={order.id}
+                                          title={review.type === 'SERVICE' ? order.serviceTier.service.name : (order.consultant?.name || "Consultant")}
+                                          initialRating={review.rating}
+                                          initialComment={review.comment}
+                                          reviewId={review.id}
+                                          onSuccess={fetchData}
+                                          trigger={
+                                            <button className="p-1 hover:bg-blue-50 rounded-md transition-colors group/edit">
+                                              <Pencil className="w-3 h-3 text-slate-300 group-hover:text-blue-500" />
+                                            </button>
+                                          }
+                                        />
                                       </div>
                                     </div>
                                     {review.comment && (

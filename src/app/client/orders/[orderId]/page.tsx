@@ -33,7 +33,8 @@ import {
   CalendarDays,
   Menu,
   X,
-  Star
+  Star,
+  Pencil
 } from 'lucide-react'
 import { format, isSameDay } from 'date-fns'
 import { toast } from 'react-hot-toast'
@@ -422,10 +423,26 @@ export default function OrderDetails() {
                     <div className="flex gap-2 ml-2">
                       {order.reviews.map((review: any) => (
                         <div key={review.id} className="flex items-center gap-1.5 bg-slate-50/50 border border-slate-100 rounded-full px-3 py-1 group/rev cursor-help relative hover:bg-white transition-colors">
-                           <div className="flex items-center gap-0.5">
-                             {[...Array(5)].map((_, i) => (
-                               <Star key={i} className={cn("w-2 h-2", i < review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200")} />
-                             ))}
+                           <div className="flex items-center gap-1.5">
+                             <div className="flex items-center gap-0.5">
+                               {[...Array(5)].map((_, i) => (
+                                 <Star key={i} className={cn("w-2 h-2", i < review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200")} />
+                               ))}
+                             </div>
+                             <ReviewDialog
+                               type={review.type}
+                               targetId={order.id}
+                               title={review.type === 'SERVICE' ? order.serviceTier.service.name : (order.consultant?.name || "Consultant")}
+                               initialRating={review.rating}
+                               initialComment={review.comment}
+                               reviewId={review.id}
+                               onSuccess={fetchOrder}
+                               trigger={
+                                 <button className="p-0.5 hover:bg-blue-50 rounded transition-colors group/edit">
+                                   <Pencil className="w-2 h-2 text-slate-300 group-hover:text-blue-500" />
+                                 </button>
+                               }
+                             />
                            </div>
                            <span className="text-[8px] font-black uppercase text-slate-500 tracking-tighter">{review.type === 'SERVICE' ? 'Service' : 'Expert'}</span>
                            
@@ -447,6 +464,7 @@ export default function OrderDetails() {
                           type="SERVICE"
                           targetId={orderId}
                           title={order.serviceTier?.service?.name}
+                          onSuccess={fetchOrder}
                           trigger={
                             <button className="text-[10px] font-black text-blue-600 hover:underline uppercase tracking-widest">
                               Évaluer le service
@@ -459,6 +477,7 @@ export default function OrderDetails() {
                           type="CONSULTANT"
                           targetId={orderId}
                           title={order.consultant?.name || "Consultant"}
+                          onSuccess={fetchOrder}
                           trigger={
                             <button className="text-[10px] font-black text-emerald-600 hover:underline uppercase tracking-widest">
                               Évaluer l'expert

@@ -12,12 +12,22 @@ interface ReviewFormProps {
   type: 'CONSULTANT' | 'SERVICE'
   targetId: string // orderId
   onSuccess?: () => void
+  initialRating?: number
+  initialComment?: string
+  reviewId?: string
 }
 
-export function ReviewForm({ type, targetId, onSuccess }: ReviewFormProps) {
+export function ReviewForm({ 
+  type, 
+  targetId, 
+  onSuccess, 
+  initialRating = 5, 
+  initialComment = "", 
+  reviewId 
+}: ReviewFormProps) {
   const router = useRouter()
-  const [rating, setRating] = React.useState(5)
-  const [comment, setComment] = React.useState("")
+  const [rating, setRating] = React.useState(initialRating)
+  const [comment, setComment] = React.useState(initialComment)
   const [isSubmitting, setIsSubmitting] = React.useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,15 +35,15 @@ export function ReviewForm({ type, targetId, onSuccess }: ReviewFormProps) {
     setIsSubmitting(true)
 
     try {
+      const method = reviewId ? 'PATCH' : 'POST'
+      const body = reviewId 
+        ? { id: reviewId, rating, comment }
+        : { type, rating, comment, orderId: targetId }
+
       const response = await fetch('/api/reviews', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type,
-          rating,
-          comment,
-          orderId: targetId
-        }),
+        body: JSON.stringify(body),
       })
 
       const data = await response.json()
@@ -42,9 +52,11 @@ export function ReviewForm({ type, targetId, onSuccess }: ReviewFormProps) {
         throw new Error(data.error || 'Failed to submit review')
       }
 
-      toast.success('Merci pour votre avis !')
-      setComment("")
-      setRating(5)
+      toast.success(reviewId ? 'Avis mis à jour !' : 'Merci pour votre avis !')
+      if (!reviewId) {
+        setComment("")
+        setRating(5)
+      }
       onSuccess?.()
       router.refresh()
     } catch (error: any) {
@@ -87,7 +99,7 @@ export function ReviewForm({ type, targetId, onSuccess }: ReviewFormProps) {
             Envoi en cours...
           </>
         ) : (
-          'Publier mon avis'
+          reviewId ? 'Mettre à jour mon avis' : 'Publier mon avis'
         )}
       </Button>
     </form>

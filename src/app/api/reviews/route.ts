@@ -125,3 +125,50 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }
+
+export async function PATCH(req: NextRequest) {
+  const clientId = await getClientId()
+  if (!clientId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  try {
+    const { id, rating, comment } = await req.json()
+
+    if (!id || !rating || (rating < 1 || rating > 5)) {
+      return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
+    }
+
+    const review = await prisma.review.findUnique({
+      where: { id }
+    })
+
+    if (!review) {
+      return NextResponse.json({ error: 'Review not found' }, { status: 404 })
+    }
+
+    if (review.clientId !== clientId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    }
+
+    const updatedReview = await prisma.review.update({
+      where: { id },
+      data: {
+        rating,
+        comment,
+      }
+    })
+
+    // Update cached ratings
+    if (review.type === 'CONSULTANT' && review.consultantId) {
+      await updateConsultantRating(review.consultantId)
+    } else if (review.type === 'SERVICE' && review.serviceId) {
+      await updateServiceRating(review.serviceId)
+    }
+
+    return NextResponse.json(updatedReview)
+  } catch (error) {
+    console.error('[REVIEWS_PATCH]', error)
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+  }
+}
