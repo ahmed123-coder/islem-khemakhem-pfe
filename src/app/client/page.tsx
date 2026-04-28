@@ -19,7 +19,8 @@ import {
   MoreVertical,
   ExternalLink,
   Zap,
-  Layout
+  Layout,
+  Star
 } from 'lucide-react'
 import { JoinZoomButton } from '@/components/JoinZoomButton'
 import { ReviewDialog } from '@/components/reviews/review-dialog'
@@ -154,6 +155,36 @@ export default function ClientDashboard() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Reviews for Active Order */}
+                    {activeOrder.reviews && activeOrder.reviews.length > 0 && (
+                      <div className="mt-8 space-y-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Recent Feedback</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {activeOrder.reviews.map((review: any) => (
+                            <div key={review.id} className="bg-slate-50/30 backdrop-blur-sm rounded-2xl p-4 border border-slate-100/50 shadow-sm transition-all hover:bg-white hover:shadow-md">
+                              <div className="flex items-center justify-between mb-2">
+                                <Badge variant="secondary" className={cn(
+                                  "text-[8px] font-black uppercase px-2 py-0.5 border-none",
+                                  review.type === 'SERVICE' ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"
+                                )}>
+                                  {review.type}
+                                </Badge>
+                                <div className="flex items-center gap-0.5">
+                                  {[...Array(5)].map((_, i) => (
+                                    <Star key={i} className={cn("w-2.5 h-2.5", i < review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200")} />
+                                  ))}
+                                </div>
+                              </div>
+                              {review.comment && <p className="text-[10px] font-bold text-slate-600 italic leading-relaxed line-clamp-2">"{review.comment}"</p>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-8 mt-12 pt-8 border-t border-slate-50">
@@ -419,6 +450,49 @@ export default function ClientDashboard() {
                                <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-blue-600 hover:underline p-0">Detailed View</Button>
                              </Link>
                           </div>
+
+                          {/* Reviews Section */}
+                          {order.reviews && order.reviews.length > 0 && (
+                            <div className="mt-6 pt-6 border-t border-slate-50 space-y-3">
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Client Feedback</span>
+                                <div className="h-px flex-1 bg-slate-50 mx-4" />
+                              </div>
+                              <div className="grid grid-cols-1 gap-2">
+                                {order.reviews.map((review: any) => (
+                                  <div key={review.id} className="bg-slate-50/50 rounded-2xl p-4 border border-slate-100/50">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <div className="flex items-center gap-2">
+                                        <div className={cn(
+                                          "w-1.5 h-1.5 rounded-full",
+                                          review.type === 'SERVICE' ? "bg-blue-400" : "bg-emerald-400"
+                                        )} />
+                                        <span className="text-[9px] font-black uppercase text-slate-500 tracking-tight">
+                                          {review.type === 'SERVICE' ? 'Service Quality' : 'Expert Expertise'}
+                                        </span>
+                                      </div>
+                                      <div className="flex items-center gap-0.5">
+                                        {[...Array(5)].map((_, i) => (
+                                          <Star 
+                                            key={i} 
+                                            className={cn(
+                                              "w-3 h-3", 
+                                              i < review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200"
+                                            )} 
+                                          />
+                                        ))}
+                                      </div>
+                                    </div>
+                                    {review.comment && (
+                                      <p className="text-[11px] font-medium text-slate-600 italic leading-relaxed">
+                                        "{review.comment}"
+                                      </p>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                        </Card>
                     ))}
                  </div>

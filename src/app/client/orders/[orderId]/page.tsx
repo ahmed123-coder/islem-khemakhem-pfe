@@ -410,13 +410,37 @@ export default function OrderDetails() {
             <div className="flex flex-col gap-2">
                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1 font-sans">Status</p>
                <div className="flex items-center gap-3">
-                 <Badge className={cn(
-                    "border-none px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] rounded-full font-sans",
-                    order.status === 'ACTIVE' ? "bg-emerald-100 text-emerald-600 shadow-sm" : "bg-slate-100 text-slate-500"
-                 )}>
-                    {order.status}
-                 </Badge>
-                 {order.status === 'COMPLETED' && (
+                  <Badge className={cn(
+                     "border-none px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] rounded-full font-sans",
+                     order.status === 'ACTIVE' ? "bg-emerald-100 text-emerald-600 shadow-sm" : "bg-slate-100 text-slate-500"
+                  )}>
+                     {order.status}
+                  </Badge>
+
+                  {/* Existing Reviews Display */}
+                  {order.reviews && order.reviews.length > 0 && (
+                    <div className="flex gap-2 ml-2">
+                      {order.reviews.map((review: any) => (
+                        <div key={review.id} className="flex items-center gap-1.5 bg-slate-50/50 border border-slate-100 rounded-full px-3 py-1 group/rev cursor-help relative hover:bg-white transition-colors">
+                           <div className="flex items-center gap-0.5">
+                             {[...Array(5)].map((_, i) => (
+                               <Star key={i} className={cn("w-2 h-2", i < review.rating ? "fill-amber-400 text-amber-400" : "text-slate-200")} />
+                             ))}
+                           </div>
+                           <span className="text-[8px] font-black uppercase text-slate-500 tracking-tighter">{review.type === 'SERVICE' ? 'Service' : 'Expert'}</span>
+                           
+                           {review.comment && (
+                             <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-48 bg-slate-900 text-white text-[10px] p-3 rounded-xl opacity-0 group-hover/rev:opacity-100 transition-opacity pointer-events-none z-50 shadow-2xl font-sans font-medium leading-relaxed">
+                               "{review.comment}"
+                               <div className="absolute top-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-t-slate-900" />
+                             </div>
+                           )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {order.status === 'COMPLETED' && (
                     <div className="flex gap-4">
                       {!order.reviews?.some((r: any) => r.type === 'SERVICE') && (
                         <ReviewDialog 
