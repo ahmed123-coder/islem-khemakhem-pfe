@@ -19,7 +19,8 @@ import {
   Type,
   AlignLeft,
   Calendar,
-  Rocket
+  Rocket,
+  Loader2
 } from 'lucide-react'
 import { StandardPage } from '@/components/admin/standard-page'
 import { Button } from '@/components/ui/button'
@@ -50,6 +51,10 @@ export default function BlogsCMS() {
   const [isEditing, setIsEditing] = React.useState(false)
   const [showPreview, setShowPreview] = React.useState(false)
 
+  const [imageFile, setImageFile] = React.useState<File | null>(null)
+  const [iconFile, setIconFile] = React.useState<File | null>(null)
+  const [isSaving, setIsSaving] = React.useState(false)
+
   React.useEffect(() => { 
     loadBlogs() 
   }, [])
@@ -59,9 +64,13 @@ export default function BlogsCMS() {
       const selected = blogs.find(b => b.id === selectedId)
       if (selected) {
         setForm(selected)
+        setImageFile(null)
+        setIconFile(null)
       }
     } else {
       setForm({ published: false })
+      setImageFile(null)
+      setIconFile(null)
     }
   }, [selectedId, blogs])
 
@@ -86,7 +95,60 @@ export default function BlogsCMS() {
   const handleCreateNew = () => {
     setSelectedId(null)
     setForm({ published: false })
+    setImageFile(null)
+    setIconFile(null)
     setIsEditing(true)
+  }
+
+  const handleSave = async () => {
+    if (!form.title || !form.content) return
+    setIsSaving(true)
+    try {
+      const formData = new FormData()
+      formData.append('title', form.title)
+      formData.append('content', form.content)
+      formData.append('published', form.published ? 'true' : 'false')
+      if (form.excerpt) formData.append('excerpt', form.excerpt)
+      if (selectedId) formData.append('id', selectedId)
+      
+      if (imageFile) formData.append('image', imageFile)
+      if (iconFile) formData.append('icon', iconFile)
+
+      const method = selectedId ? 'PUT' : 'POST'
+      const res = await fetch('/api/admin/blogs', {
+        method,
+        body: formData,
+      })
+      if (res.ok) {
+        await loadBlogs()
+        if (!selectedId) {
+          const newBlog = await res.json()
+          setSelectedId(newBlog.id)
+        }
+      }
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!selectedId) {
+      setIsEditing(false)
+      return
+    }
+    if (!confirm('Are you sure you want to delete this?')) return
+    try {
+      const res = await fetch(`/api/admin/blogs?id=${selectedId}`, { method: 'DELETE' })
+      if (res.ok) {
+        await loadBlogs()
+        setSelectedId(null)
+        setIsEditing(false)
+      }
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   const filteredBlogs = blogs.filter(b => 
@@ -148,9 +210,7 @@ export default function BlogsCMS() {
                       {blog.image ? (
                         <img src={blog.image} alt="" className="w-full h-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <ImageIcon className="w-6 h-6 text-slate-200" />
-                        </div>
+                        <ImageIcon className="w-6 h-6 text-slate-200" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0 pr-6">
@@ -270,20 +330,66 @@ export default function BlogsCMS() {
                         />
                       </div>
 
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
+                            <ImageIcon className="w-3 h-3" /> Hero Image
+                          </label>
+                          <div className="group relative h-48 rounded-[32px] border-2 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer overflow-hidden">
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={(e) => { if (e.target.files?.[0]) setImageFile(e.target.files[0]) }} 
+                              className="absolute inset-0 opacity-0 cursor-pointer z-10" 
+                            />
+                            {imageFile ? (
+                              <img src={URL.createObjectURL(imageFile)} className="h-full w-full object-cover" alt="Hero" />
+                            ) : form.image ? (
+                              <img src={form.image} className="h-full w-full object-cover" alt="Hero" />
+                            ) : (
+                              <>
+                                <Plus className="w-10 h-10 text-slate-200 group-hover:text-blue-400 transition-colors" />
+                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">Select Brilliance</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
+                            <Sparkles className="w-3 h-3" /> Icon
+                          </label>
+                          <div className="group relative h-48 rounded-[32px] border-2 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer overflow-hidden">
+                            <input 
+                              type="file" 
+                              accept="image/*" 
+                              onChange={(e) => { if (e.target.files?.[0]) setIconFile(e.target.files[0]) }} 
+                              className="absolute inset-0 opacity-0 cursor-pointer z-10" 
+                            />
+                            {iconFile ? (
+                              <img src={URL.createObjectURL(iconFile)} className="h-24 w-24 object-contain" alt="Icon" />
+                            ) : form.icon ? (
+                              <img src={form.icon} className="h-24 w-24 object-contain" alt="Icon" />
+                            ) : (
+                              <>
+                                <Plus className="w-10 h-10 text-slate-200 group-hover:text-blue-400 transition-colors" />
+                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">Upload Icon</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
-                          <ImageIcon className="w-3 h-3" /> Hero Image
+                          <AlignLeft className="w-3 h-3" /> Short Excerpt
                         </label>
-                        <div className="group relative h-48 rounded-[32px] border-2 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer overflow-hidden">
-                          {form.image ? (
-                            <img src={form.image} className="h-full w-full object-cover" alt="Hero" />
-                          ) : (
-                            <>
-                              <Plus className="w-10 h-10 text-slate-200 group-hover:text-blue-400 transition-colors" />
-                              <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">Select Brilliance</span>
-                            </>
-                          )}
-                        </div>
+                        <Textarea 
+                          value={form.excerpt || ''} 
+                          onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
+                          placeholder="A quick summary..." 
+                          className="min-h-[80px] border border-slate-100 rounded-2xl bg-white shadow-sm px-4 py-3 text-sm font-medium resize-none placeholder:text-slate-300 focus-visible:ring-blue-600/20"
+                        />
                       </div>
 
                       <div className="space-y-4 pt-4 border-t border-slate-50">
@@ -325,8 +431,20 @@ export default function BlogsCMS() {
                             <button onClick={() => setShowPreview(false)}><X className="w-4 h-4 text-slate-300" /></button>
                          </div>
                          <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                            <div className="h-48 rounded-3xl bg-slate-50 overflow-hidden">
-                               {form.image && <img src={form.image} className="w-full h-full object-cover" alt="" />}
+                            <div className="h-48 rounded-3xl bg-slate-50 overflow-hidden relative">
+                               {imageFile ? (
+                                  <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" alt="" />
+                               ) : form.image && (
+                                  <img src={form.image} className="w-full h-full object-cover" alt="" />
+                               )}
+                               
+                               <div className="absolute top-4 left-4 w-12 h-12 bg-white rounded-2xl shadow-lg flex items-center justify-center overflow-hidden p-2">
+                                  {iconFile ? (
+                                     <img src={URL.createObjectURL(iconFile)} className="w-full h-full object-contain" alt="" />
+                                  ) : form.icon && (
+                                     <img src={form.icon} className="w-full h-full object-contain" alt="" />
+                                  )}
+                               </div>
                             </div>
                             <h1 className="text-3xl font-black text-slate-900 leading-tight">{form.title || 'Draft Title'}</h1>
                             <div className="flex items-center gap-3">
@@ -350,13 +468,17 @@ export default function BlogsCMS() {
                   <div className="flex items-center justify-between">
                     <Button 
                       variant="ghost" 
+                      onClick={handleDelete}
                       className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl font-bold text-sm px-6"
                     >
                       <Trash2 className="w-4 h-4 mr-2" /> Discard Narrative
                     </Button>
                     <Button 
-                      className="rounded-[24px] bg-blue-600 hover:bg-blue-700 text-white font-black italic text-lg px-10 h-16 shadow-2xl shadow-blue-200 transition-all hover:scale-105 active:scale-95"
+                      onClick={handleSave}
+                      disabled={isSaving || !form.title || !form.content}
+                      className="rounded-[24px] bg-blue-600 hover:bg-blue-700 text-white font-black italic text-lg px-10 h-16 shadow-2xl shadow-blue-200 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                     >
+                      {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
                       Publish to Live <Rocket className="w-5 h-5 ml-3" />
                     </Button>
                   </div>

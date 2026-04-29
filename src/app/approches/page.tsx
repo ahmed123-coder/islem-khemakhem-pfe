@@ -22,8 +22,22 @@ async function getFaqs() {
   }
 }
 
+async function getApproches() {
+  try {
+    const approches = await prisma.blog.findMany({
+      where: { published: true },
+      orderBy: { createdAt: 'asc' }
+    });
+    return approches;
+  } catch (error) {
+    console.error("Fetch approches error:", error);
+    return [];
+  }
+}
+
 export default async function ApprochesPage() {
   const faqs = await getFaqs();
+  const approches = await getApproches();
   let heroData: any = null;
   try {
     const heroContent = await prisma.siteContent.findUnique({ where: { key: 'hero-approches' } })
@@ -58,62 +72,54 @@ export default async function ApprochesPage() {
       </section>
 
       {/* Approches Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: '👥',
-                title: 'Coaching professionnel',
-                desc: 'Nous proposons un accompagnement ciblé pour libérer votre potentiel. Coaching individuel ou d\'équipes, développement du leadership et accompagnement des transitions professionnelles : tout est pensé pour favoriser l\'engagement, la performance et la réussite durable.',
-                benefits: [
-                  'Coaching individuel et d\'équipes',
-                  'Développement du leadership',
-                  'Accompagnement des transitions',
-                  'Favoriser l\'engagement et la performance'
-                ]
-              },
-              {
-                icon: '🔄',
-                title: 'Conduite du changement',
-                desc: 'Nous aidons les organisations à réussir leurs transformations en alignant les dimensions humaines et opérationnelles. Grâce à un diagnostic précis, des stratégies sur mesure et la mobilisation des équipes, nous garantissons cohérence, adhésion et performance durable.',
-                benefits: [
-                  'Diagnostic précis des enjeux',
-                  'Stratégies de transformation sur mesure',
-                  'Mobilisation et engagement des équipes',
-                  'Pérennité du changement'
-                ]
-              },
-              {
-                icon: '📚',
-                title: 'Formation & Sensibilisation',
-                desc: 'Nous développons des parcours de formation sur mesure pour renforcer les compétences clés et installer une culture d\'amélioration continue. Nos programmes interactifs sont orientés résultats et visent un impact concret sur la performance individuelle et collective.',
-                benefits: [
-                  'Parcours de formation personnalisés',
-                  'Renforcement des compétences clés',
-                  'Culture d\'amélioration continue',
-                  'Impact mesurable sur la performance'
-                ]
-              }
-            ].map((approche, i) => (
-              <div key={i} className="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
-                <div className="text-5xl mb-5">{approche.icon}</div>
-                <div className="w-10 h-1 bg-[#7AB648] mb-4 rounded-full"></div>
-                <h3 className="text-2xl font-bold text-[#1B3F7A] mb-4">{approche.title}</h3>
-                <p className="text-gray-700 leading-relaxed mb-6 text-sm">
-                  {approche.desc}
-                </p>
-                <div className="space-y-2 mb-6">
-                  {approche.benefits.map((benefit, j) => (
-                    <div key={j} className="flex items-start gap-3">
-                      <span className="text-[#7AB648] mt-1 flex-shrink-0">✔️</span>
-                      <p className="text-gray-600 text-sm">{benefit}</p>
-                    </div>
-                  ))}
+      <section className="py-20 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+          {approches.length > 0 ? approches.map((approche, index) => {
+            return (
+              <div key={approche.id || index} className="animate-in fade-in slide-in-from-bottom-10 duration-700">
+                <div className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center group ${index % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
+                  <div className={`${index % 2 === 1 ? 'lg:order-2' : ''}`}>
+                    {approche.icon && (
+                      <div className="w-20 h-20 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 flex items-center justify-center mb-8 overflow-hidden group-hover:-translate-y-1 transition-transform duration-500 relative">
+                        <div className="absolute inset-0 bg-[#7AB648]/10 group-hover:bg-[#7AB648]/0 transition-colors duration-500"></div>
+                        <img src={approche.icon} alt={approche.title} className="w-12 h-12 object-contain relative z-10 group-hover:scale-110 transition-transform duration-500" />
+                      </div>
+                    )}
+                    <h2 className="text-4xl font-serif font-extrabold text-gray-900 mb-6 leading-tight group-hover:text-[#1B3F7A] transition-colors duration-300">
+                      {approche.title}
+                    </h2>
+                    {approche.excerpt && (
+                      <p className="text-lg text-gray-600 mb-4 leading-relaxed font-medium">
+                        {approche.excerpt}
+                      </p>
+                    )}
+                    {approche.content && (
+                      <div className="text-gray-600 leading-relaxed whitespace-pre-wrap mb-8 text-sm">
+                        {approche.content}
+                      </div>
+                    )}
+
+                  </div>
+                  <div 
+                    className={`relative h-[300px] sm:h-[400px] w-full rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgb(0,0,0,0.1)] group-hover:shadow-[0_20px_50px_rgb(27,63,122,0.15)] transition-shadow duration-500 ${index % 2 === 1 ? 'lg:order-1' : ''}`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                    {approche.image ? (
+                      <img src={approche.image} alt={approche.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                    ) : (
+                      <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                        <div className="text-8xl opacity-10 drop-shadow-sm">📊</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
+            )
+          }) : (
+            <div className="text-center py-10 text-gray-500">
+              Aucune approche publiée pour le moment.
+            </div>
+          )}
         </div>
       </section>
 
