@@ -1,7 +1,24 @@
+// Load environment variables from .env file
+require('dotenv').config()
+
+// Enable TypeScript support for imports
+require('ts-node').register({
+  project: './tsconfig.server.json',
+  transpileOnly: true
+})
+
 const { createServer } = require('http')
 const { parse } = require('url')
 const next = require('next')
 const { Server } = require('socket.io')
+
+// SECURITY: Environment Validation - Validates required environment variables at startup
+// Requirement 4.1: Validate environment before server initialization
+const { validateEnv } = require('./src/lib/env/validator')
+
+// Validate environment variables before proceeding
+// This ensures the application doesn't start with invalid configuration
+validateEnv()
 
 const dev = process.env.NODE_ENV !== 'production'
 const app = next({ dev })
