@@ -4,7 +4,9 @@ import bcrypt from 'bcryptjs';
 const prisma = new PrismaClient();
 
 async function main() {
-  // Delete all data
+  // Delete all data in dependency order (children before parents)
+  await prisma.payment.deleteMany({});
+  await prisma.review.deleteMany({});
   await prisma.notification.deleteMany({});
   await prisma.missionFile.deleteMany({});
   await prisma.milestone.deleteMany({});
@@ -12,12 +14,14 @@ async function main() {
   await prisma.call.deleteMany({});
   await prisma.message.deleteMany({});
   await prisma.reservation.deleteMany({});
+  await prisma.invoice.deleteMany({});
   await prisma.order.deleteMany({});
   await prisma.serviceTier.deleteMany({});
   await prisma.service.deleteMany({});
   await prisma.siteContent.deleteMany({});
   await prisma.contact.deleteMany({});
   await prisma.blog.deleteMany({});
+  await prisma.faq.deleteMany({});
   await prisma.consultant.deleteMany({});
   await prisma.user.deleteMany({});
   console.log('✅ Deleted all data');
