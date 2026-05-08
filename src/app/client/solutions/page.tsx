@@ -42,7 +42,8 @@ export default function ClientServicesPage() {
     // Fetch Auth State
     fetch('/api/auth/me')
       .then(r => r.json())
-      .then(user => {
+      .then(res => {
+        const user = res.data || res
         if (!user.error) setCurrentUser(user)
       })
       .catch(() => {})

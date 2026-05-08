@@ -9,7 +9,7 @@ export function ConsultantHeaderWithUser() {
   React.useEffect(() => {
     fetch('/api/auth/me')
       .then(r => r.json())
-      .then(data => setUser(data))
+      .then(res => setUser(res.data || res))
       .catch(() => {})
   }, [])
 

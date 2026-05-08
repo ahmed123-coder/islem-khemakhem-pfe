@@ -24,7 +24,8 @@ export default function AdminProfilePage() {
   React.useEffect(() => {
     fetch('/api/auth/me')
       .then(r => r.json())
-      .then(data => {
+      .then(res => {
+        const data = res.data || res
         if (data.id) {
           setFormData(prev => ({ ...prev, name: data.name || '', email: data.email || '' }))
         }

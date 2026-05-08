@@ -20,7 +20,8 @@ export default function NotificationProvider({ children }: { children: React.Rea
         try {
           const res = await fetch('/api/auth/me')
           if (res.ok) {
-            const data = await res.json()
+            const result = await res.json()
+            const data = result.data || result
             userId = data.id || data.user?.id
             role = data.role || data.user?.role
             if (userId) localStorage.setItem('userId', userId)

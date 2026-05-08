@@ -48,7 +48,7 @@ export default function AvailabilityCalendar({
   useEffect(() => {
     fetch('/api/auth/me')
       .then(r => r.json())
-      .then(data => setCurrentUser(data))
+      .then(res => setCurrentUser(res.data || res))
       .catch(() => {})
   }, [])
 
