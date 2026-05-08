@@ -53,7 +53,9 @@ export function ConsultantHeader() {
 
   React.useEffect(() => {
     setMounted(true)
-    fetch('/api/consultant/profile').then(res => res.json()).then(data => setUser(data))
+    fetch('/api/consultant/profile')
+      .then(res => res.json())
+      .then(result => setUser(result.data || result))
     fetchNotifications()
 
     const socket = getSocket()
@@ -71,7 +73,8 @@ export function ConsultantHeader() {
   const fetchNotifications = async () => {
     try {
       const res = await fetch('/api/notifications')
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || result
       if (Array.isArray(data)) {
         setNotifications(data)
         setUnreadCount(data.filter((n: any) => !n.isRead).length)

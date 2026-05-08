@@ -49,7 +49,8 @@ export function AdminTopBar() {
   const fetchNotifications = async () => {
     try {
       const res = await fetch('/api/notifications')
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || result
       if (Array.isArray(data)) {
         setNotifications(data)
         setUnreadCount(data.filter((n: any) => !n.isRead).length)

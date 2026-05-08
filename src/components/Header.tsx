@@ -31,7 +31,7 @@ export default function Header({ title }: HeaderProps) {
     setMounted(true)
     fetch('/api/client/profile')
       .then(res => res.json())
-      .then(data => setUser(data))
+      .then(result => setUser(result.data || result))
       .catch(() => {})
     
     fetchNotifications()
@@ -47,9 +47,10 @@ export default function Header({ title }: HeaderProps) {
     try {
       const res = await fetch('/api/notifications')
       if (res.ok) {
-        const data = await res.json()
-        setNotifications(data)
-        setUnreadCount(data.filter((n: any) => !n.isRead).length)
+        const result = await res.json()
+        const notificationsData = result.data || []
+        setNotifications(notificationsData)
+        setUnreadCount(Array.isArray(notificationsData) ? notificationsData.filter((n: any) => !n.isRead).length : 0)
       }
     } catch (error) {
       console.error('Failed to fetch notifications')
