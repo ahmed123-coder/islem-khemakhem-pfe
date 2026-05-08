@@ -1,5 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { v2 as cloudinary } from 'cloudinary'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -21,13 +23,16 @@ function uploadToCloudinary(buffer: Buffer, folder: string, resourceType: 'raw' 
 }
 
 export async function POST(request: NextRequest) {
+  const authResult = requireAuth(request)
+  if (!authResult.success) return authResult.response!
+
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
     const folder = (formData.get('folder') as string) || 'documents'
 
     if (!file) {
-      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+      return handleError(new Error('No file provided'), request)
     }
 
     const bytes = await file.arrayBuffer()
@@ -38,8 +43,9 @@ export async function POST(request: NextRequest) {
 
     const url = await uploadToCloudinary(buffer, folder, resourceType)
 
-    return NextResponse.json({ url })
+    return successResponse({ url }, 'Document uploaded successfully')
   } catch (error) {
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
+    return handleError(error, request)
   }
 }
+

@@ -1,7 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const authResult = requireAuth(req, ['ADMIN'])
+  if (!authResult.success) return authResult.response!
+
   try {
     const data = await req.json()
     const { question, answer, order, isActive } = data
@@ -16,21 +21,23 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       }
     })
 
-    return NextResponse.json(faq, { status: 200 })
+    return successResponse(faq, 'FAQ updated successfully')
   } catch (error) {
-    console.error('Error updating faq:', error)
-    return NextResponse.json({ error: 'Failed to update faq' }, { status: 500 })
+    return handleError(error, req)
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+  const authResult = requireAuth(req, ['ADMIN'])
+  if (!authResult.success) return authResult.response!
+
   try {
     await prisma.faq.delete({
       where: { id: params.id }
     })
-    return NextResponse.json({ success: true }, { status: 200 })
+    return successResponse({ success: true }, 'FAQ deleted successfully')
   } catch (error) {
-    console.error('Error deleting faq:', error)
-    return NextResponse.json({ error: 'Failed to delete faq' }, { status: 500 })
+    return handleError(error, req)
   }
 }
+

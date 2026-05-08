@@ -1,24 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getClientId, getCurrentUser } from '@/lib/auth'
+import { requireAuth, authenticateUser } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 import { updateConsultantRating, updateServiceRating } from '@/lib/review-service'
 
 export async function POST(req: NextRequest) {
-  const clientId = await getClientId()
-  if (!clientId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authResult = requireAuth(req, ['CLIENT'])
+  if (!authResult.success) return authResult.response!
+
+  const clientId = authResult.user!.userId
 
   try {
     const { type, rating, comment, consultantId, orderId } = await req.json()
 
     // Basic validation
     if (!type || !rating || (rating < 1 || rating > 5)) {
-      return NextResponse.json({ error: 'Invalid rating or type' }, { status: 400 })
+      return handleError(new Error('Invalid rating or type'), req)
     }
 
     if (!orderId) {
-      return NextResponse.json({ error: 'Order ID is required' }, { status: 400 })
+      return handleError(new Error('Order ID is required'), req)
     }
 
     // Verify Order and Eligibility (Must be COMPLETED)
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
     })
 
     if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+      return handleError(new Error('Order not found'), req)
     }
 
     // Check for existing review of this type manually
@@ -42,15 +43,15 @@ export async function POST(req: NextRequest) {
     })
 
     if (existingReviews.length > 0) {
-      return NextResponse.json({ error: `Vous avez déjà laissé un avis sur ce ${type === 'CONSULTANT' ? 'consultant' : 'service'} pour هذه الطلبية.` }, { status: 400 })
+      return handleError(new Error(`Vous avez déjà laissé un avis sur ce ${type === 'CONSULTANT' ? 'consultant' : 'service'} pour cette commande.`), req)
     }
 
     if (order.clientId !== clientId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+      return handleError(new Error('Unauthorized'), req)
     }
 
     if (order.status !== 'COMPLETED') {
-      return NextResponse.json({ error: 'Vous ne pouvez laisser un avis qu\'une fois la commande terminée (COMPLETED).' }, { status: 403 })
+      return handleError(new Error('Vous ne pouvez laisser un avis qu\'une fois la commande terminée (COMPLETED).'), req)
     }
 
     const serviceId = order.serviceTier.serviceId
@@ -76,10 +77,9 @@ export async function POST(req: NextRequest) {
       await updateServiceRating(serviceId)
     }
 
-    return NextResponse.json(review, { status: 201 })
+    return successResponse(review, 'Review created successfully', 201)
   } catch (error) {
-    console.error('[REVIEWS_POST]', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return handleError(error, req)
   }
 }
 
@@ -90,8 +90,8 @@ export async function GET(req: NextRequest) {
     const serviceId = searchParams.get('serviceId')
     const clientId = searchParams.get('clientId')
 
-    const user = await getCurrentUser()
-    const isAdmin = user?.role === 'ADMIN'
+    const authResult = authenticateUser(req)
+    const isAdmin = authResult.success && authResult.user?.role === 'ADMIN'
 
     const reviews = await prisma.review.findMany({
       where: {
@@ -119,24 +119,23 @@ export async function GET(req: NextRequest) {
       }
     })
 
-    return NextResponse.json(reviews)
+    return successResponse(reviews)
   } catch (error) {
-    console.error('[REVIEWS_GET]', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return handleError(error, req)
   }
 }
 
 export async function PATCH(req: NextRequest) {
-  const clientId = await getClientId()
-  if (!clientId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authResult = requireAuth(req, ['CLIENT'])
+  if (!authResult.success) return authResult.response!
+
+  const clientId = authResult.user!.userId
 
   try {
     const { id, rating, comment } = await req.json()
 
     if (!id || !rating || (rating < 1 || rating > 5)) {
-      return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
+      return handleError(new Error('Invalid data'), req)
     }
 
     const review = await prisma.review.findUnique({
@@ -144,11 +143,11 @@ export async function PATCH(req: NextRequest) {
     })
 
     if (!review) {
-      return NextResponse.json({ error: 'Review not found' }, { status: 404 })
+      return handleError(new Error('Review not found'), req)
     }
 
     if (review.clientId !== clientId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+      return handleError(new Error('Unauthorized'), req)
     }
 
     const updatedReview = await prisma.review.update({
@@ -166,9 +165,9 @@ export async function PATCH(req: NextRequest) {
       await updateServiceRating(review.serviceId)
     }
 
-    return NextResponse.json(updatedReview)
+    return successResponse(updatedReview, 'Review updated successfully')
   } catch (error) {
-    console.error('[REVIEWS_PATCH]', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return handleError(error, req)
   }
 }
+

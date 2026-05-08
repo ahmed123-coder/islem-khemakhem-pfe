@@ -19,13 +19,13 @@ This document outlines the implementation tasks for fixing the critical RBAC vul
 **Time:** 1-2 hours  
 **Requirements:** All requirements (foundation for implementation)
 
-- [ ] 0.1.1 Read all route files in `src/app/api/` to understand current implementation
+- [x] 0.1.1 Read all route files in `src/app/api/` to understand current implementation
   - Identify which routes have NO auth checks
   - Identify which routes use deprecated patterns (`getCurrentUser()`, `getConsultantId()`, `getClientId()`)
   - Identify which routes already use `requireAuth()`
   - Document current auth patterns per route
 
-- [ ] 0.1.2 Categorize all routes by required protection level
+- [x] 0.1.2 Categorize all routes by required protection level
   - **PUBLIC**: Routes that should remain accessible without authentication
   - **AUTHENTICATED**: Routes requiring any logged-in user
   - **ADMIN**: Routes requiring ADMIN role only
@@ -33,7 +33,7 @@ This document outlines the implementation tasks for fixing the critical RBAC vul
   - **CLIENT**: Routes requiring CLIENT role only
   - **OWNERSHIP**: Routes requiring ownership validation (CLIENT accessing own resources)
 
-- [ ] 0.1.3 Create detailed route inventory spreadsheet/document
+- [x] 0.1.3 Create detailed route inventory spreadsheet/document
   - Route path
   - HTTP methods
   - Current protection status (NONE, WEAK, PROTECTED)
@@ -42,7 +42,7 @@ This document outlines the implementation tasks for fixing the critical RBAC vul
   - Priority (CRITICAL, HIGH, MEDIUM, LOW)
   - Estimated time to fix
 
-- [ ] 0.1.4 Review audit with stakeholders
+- [x] 0.1.4 Review audit with stakeholders
   - Confirm which routes should be PUBLIC vs PROTECTED
   - Confirm role requirements for each protected route
   - Confirm ownership validation requirements
@@ -62,87 +62,87 @@ This document outlines the implementation tasks for fixing the critical RBAC vul
 **Methods:** GET, POST, PUT, DELETE  
 **Requirements:** 2.1.2
 
-- [ ] 1.1.1 Add required imports
+- [x] 1.1.1 Add required imports
   ```typescript
   import { NextRequest } from 'next/server';
   import { requireAuth } from '@/lib/auth/middleware';
   import { handleError, successResponse } from '@/lib/errors/handler';
   ```
 
-- [ ] 1.1.2 Update function signatures to accept `NextRequest`
+- [x] 1.1.2 Update function signatures to accept `NextRequest`
 
-- [ ] 1.1.3 Add auth check as first line in each method
+- [x] 1.1.3 Add auth check as first line in each method
   ```typescript
   const authResult = requireAuth(request, ['ADMIN']);
   if (!authResult.success) return authResult.response;
   ```
 
-- [ ] 1.1.4 Wrap logic in try-catch with `handleError()`
+- [x] 1.1.4 Wrap logic in try-catch with `handleError()`
 
-- [ ] 1.1.5 Replace response patterns with `successResponse()`
+- [x] 1.1.5 Replace response patterns with `successResponse()`
 
-- [ ] 1.1.6 Test route returns 401 without auth, 403 with wrong role, 200 with ADMIN role
+- [x] 1.1.6 Test route returns 401 without auth, 403 with wrong role, 200 with ADMIN role
 
 ### Task 1.2: Protect Admin Orders Routes
 **Files:** `src/app/api/admin/orders/route.ts`, `src/app/api/admin/orders/[id]/route.ts`, `src/app/api/admin/orders/create/route.ts`  
 **Methods:** GET, PUT, DELETE, POST  
 **Requirements:** 2.1.1, 2.1.7
 
-- [ ] 1.2.1 Protect `/api/admin/orders` (GET, PUT)
+- [x] 1.2.1 Protect `/api/admin/orders` (GET, PUT)
   - Add imports
   - Add `requireAuth(request, ['ADMIN'])`
   - Update responses
 
-- [ ] 1.2.2 Protect `/api/admin/orders/[id]` (DELETE)
+- [x] 1.2.2 Protect `/api/admin/orders/[id]` (DELETE)
   - Add imports
   - Add `requireAuth(request, ['ADMIN'])`
   - Update responses
 
-- [ ] 1.2.3 Protect `/api/admin/orders/create` (POST)
+- [x] 1.2.3 Protect `/api/admin/orders/create` (POST)
   - Add imports
   - Add `requireAuth(request, ['ADMIN'])`
   - Update responses
 
-- [ ] 1.2.4 Test all order routes with different auth scenarios
+- [x] 1.2.4 Test all order routes with different auth scenarios
 
 ### Task 1.3: Protect Admin Stats Route
 **File:** `src/app/api/admin/stats/route.ts`  
 **Methods:** GET  
 **Requirements:** 2.1.3
 
-- [ ] 1.3.1 Add required imports
+- [x] 1.3.1 Add required imports
 
-- [ ] 1.3.2 Add `requireAuth(request, ['ADMIN'])`
+- [x] 1.3.2 Add `requireAuth(request, ['ADMIN'])`
 
-- [ ] 1.3.3 Update responses
+- [x] 1.3.3 Update responses
 
-- [ ] 1.3.4 Test route protection
+- [x] 1.3.4 Test route protection
 
 ### Task 1.4: Protect Admin Services Routes
 **Files:** `src/app/api/admin/services/[id]/route.ts`  
 **Methods:** GET, PUT, DELETE  
 **Requirements:** 2.1.4
 
-- [ ] 1.4.1 Add required imports
+- [x] 1.4.1 Add required imports
 
-- [ ] 1.4.2 Add `requireAuth(request, ['ADMIN'])` to all methods
+- [x] 1.4.2 Add `requireAuth(request, ['ADMIN'])` to all methods
 
-- [ ] 1.4.3 Update responses
+- [x] 1.4.3 Update responses
 
-- [ ] 1.4.4 Test route protection
+- [x] 1.4.4 Test route protection
 
 ### Task 1.5: Protect Admin Hero Routes
 **File:** `src/app/api/admin/hero/route.ts`  
 **Methods:** POST, DELETE  
 **Requirements:** 2.1.5
 
-- [ ] 1.5.1 Add required imports
+- [x] 1.5.1 Add required imports
 
-- [ ] 1.5.2 Add `requireAuth(request, ['ADMIN'])` to POST and DELETE
+- [x] 1.5.2 Add `requireAuth(request, ['ADMIN'])` to POST and DELETE
 
-- [ ] 1.5.3 Update responses
+- [x] 1.5.3 Update responses
 
-- [ ] 1.5.4 Test route protection
+- [x] 1.5.4 Test route protection
 
 ### Task 1.6: Protect Admin Contacts Routes
 **File:** `src/app/api/admin/contacts/[id]/route.ts`  
@@ -151,37 +151,37 @@ This document outlines the implementation tasks for fixing the critical RBAC vul
 
 - [ ] 1.6.1 Add required imports
 
-- [ ] 1.6.2 Add `requireAuth(request, ['ADMIN'])` to PUT and DELETE
+- [x] 1.6.2 Add `requireAuth(request, ['ADMIN'])` to PUT and DELETE
 
-- [ ] 1.6.3 Update responses
+- [x] 1.6.3 Update responses
 
-- [ ] 1.6.4 Test route protection
+- [x] 1.6.4 Test route protection
 
 ### Task 1.7: Phase 1 Testing & Verification
 **Time:** 30 minutes
 
-- [ ] 1.7.1 Run TypeScript compilation (`npm run build`)
+- [x] 1.7.1 Run TypeScript compilation (`npm run build`)
 
-- [ ] 1.7.2 Test each protected route:
+- [x] 1.7.2 Test each protected route:
   - Without auth token → 401 Unauthorized
   - With CLIENT token → 403 Forbidden
   - With CONSULTANT token → 403 Forbidden
   - With ADMIN token → 200 OK
 
-- [ ] 1.7.3 Verify public routes still work without auth
+- [x] 1.7.3 Verify public routes still work without auth
 
-- [ ] 1.7.4 Verify already-protected routes still work
+- [x] 1.7.4 Verify already-protected routes still work
 
-- [ ] 1.7.5 Check for any console errors or warnings
+- [x] 1.7.5 Check for any console errors or warnings
 
 ### Task 1.8: Phase 1 Checkpoint
 **Time:** 15 minutes
 
-- [ ] 1.8.1 Review all Phase 1 changes
+- [x] 1.8.1 Review all Phase 1 changes
 
-- [ ] 1.8.2 Commit Phase 1 changes with descriptive message
+- [x] 1.8.2 Commit Phase 1 changes with descriptive message
 
-- [ ] 1.8.3 Ask user if ready to proceed to Phase 2
+- [x] 1.8.3 Ask user if ready to proceed to Phase 2
 
 ---
 
@@ -197,7 +197,7 @@ This document outlines the implementation tasks for fixing the critical RBAC vul
 **Methods:** PATCH  
 **Requirements:** 2.2.3
 
-- [ ] 2.1.1 Add required imports
+- [x] 2.1.1 Add required imports
 
 - [ ] 2.1.2 Replace deprecated pattern with `requireAuth(request, ['CONSULTANT'])`
 
@@ -502,70 +502,52 @@ This document outlines the implementation tasks for fixing the critical RBAC vul
 **Methods:** POST, PATCH, DELETE  
 **Requirements:** 2.4.1-2.4.5
 
-- [ ] 4.1.1 Protect POST `/api/reviews` (require CLIENT role)
-
-- [ ] 4.1.2 Protect PATCH `/api/reviews` (require CLIENT role)
-
-- [ ] 4.1.3 Protect PATCH/DELETE `/api/reviews/[id]` (require CLIENT role + ownership)
-
-- [ ] 4.1.4 Test route protection and ownership
+- [x] 4.1.1 Protect POST `/api/reviews` (require CLIENT role)
+- [x] 4.1.2 Protect PATCH `/api/reviews` (require CLIENT role)
+- [x] 4.1.3 Protect PATCH/DELETE `/api/reviews/[id]` (require CLIENT role + ownership)
+- [x] 4.1.4 Test route protection and ownership
 
 ### Task 4.2: Protect Upload Routes
 **Files:** `src/app/api/upload/image/route.ts`, `src/app/api/upload/document/route.ts`, `src/app/api/upload/icon/route.ts`, `src/app/api/upload/logo/route.ts`  
 **Methods:** POST  
 **Requirements:** 2.5.1-2.5.5
 
-- [ ] 4.2.1 Determine appropriate role for each upload type:
+- [x] 4.2.1 Determine appropriate role for each upload type:
   - Image: AUTHENTICATED (any logged-in user)
   - Document: AUTHENTICATED
   - Icon: ADMIN
   - Logo: ADMIN
-
-- [ ] 4.2.2 Add protection to each upload route
-
-- [ ] 4.2.3 Test route protection
+- [x] 4.2.2 Add protection to each upload route
+- [x] 4.2.3 Test route protection
 
 ### Task 4.3: Protect FAQ Admin Routes
 **Files:** `src/app/api/faqs/route.ts`, `src/app/api/faqs/[id]/route.ts`  
 **Methods:** POST, PUT, DELETE  
 **Requirements:** 2.6.1-2.6.4
 
-- [ ] 4.3.1 Protect POST `/api/faqs` (require ADMIN role)
-
-- [ ] 4.3.2 Protect PUT/DELETE `/api/faqs/[id]` (require ADMIN role)
-
-- [ ] 4.3.3 Verify GET `/api/faqs` remains public
-
-- [ ] 4.3.4 Test route protection
+- [x] 4.3.1 Protect POST `/api/faqs` (require ADMIN role)
+- [x] 4.3.2 Protect PUT/DELETE `/api/faqs/[id]` (require ADMIN role)
+- [x] 4.3.3 Verify GET `/api/faqs` remains public
+- [x] 4.3.4 Test route protection
 
 ### Task 4.4: Protect Content Admin Routes
 **File:** `src/app/api/content/[key]/route.ts`  
 **Methods:** PUT  
 **Requirements:** 2.7.1-2.7.3
 
-- [ ] 4.4.1 Protect PUT `/api/content/[key]` (require ADMIN role)
-
-- [ ] 4.4.2 Verify GET `/api/content/[key]` remains public
-
-- [ ] 4.4.3 Test route protection
+- [x] 4.4.1 Protect PUT `/api/content/[key]` (require ADMIN role)
+- [x] 4.4.2 Verify GET `/api/content/[key]` remains public
+- [x] 4.4.3 Test route protection
 
 ### Task 4.5: Phase 4 Testing & Verification
 **Time:** 30 minutes
 
-- [ ] 4.5.1 Run TypeScript compilation
-
-- [ ] 4.5.2 Test all Phase 4 routes with appropriate roles
-
-- [ ] 4.5.3 Verify no regressions in previous phases
-
-### Task 4.6: Phase 4 Checkpoint
-**Time:** 15 minutes
-
-- [ ] 4.6.1 Review all Phase 4 changes
-
-- [ ] 4.6.2 Commit Phase 4 changes
-
-- [ ] 4.6.3 Ask user if ready to proceed to Phase 5
+- [x] 4.5.1 Run TypeScript compilation
+- [x] 4.5.2 Test all Phase 4 routes with appropriate roles
+- [x] 4.5.3 Verify no regressions in previous phases
+- [x] 4.6.1 Review all Phase 4 changes
+- [x] 4.6.2 Commit Phase 4 changes
+- [x] 4.6.3 Ask user if ready to proceed to Phase 5
 
 ---
 

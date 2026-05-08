@@ -1,19 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 import { uploadImage } from '@/lib/cloudinary'
 
 export async function POST(request: NextRequest) {
-  try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const authResult = requireAuth(request)
+  if (!authResult.success) return authResult.response!
 
+  try {
     const formData = await request.formData()
     const file = formData.get('image') as File
     
     if (!file) {
-      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
+      return handleError(new Error('No file uploaded'), request)
     }
 
     const bytes = await file.arrayBuffer()
@@ -21,9 +20,9 @@ export async function POST(request: NextRequest) {
 
     const imageUrl = await uploadImage(buffer, 'heroes')
 
-    return NextResponse.json({ success: true, imageUrl })
+    return successResponse({ imageUrl }, 'Image uploaded successfully')
   } catch (error) {
-    console.error('Image upload error:', error)
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
+    return handleError(error, request)
   }
 }
+

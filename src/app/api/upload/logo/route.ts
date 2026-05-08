@@ -1,14 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 import { uploadImage } from '@/lib/cloudinary'
 
 export async function POST(request: NextRequest) {
+  const authResult = requireAuth(request, ['ADMIN'])
+  if (!authResult.success) return authResult.response!
+
   try {
     const formData = await request.formData()
     const file = formData.get('logo') as File
     
     if (!file) {
-      return NextResponse.json({ error: 'No file uploaded' }, { status: 400 })
+      return handleError(new Error('No file uploaded'), request)
     }
 
     const bytes = await file.arrayBuffer()
@@ -41,9 +46,9 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    return NextResponse.json({ success: true, logoUrl })
+    return successResponse({ logoUrl }, 'Logo uploaded successfully')
   } catch (error) {
-    console.error('Logo upload error:', error)
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
+    return handleError(error, request)
   }
 }
+

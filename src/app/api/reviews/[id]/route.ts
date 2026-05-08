@@ -1,16 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { requireAuth, requireOwnership } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 import { updateConsultantRating, updateServiceRating } from '@/lib/review-service'
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authResult = requireAuth(req, ['ADMIN'])
+  if (!authResult.success) return authResult.response!
 
   try {
     const { isPublished } = await req.json()
@@ -27,9 +26,9 @@ export async function PATCH(
       await updateServiceRating(review.serviceId)
     }
 
-    return NextResponse.json(review)
+    return successResponse(review, 'Review updated successfully')
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update review' }, { status: 500 })
+    return handleError(error, req)
   }
 }
 
@@ -37,16 +36,24 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ 
-      error: 'Unauthorized', 
-      _debug: { hasUser: !!user, role: user?.role } 
-    }, { status: 401 })
-  }
+  const authResult = requireAuth(req, ['ADMIN', 'CLIENT'])
+  if (!authResult.success) return authResult.response!
 
   try {
-    const review = await prisma.review.delete({
+    const review = await prisma.review.findUnique({
+      where: { id: params.id }
+    })
+
+    if (!review) {
+      return handleError(new Error('Review not found'), req)
+    }
+
+    // Ownership check (Admin bypasses this in requireOwnership if we implement it that way, 
+    // or we check role explicitly)
+    const ownershipResult = requireOwnership(authResult.user!, review.clientId)
+    if (!ownershipResult.success) return ownershipResult.response!
+
+    await prisma.review.delete({
       where: { id: params.id }
     })
 
@@ -58,8 +65,9 @@ export async function DELETE(
       await updateServiceRating(review.serviceId)
     }
 
-    return NextResponse.json({ success: true })
+    return successResponse({ success: true }, 'Review deleted successfully')
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete review' }, { status: 500 })
+    return handleError(error, req)
   }
 }
+
