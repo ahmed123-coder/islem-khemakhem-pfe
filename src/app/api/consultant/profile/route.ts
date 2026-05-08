@@ -1,37 +1,47 @@
-import { NextResponse } from 'next/server'
+// SECURITY: Backend Authorization - Consultant-only route protection
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Authenticate and authorize - CONSULTANT only
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) {
+    return authResult.response;
+  }
+
   try {
-    const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
     const consultant = await prisma.consultant.findUnique({ 
-      where: { email: user.email },
+      where: { email: authResult.user.email },
       select: { name: true, email: true, specialty: true }
     })
 
-    return NextResponse.json(consultant || { name: '', email: '', specialty: '' })
+    return successResponse(consultant || { name: '', email: '', specialty: '' });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
-export async function PUT(request: Request) {
-  try {
-    const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function PUT(request: NextRequest) {
+  // Authenticate and authorize - CONSULTANT only
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) {
+    return authResult.response;
+  }
 
+  try {
     const { name, specialty } = await request.json()
 
     await prisma.consultant.update({
-      where: { email: user.email },
+      where: { email: authResult.user.email },
       data: { name, specialty }
     })
 
-    return NextResponse.json({ success: true })
+    return successResponse({ success: true }, 'Profile updated successfully');
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+    return handleError(error, request);
   }
 }
+// END SECURITY: Backend Authorization - Consultant route protection complete
+

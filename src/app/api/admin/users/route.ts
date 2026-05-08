@@ -1,12 +1,15 @@
-import { NextResponse } from 'next/server'
+// SECURITY: Backend Authorization - Admin-only route protection
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-import { getCurrentUser } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(request: NextRequest) {
+  // Authenticate and authorize - ADMIN only
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) {
+    return authResult.response;
   }
 
   try {
@@ -44,16 +47,17 @@ export async function GET() {
       },
       orderBy: { createdAt: 'desc' },
     })
-    return NextResponse.json(users)
+    return successResponse(users);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
-export async function POST(request: Request) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function POST(request: NextRequest) {
+  // Authenticate and authorize - ADMIN only
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) {
+    return authResult.response;
   }
 
   try {
@@ -77,16 +81,17 @@ export async function POST(request: Request) {
       },
     })
     
-    return NextResponse.json(newUser)
+    return successResponse(newUser, 'User created successfully', 201);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create user' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
-export async function PUT(request: Request) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function PUT(request: NextRequest) {
+  // Authenticate and authorize - ADMIN only
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) {
+    return authResult.response;
   }
 
   try {
@@ -98,8 +103,10 @@ export async function PUT(request: Request) {
       data: { email, name, firstName, phone, company, sector, address, needs, role, ...(isActive !== undefined && { isActive }) },
     })
     
-    return NextResponse.json(updatedUser)
+    return successResponse(updatedUser, 'User updated successfully');
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update user' }, { status: 500 })
+    return handleError(error, request);
   }
 }
+// END SECURITY: Backend Authorization - Admin route protection complete
+

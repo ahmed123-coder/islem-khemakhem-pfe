@@ -1,32 +1,45 @@
-import { NextResponse } from 'next/server'
+// SECURITY: Backend Authorization - Client-only route protection
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  // Authenticate and authorize - CLIENT only
+  const authResult = requireAuth(request, ['CLIENT']);
+  if (!authResult.success || !authResult.user) {
+    return authResult.response;
+  }
+
   try {
-    const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    return NextResponse.json({ name: user.name || '', email: user.email })
+    return successResponse({ 
+      name: authResult.user.email.split('@')[0] || '', 
+      email: authResult.user.email 
+    });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
-export async function PUT(request: Request) {
-  try {
-    const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function PUT(request: NextRequest) {
+  // Authenticate and authorize - CLIENT only
+  const authResult = requireAuth(request, ['CLIENT']);
+  if (!authResult.success || !authResult.user) {
+    return authResult.response;
+  }
 
+  try {
     const { name } = await request.json()
 
     await prisma.user.update({
-      where: { id: user.id },
+      where: { id: authResult.user.userId },
       data: { name }
     })
 
-    return NextResponse.json({ success: true })
+    return successResponse({ success: true }, 'Profile updated successfully');
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+    return handleError(error, request);
   }
 }
+// END SECURITY: Backend Authorization - Client route protection complete
+
