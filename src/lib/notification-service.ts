@@ -97,6 +97,55 @@ export async function notifyOrderStatusUpdate(orderId: string, status: string) {
   )
 }
 
+export async function notifyNewOrder(orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    include: { client: true, serviceTier: { include: { service: true } } }
+  })
+  if (!order) return
+
+  // 1. Notify Client (Confirmation)
+  await createNotification(
+    order.clientId,
+    'CLIENT',
+    'ORDER',
+    'Order Placed',
+    `Your order for ${order.serviceTier.service.name} has been placed.`,
+    orderId
+  )
+
+  // 2. Notify Consultant (if assigned)
+  if (order.consultantId) {
+    await createNotification(
+      order.consultantId,
+      'CONSULTANT',
+      'ORDER',
+      'New Order Assigned',
+      `You have been assigned a new order for ${order.serviceTier.service.name} from ${order.client.name || order.client.email}.`,
+      orderId
+    )
+    
+    // Real-time socket
+    emitToRoom(`user:${order.consultantId}`, 'notification', {
+      type: 'ORDER',
+      orderId,
+      title: 'New Order Assigned',
+      message: `New order for ${order.serviceTier.service.name} from ${order.client.name || order.client.email}`,
+      timestamp: new Date().toISOString()
+    })
+  }
+
+  // 3. Notify Admin (Global)
+  // We don't have a specific Admin ID, but we could emit to role:ADMIN room
+  emitToRoom('role:ADMIN', 'notification', {
+    type: 'ORDER',
+    orderId,
+    title: 'New Site Order',
+    message: `A new order has been placed by ${order.client.name || order.client.email}`,
+    timestamp: new Date().toISOString()
+  })
+}
+
 export async function notifyMissionUpdate(missionId: string, title: string, message: string) {
     const mission = await prisma.mission.findUnique({ 
         where: { id: missionId },
@@ -131,11 +180,21 @@ export async function notifyConsultantMilestoneUpdate(missionId: string, title: 
     )
 }
 export async function notifyNewReservation(reservationId: string) {
+  console.log(`[Notification] Starting notifyNewReservation for ${reservationId}`)
   const reservation = await prisma.reservation.findUnique({ 
     where: { id: reservationId },
     include: { client: true, order: true }
   })
-  if (!reservation || !reservation.consultantId) return
+  
+  if (!reservation) {
+    console.warn(`[Notification] Reservation ${reservationId} not found`)
+    return
+  }
+
+  if (!reservation.consultantId) {
+    console.warn(`[Notification] Reservation ${reservationId} has no consultantId`)
+    return
+  }
 
   const payload = {
     id: reservation.id,
@@ -146,6 +205,8 @@ export async function notifyNewReservation(reservationId: string) {
     timestamp: new Date().toISOString()
   }
 
+  console.log(`[Notification] Creating DB entry and emitting to consultant: ${reservation.consultantId}`)
+  
   await createNotification(
     reservation.consultantId,
     'CONSULTANT',
@@ -155,8 +216,10 @@ export async function notifyNewReservation(reservationId: string) {
     reservation.orderId ?? undefined
   )
 
-  // Double emission for maximum reliability
+  // Double emission to ensure the room name matches (user:id)
   emitToRoom(`user:${reservation.consultantId}`, 'notification', payload)
+  console.log(`[Notification] Success: Emitted to user:${reservation.consultantId}`)
+
   if (reservation.orderId) {
     emitToRoom(`order:${reservation.orderId}`, 'notification', payload)
   }

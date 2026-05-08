@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
             gte: startOfDay,
             lte: endOfDay
           },
-          status: 'CONFIRMED'
+          status: { in: ['CONFIRMED', 'PENDING'] }
         }
       }),
       // Total hours this month (sum of durations of completed/confirmed reservations)
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
         where: {
           consultantId,
           startTime: { gte: now },
-          status: 'CONFIRMED'
+          status: { in: ['CONFIRMED', 'PENDING'] }
         },
         orderBy: { startTime: 'asc' },
         include: { client: { select: { name: true } } }
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
             gte: startOfDay,
             lte: endOfDay
           },
-          status: { in: ['CONFIRMED', 'COMPLETED'] }
+          status: { in: ['CONFIRMED', 'COMPLETED', 'PENDING'] }
         },
         orderBy: { startTime: 'asc' },
         include: { client: { select: { name: true } } }

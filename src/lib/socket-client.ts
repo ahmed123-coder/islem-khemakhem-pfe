@@ -4,18 +4,28 @@ let socket: Socket | null = null
 
 export function initSocketClient(userId: string, role: string): Socket {
   if (!socket) {
-    socket = io({ path: '/socket.io', transports: ['websocket', 'polling'] })
-    
-    socket.on('connect', () => {
-      console.log('[Socket] Connected, emitting join...')
-      socket!.emit('join', { userId, role })
+    socket = io({ 
+      path: '/socket.io', 
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
     })
-  } else {
-     // If already exists and connected, emit join immediately with new identity
-     if (socket.connected) {
-       console.log('[Socket] Already connected, re-emitting join...')
-       socket.emit('join', { userId, role })
-     }
+    
+    console.log('[Socket] Initializing new connection...')
+  }
+
+  // Always refresh the connect listener to use latest identity
+  socket.off('connect')
+  socket.on('connect', () => {
+    console.log(`[Socket] Connected, emitting join for ${role}: ${userId}`)
+    socket!.emit('join', { userId, role })
+  })
+
+  // If already connected, emit join immediately
+  if (socket.connected) {
+    console.log(`[Socket] Already connected, re-emitting join for ${role}: ${userId}`)
+    socket.emit('join', { userId, role })
   }
 
   return socket

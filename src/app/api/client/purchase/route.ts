@@ -5,6 +5,7 @@ import { handleError, successResponse } from '@/lib/errors/handler'
 import { NotFoundError } from '@/lib/errors/types'
 import { createZoomMeeting } from '@/lib/zoom'
 import { BillingService } from '@/lib/billing'
+import { notifyNewReservation, notifyNewOrder } from '@/lib/notification-service'
 
 export async function POST(request: NextRequest) {
   const authResult = requireAuth(request, ['CLIENT']);
@@ -101,14 +102,9 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      await prisma.notification.create({
-        data: {
-          userId: authResult.user.userId,
-          type: 'ORDER',
-          title: 'Commande créée',
-          message: `Votre commande pour ${serviceTier.service.name} (${serviceTier.tierType}) a été validée. RDV le ${new Date(startTime).toLocaleDateString('fr-FR')} à ${new Date(startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}.`
-        }
-      })
+      // Notify Consultant & Admin (Real-time)
+      await notifyNewOrder(order.id);
+      await notifyNewReservation(reservation.id);
 
       return successResponse({ order, reservation, consultant });
     }
@@ -131,14 +127,8 @@ export async function POST(request: NextRequest) {
       ? `Commande créée via virement bancaire. En attente de validation du paiement.` 
       : `Commande créée (paiement sur place). En attente de validation.`;
 
-    await prisma.notification.create({
-      data: {
-        userId: authResult.user.userId,
-        type: 'ORDER',
-        title: 'Commande en attente',
-        message
-      }
-    })
+    // Notify Consultant & Admin
+    await notifyNewOrder(order.id);
 
     const bankDetails = paymentMethod === 'VIREMENT' ? {
       bankName: "Société Générale",
