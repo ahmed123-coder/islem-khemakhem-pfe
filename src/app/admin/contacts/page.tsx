@@ -51,7 +51,8 @@ export default function ContactsCRM() {
     setIsLoading(true)
     try {
       const res = await fetch('/api/admin/contacts')
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || []
       setContacts(data)
       if (data.length > 0 && !selectedId) setSelectedId(data[0].id)
     } finally {
