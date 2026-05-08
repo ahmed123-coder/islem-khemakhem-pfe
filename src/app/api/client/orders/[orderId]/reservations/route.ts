@@ -1,26 +1,25 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
+import { requireAuth, requireOwnership } from '@/lib/auth/middleware'
 import { prisma } from '@/lib/prisma'
-import { createZoomMeeting } from '@/lib/zoom'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
 export async function GET(req: NextRequest, { params }: { params: { orderId: string } }) {
-  try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'CLIENT') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const authResult = requireAuth(req, ['CLIENT', 'ADMIN'])
+  if (!authResult.success) return authResult.response!
 
+  try {
     const order = await prisma.order.findUnique({ 
       where: { id: params.orderId },
       include: { consultant: true }
     })
 
-    if (!order || order.clientId !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
+    if (!order) return handleError(new Error('Order not found'), req)
+
+    const ownershipResult = requireOwnership(authResult.user!, order.clientId)
+    if (!ownershipResult.success) return ownershipResult.response!
 
     if (!order.consultantId) {
-      return NextResponse.json([])
+      return successResponse([])
     }
 
     // Fetch all reservations for this consultant to show availability in the calendar grid
@@ -45,26 +44,26 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
       orderBy: { startTime: 'asc' }
     })
 
-    return NextResponse.json(reservations)
+    return successResponse(reservations)
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch reservations' }, { status: 500 })
+    return handleError(error, req)
   }
 }
 
 export async function POST(req: NextRequest, { params }: { params: { orderId: string } }) {
-  try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'CLIENT') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const authResult = requireAuth(req, ['CLIENT'])
+  if (!authResult.success) return authResult.response!
 
+  const userId = authResult.user!.userId
+
+  try {
     const { startTime, endTime, meetingType } = await req.json()
 
     if (!startTime || !endTime) {
-      return NextResponse.json({ error: 'Champs requis manquants (startTime/endTime)' }, { status: 400 })
+      return handleError(new Error('Champs requis manquants (startTime/endTime)'), req)
     }
 
-    return await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       const order = await tx.order.findUnique({
         where: { id: params.orderId },
         include: { 
@@ -76,16 +75,21 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         }
       })
 
-      if (!order || order.clientId !== user.id) {
-        return NextResponse.json({ error: 'Commande non trouvée' }, { status: 404 })
+      if (!order) {
+        throw new Error('Commande non trouvée')
+      }
+
+      const ownershipResult = requireOwnership(authResult.user!, order.clientId)
+      if (!ownershipResult.success) {
+        throw new Error('Unauthorized')
       }
 
       if (order.status !== 'ACTIVE') {
-        return NextResponse.json({ error: 'Cette commande n\'est plus active' }, { status: 403 })
+        throw new Error('Cette commande n\'est plus active')
       }
 
       if (!order.consultantId) {
-        return NextResponse.json({ error: 'Aucun consultant n\'est assigné à cette commande' }, { status: 400 })
+        throw new Error('Aucun consultant n\'est assigné à cette commande')
       }
 
       // 1. Check for active (PENDING or CONFIRMED) reservations
@@ -94,9 +98,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       )
 
       if (activeReservation) {
-        return NextResponse.json({ 
-          error: 'Vous avez déjà une réservation en cours. Terminez-la ou annulez-la avant d\'en prévoir une autre.' 
-        }, { status: 400 })
+        throw new Error('Vous avez déjà une réservation en cours. Terminez-la ou annulez-la avant d\'en prévoir une autre.')
       }
 
       // 2. Calculate next session index
@@ -104,7 +106,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       const sessionsConfig = (order.serviceTier.sessionsConfig as any[]) || []
 
       if (completedCount >= sessionsConfig.length) {
-        return NextResponse.json({ error: 'Toutes les séances de ce pack ont été consommées.' }, { status: 400 })
+        throw new Error('Toutes les séances de ce pack ont été consommées.')
       }
 
       const nextIndex = completedCount
@@ -126,18 +128,18 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       })
 
       if (overlapping) {
-        return NextResponse.json({ error: 'Ce créneau est déjà réservé par un autre client.' }, { status: 409 })
+        throw new Error('Ce créneau est déjà réservé par un autre client.')
       }
 
       // 4. Create the reservation with 15-minute buffer
       const reservation = await tx.reservation.create({
         data: {
           orderId: order.id,
-          clientId: user.id,
+          clientId: userId,
           consultantId: order.consultantId,
           serviceTierId: order.serviceTierId,
           startTime: new Date(startTime),
-          endTime: bufferEnd, // This already has the 15min buffer from step 3 above
+          endTime: bufferEnd,
           meetingType: meetingType === 'SUR_PLACE' ? 'SUR_PLACE' : 'ZOOM',
           sessionIndex: nextIndex,
           sessionLabel: sessionLabel,
@@ -149,10 +151,16 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       const { notifyNewReservation } = await import('@/lib/notification-service')
       await notifyNewReservation(reservation.id)
 
-      return NextResponse.json(reservation)
+      return reservation
     })
-  } catch (error) {
-    console.error('Reservation error:', error)
-    return NextResponse.json({ error: 'Échec de la création de la réservation' }, { status: 500 })
+
+    return successResponse(result, 'Reservation created successfully', 201)
+  } catch (error: any) {
+    if (error.message === 'Unauthorized') {
+      return handleError(error, req)
+    }
+    // Handle cases where we threw errors inside transaction
+    return handleError(error, req)
   }
 }
+

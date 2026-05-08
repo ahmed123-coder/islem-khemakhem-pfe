@@ -1,14 +1,13 @@
-import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
-import { getCurrentUser } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-  
+export async function GET(req: NextRequest) {
+  const authResult = requireAuth(req, ['ADMIN'])
+  if (!authResult.success) return authResult.response!
+
   try {
     const consultants = await prisma.consultant.findMany({
       select: {
@@ -31,36 +30,33 @@ export async function GET() {
       },
       orderBy: { createdAt: 'desc' },
     })
-    return NextResponse.json(consultants)
+    return successResponse(consultants)
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch consultants' }, { status: 500 })
+    return handleError(error, req)
   }
 }
 
-export async function POST(request: Request) {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-  
+export async function POST(req: NextRequest) {
+  const authResult = requireAuth(req, ['ADMIN'])
+  if (!authResult.success) return authResult.response!
+
   try {
-    const body = await request.json()
-    console.log('POST /api/admin/consultants body:', body)
+    const body = await req.json()
     const { email, password, name, firstName, phone, specialty, hourlyRate, bio, imageUrl, cvUrl, certifications, isActive, serviceIds } = body
     
     if (!email) {
-      return NextResponse.json({ error: 'Email is required' }, { status: 400 })
+      return handleError(new Error('Email is required'), req)
     }
     if (!password) {
-      return NextResponse.json({ error: 'Password is required' }, { status: 400 })
+      return handleError(new Error('Password is required'), req)
     }
     if (!name) {
-      return NextResponse.json({ error: 'Name is required' }, { status: 400 })
+      return handleError(new Error('Name is required'), req)
     }
 
     const exists = await prisma.consultant.findUnique({ where: { email } })
     if (exists) {
-      return NextResponse.json({ error: 'Email already in use' }, { status: 400 })
+      return handleError(new Error('Email already in use'), req)
     }
 
     const hashedPassword = await bcrypt.hash(password, 10)
@@ -88,29 +84,22 @@ export async function POST(request: Request) {
       }
     })
     
-    return NextResponse.json(consultant)
+    return successResponse(consultant, 'Consultant created successfully', 201)
   } catch (error: any) {
-    console.error('POST /api/admin/consultants error:', error)
-    return NextResponse.json({ 
-      error: 'Failed to create consultant', 
-      details: error.message || String(error),
-      code: error.code // Prisma error codes
-    }, { status: 500 })
+    return handleError(error, req)
   }
 }
 
-export async function PUT(request: Request) {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-  
+export async function PUT(req: NextRequest) {
+  const authResult = requireAuth(req, ['ADMIN'])
+  if (!authResult.success) return authResult.response!
+
   try {
-    const body = await request.json()
+    const body = await req.json()
     const { id, email, name, firstName, phone, specialty, hourlyRate, bio, imageUrl, cvUrl, certifications, isActive, serviceIds } = body
 
     if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+      return handleError(new Error('ID is required'), req)
     }
 
     const data: any = {}
@@ -133,9 +122,9 @@ export async function PUT(request: Request) {
     
     const consultant = await prisma.consultant.update({ where: { id }, data })
     
-    return NextResponse.json(consultant)
+    return successResponse(consultant, 'Consultant updated successfully')
   } catch (error) {
-    console.error('PUT /api/admin/consultants error:', error)
-    return NextResponse.json({ error: 'Failed to update consultant', details: String(error) }, { status: 500 })
+    return handleError(error, req)
   }
 }
+

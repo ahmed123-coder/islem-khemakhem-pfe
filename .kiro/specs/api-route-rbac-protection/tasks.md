@@ -561,44 +561,33 @@ This document outlines the implementation tasks for fixing the critical RBAC vul
 ### Task 5.1: Identify Routes with Weak Protection
 **Time:** 1 hour
 
-- [ ] 5.1.1 Search codebase for `getCurrentUser()` usage
-
-- [ ] 5.1.2 Search codebase for `getConsultantId()` usage
-
-- [ ] 5.1.3 Search codebase for `getClientId()` usage
-
-- [ ] 5.1.4 Create list of routes to refactor
+- [x] 5.1.1 Search codebase for `getCurrentUser()` usage
+- [x] 5.1.2 Search codebase for `getConsultantId()` usage
+- [x] 5.1.3 Search codebase for `getClientId()` usage
+- [x] 5.1.4 Create list of routes to refactor
 
 ### Task 5.2: Refactor Routes to Use requireAuth()
 **Time:** 2-3 hours
 
-- [ ] 5.2.1 Replace `getCurrentUser()` pattern with `requireAuth()`
-
-- [ ] 5.2.2 Replace `getConsultantId()` pattern with `requireAuth(request, ['CONSULTANT'])`
-
-- [ ] 5.2.3 Replace `getClientId()` pattern with `requireAuth(request, ['CLIENT'])`
-
-- [ ] 5.2.4 Standardize all error responses
-
-- [ ] 5.2.5 Standardize all success responses
+- [x] 5.2.1 Replace `getCurrentUser()` pattern with `requireAuth()`
+- [x] 5.2.2 Replace `getConsultantId()` pattern with `requireAuth(request, ['CONSULTANT'])`
+- [x] 5.2.3 Replace `getClientId()` pattern with `requireAuth(request, ['CLIENT'])`
+- [x] 5.2.4 Standardize all error responses
+- [x] 5.2.5 Standardize all success responses
 
 ### Task 5.3: Phase 5 Testing & Verification
 **Time:** 30 minutes
 
-- [ ] 5.3.1 Run TypeScript compilation
-
-- [ ] 5.3.2 Test refactored routes maintain same behavior
-
-- [ ] 5.3.3 Verify consistent error responses across all routes
+- [x] 5.3.1 Run TypeScript compilation
+- [x] 5.3.2 Test refactored routes maintain same behavior
+- [x] 5.3.3 Verify consistent error responses across all routes
 
 ### Task 5.4: Phase 5 Checkpoint
 **Time:** 15 minutes
 
-- [ ] 5.4.1 Review all Phase 5 changes
-
-- [ ] 5.4.2 Commit Phase 5 changes
-
-- [ ] 5.4.3 Mark bugfix as complete
+- [x] 5.4.1 Review all Phase 5 changes
+- [x] 5.4.2 Commit Phase 5 changes
+- [x] 5.4.3 Mark bugfix as complete
 
 ---
 

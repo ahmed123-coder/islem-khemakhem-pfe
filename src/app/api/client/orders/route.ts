@@ -1,16 +1,17 @@
-import { NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
+import { requireAuth } from '@/lib/auth/middleware'
 import { prisma } from '@/lib/prisma'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const authResult = requireAuth(req, ['CLIENT'])
+  if (!authResult.success) return authResult.response!
+
+  const clientId = authResult.user!.userId
+
   try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'CLIENT') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const orders = await prisma.order.findMany({
-      where: { clientId: user.id },
+      where: { clientId },
       include: {
         serviceTier: {
           include: { service: true }
@@ -41,7 +42,7 @@ export async function GET() {
     }))
 
     const reservations = await prisma.reservation.findMany({
-      where: { clientId: user.id },
+      where: { clientId },
       include: {
         serviceTier: { include: { service: true } },
         consultant: { select: { name: true, specialty: true } }
@@ -49,9 +50,9 @@ export async function GET() {
       orderBy: { startTime: 'desc' }
     })
 
-    return NextResponse.json({ orders: ordersWithReviews, reservations })
+    return successResponse({ orders: ordersWithReviews, reservations })
   } catch (error) {
-    console.error('[ORDERS_GET]', error)
-    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })
+    return handleError(error, req)
   }
 }
+

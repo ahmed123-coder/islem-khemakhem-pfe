@@ -1,14 +1,40 @@
-import { NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
+import { requireAuth } from '@/lib/auth/middleware'
+import { prisma } from '@/lib/prisma'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const authResult = requireAuth(req)
+  if (!authResult.success) return authResult.response!
+
+  const userId = authResult.user!.userId
+
   try {
-    const user = await getCurrentUser()
+    // Try user table first
+    let user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, email: true, name: true, role: true }
+    })
+
     if (!user) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+      // Try consultant table
+      const consultant = await prisma.consultant.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, name: true }
+      })
+      
+      if (consultant) {
+        user = { ...consultant, role: 'CONSULTANT' } as any
+      }
     }
-    return NextResponse.json(user)
+
+    if (!user) {
+      return handleError(new Error('User not found'), req)
+    }
+
+    return successResponse(user)
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to get user' }, { status: 500 })
+    return handleError(error, req)
   }
 }
+

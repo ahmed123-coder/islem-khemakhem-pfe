@@ -1,21 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { requireAuth, requireOwnership } from '@/lib/auth/middleware'
 import { BillingService } from '@/lib/billing'
+import { prisma } from '@/lib/prisma'
+import { handleError } from '@/lib/errors/handler'
 
 export async function GET(
-  request: NextRequest,
+  req: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  try {
-    const user = await getCurrentUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const authResult = requireAuth(req, ['CLIENT', 'ADMIN'])
+  if (!authResult.success) return authResult.response!
 
+  try {
     const invoiceId = params.id
     
-    // In a real app, verify that the invoice belongs to the user
-    // The BillingService could do this check as well.
+    // Verify invoice exists and ownership
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: invoiceId }
+    })
+
+    if (!invoice) {
+      return handleError(new Error('Invoice not found'), req)
+    }
+
+    const ownershipResult = requireOwnership(authResult.user!, invoice.clientId)
+    if (!ownershipResult.success) return ownershipResult.response!
 
     const pdfBuffer = await BillingService.generateInvoicePDF(invoiceId)
 
@@ -26,7 +35,7 @@ export async function GET(
       },
     })
   } catch (error) {
-    console.error('Download invoice error:', error)
-    return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 })
+    return handleError(error, req)
   }
 }
+

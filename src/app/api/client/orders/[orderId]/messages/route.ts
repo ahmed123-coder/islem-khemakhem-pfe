@@ -1,53 +1,54 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
+import { requireAuth, requireOwnership } from '@/lib/auth/middleware'
 import { prisma } from '@/lib/prisma'
+import { handleError, successResponse } from '@/lib/errors/handler'
 import { notifyNewMessage } from '@/lib/notification-service'
 
 export async function GET(req: NextRequest, { params }: { params: { orderId: string } }) {
-  try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'CLIENT') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const authResult = requireAuth(req, ['CLIENT', 'ADMIN'])
+  if (!authResult.success) return authResult.response!
 
+  try {
     const order = await prisma.order.findUnique({ where: { id: params.orderId } })
-    if (!order || order.clientId !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
+    if (!order) return handleError(new Error('Order not found'), req)
+
+    const ownershipResult = requireOwnership(authResult.user!, order.clientId)
+    if (!ownershipResult.success) return ownershipResult.response!
 
     const messages = await prisma.message.findMany({
       where: { orderId: params.orderId },
       orderBy: { createdAt: 'asc' }
     })
 
-    return NextResponse.json(messages)
+    return successResponse(messages)
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch messages' }, { status: 500 })
+    return handleError(error, req)
   }
 }
 
 export async function POST(req: NextRequest, { params }: { params: { orderId: string } }) {
-  try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'CLIENT') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const authResult = requireAuth(req, ['CLIENT'])
+  if (!authResult.success) return authResult.response!
 
+  const userId = authResult.user!.userId
+
+  try {
     const { content } = await req.json()
     const order = await prisma.order.findUnique({ where: { id: params.orderId } })
     
-    if (!order || order.clientId !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
-    }
+    if (!order) return handleError(new Error('Order not found'), req)
+
+    const ownershipResult = requireOwnership(authResult.user!, order.clientId)
+    if (!ownershipResult.success) return ownershipResult.response!
 
     if (order.status !== 'ACTIVE') {
-      return NextResponse.json({ error: 'Order must be active' }, { status: 400 })
+      return handleError(new Error('Order must be active'), req)
     }
 
     const message = await prisma.message.create({
       data: {
         orderId: params.orderId,
-        senderId: user.id,
+        senderId: userId,
         senderType: 'CLIENT',
         content
       }
@@ -57,9 +58,10 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       where: { id: params.orderId },
       data: { messagesUsed: { increment: 1 } }
     })
-    await notifyNewMessage(params.orderId, user.id, 'CLIENT', message)
-    return NextResponse.json(message)
+    await notifyNewMessage(params.orderId, userId, 'CLIENT', message)
+    return successResponse(message, 'Message sent successfully', 201)
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to send message' }, { status: 500 })
+    return handleError(error, req)
   }
 }
+

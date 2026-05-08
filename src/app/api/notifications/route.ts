@@ -1,76 +1,81 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
 export async function GET(req: NextRequest) {
-  try {
-    const user = await getCurrentUser()
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const authResult = requireAuth(req)
+  if (!authResult.success) return authResult.response!
 
+  const userId = authResult.user!.userId
+
+  try {
     const notifications = await prisma.notification.findMany({
       where: {
         OR: [
-          { userId: user.id },
-          { consultantId: user.id }
+          { userId: userId },
+          { consultantId: userId }
         ]
       },
       orderBy: { createdAt: 'desc' },
       take: 20
     })
 
-    return NextResponse.json(notifications)
+    return successResponse(notifications)
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return handleError(error, req)
   }
 }
 
 export async function PATCH(req: NextRequest) {
-  try {
-    const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const authResult = requireAuth(req)
+  if (!authResult.success) return authResult.response!
 
+  const userId = authResult.user!.userId
+
+  try {
     const { id } = await req.json()
-    if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 })
+    if (!id) return handleError(new Error('ID is required'), req)
 
     // Use updateMany so it doesn't throw if not found
     await prisma.notification.updateMany({
       where: {
         id,
         OR: [
-          { userId: user.id },
-          { consultantId: user.id }
+          { userId: userId },
+          { consultantId: userId }
         ]
       },
       data: { isRead: true }
     })
 
-    return NextResponse.json({ success: true })
+    return successResponse({ success: true }, 'Notification marked as read')
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return handleError(error, req)
   }
 }
 
 export async function PUT(req: NextRequest) {
-    // Mark all as read
-    try {
-      const user = await getCurrentUser()
-      if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  
-      await prisma.notification.updateMany({
-        where: {
-            OR: [
-                { userId: user.id },
-                { consultantId: user.id }
-            ],
-            isRead: false
-        },
-        data: { isRead: true }
-      })
-  
-      return NextResponse.json({ success: true })
-    } catch (error) {
-      return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
-    }
+  const authResult = requireAuth(req)
+  if (!authResult.success) return authResult.response!
+
+  const userId = authResult.user!.userId
+
+  try {
+    await prisma.notification.updateMany({
+      where: {
+        OR: [
+          { userId: userId },
+          { consultantId: userId }
+        ],
+        isRead: false
+      },
+      data: { isRead: true }
+    })
+
+    return successResponse({ success: true }, 'All notifications marked as read')
+  } catch (error) {
+    return handleError(error, req)
   }
+}
+
