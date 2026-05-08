@@ -1,8 +1,16 @@
 import { AdminSidebar } from "@/components/admin/sidebar"
 import { AdminTopBar } from "@/components/admin/top-bar"
 import { Toaster } from "react-hot-toast"
+import { getAuthToken, verifyToken } from "@/lib/auth"
+import { redirect } from "next/navigation"
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const token = await getAuthToken()
+  if (!token) redirect('/login')
+
+  const payload = verifyToken(token)
+  if (!payload || payload.role !== 'ADMIN') redirect('/')
+
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans antialiased text-slate-900">
       <AdminSidebar />

@@ -64,7 +64,12 @@ export function middleware(request: NextRequest) {
   // SECURITY: RBAC - Role-Based Access Control for route protection
   
   // 1. Check if route is public (allow without authentication)
-  if (publicRoutes.includes(pathname) || publicRoutes.some(route => pathname.startsWith(route))) {
+  const isPublicRoute = publicRoutes.some(route => {
+    if (route === '/') return pathname === '/';
+    return pathname === route || pathname.startsWith(route + '/');
+  });
+
+  if (isPublicRoute) {
     const response = NextResponse.next();
     return applySecurityHeaders(response);
   }
@@ -130,5 +135,15 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)']
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder files (e.g. /logo.png, /hero.jpg)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)',
+  ],
 }
