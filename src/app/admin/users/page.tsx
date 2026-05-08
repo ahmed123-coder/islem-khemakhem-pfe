@@ -131,7 +131,8 @@ export default function UsersPage() {
     setLoading(true)
     try {
       const res = await fetch('/api/admin/users')
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || []
       setUsers(data.filter((u: User) => u.role === 'CLIENT'))
     } finally {
       setLoading(false)
@@ -186,7 +187,10 @@ export default function UsersPage() {
     setSelectedTier('')
     setTiers([])
     const res = await fetch('/api/admin/services')
-    if (res.ok) setServices(await res.json())
+    if (res.ok) {
+      const result = await res.json()
+      setServices(result.data || result)
+    }
   }
 
   const handleServiceChange = async (serviceId: string) => {
@@ -194,7 +198,10 @@ export default function UsersPage() {
     setSelectedTier('')
     if (!serviceId) return setTiers([])
     const res = await fetch(`/api/admin/services/tiers?serviceId=${serviceId}`)
-    if (res.ok) setTiers(await res.json())
+    if (res.ok) {
+      const result = await res.json()
+      setTiers(result.data || result)
+    }
   }
 
   const handleCreateOrder = async () => {

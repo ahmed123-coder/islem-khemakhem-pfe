@@ -31,7 +31,8 @@ export default function AdminBillingPage() {
   const fetchClients = async () => {
     try {
       const res = await fetch('/api/admin/users')
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || []
       setClients(data.filter((u: any) => u.role === 'CLIENT' || u.role === 'ADMIN'))
     } catch (error) {
       console.error('Failed to fetch clients')
@@ -41,8 +42,8 @@ export default function AdminBillingPage() {
   const fetchInvoices = async () => {
     try {
       const res = await fetch('/api/admin/billing')
-      const data = await res.json()
-      setInvoices(data)
+      const result = await res.json()
+      setInvoices(result.data || [])
     } catch (error) {
         console.error('Failed to fetch invoices')
     } finally {

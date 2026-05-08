@@ -122,9 +122,10 @@ export default function ConsultantsPage() {
     setLoading(true)
     try {
       const res = await fetch('/api/admin/consultants')
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || result
       if (!Array.isArray(data)) {
-        setError(data.error || 'Erreur de chargement')
+        setError(result.error || 'Erreur de chargement')
         setConsultants([])
       } else {
         setConsultants(data)

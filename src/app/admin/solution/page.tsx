@@ -109,7 +109,8 @@ export default function ServicesCMS() {
     try {
       const res = await fetch('/api/admin/services')
       if (res.ok) {
-        const data = await res.json()
+        const result = await res.json()
+        const data = result.data || result
         setServices(Array.isArray(data) ? data : [])
       }
     } finally {
@@ -119,7 +120,10 @@ export default function ServicesCMS() {
 
   const loadTiers = async (serviceId: string) => {
     const res = await fetch(`/api/admin/services/tiers?serviceId=${serviceId}`)
-    if (res.ok) setTiers(await res.json())
+    if (res.ok) {
+      const result = await res.json()
+      setTiers(result.data || result)
+    }
   }
 
   const handleSelect = (id: string) => {

@@ -21,9 +21,9 @@ export default function AdminReviewsPage() {
 
   const fetchReviews = async () => {
     try {
-      const res = await fetch('/api/reviews') // I should update GET in route.ts to handle admin access
-      const data = await res.json()
-      setReviews(data)
+      const res = await fetch('/api/reviews') 
+      const result = await res.json()
+      setReviews(result.data || [])
     } catch (error) {
       toast.error("Failed to load reviews")
     } finally {

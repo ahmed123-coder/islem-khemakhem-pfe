@@ -79,7 +79,8 @@ export default function BlogsCMS() {
     try {
       const res = await fetch('/api/admin/blogs')
       if (res.ok) {
-        const data = await res.json()
+        const result = await res.json()
+        const data = result.data || result
         setBlogs(Array.isArray(data) ? data : [])
       }
     } finally {
