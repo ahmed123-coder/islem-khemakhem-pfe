@@ -1,47 +1,45 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
 export async function PUT(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
 
   const id = params.id
-  const data = await req.json()
   
   try {
+    const data = await request.json()
+    
     const contact = await prisma.contact.update({
       where: { id },
       data: {
         status: data.status
       }
     })
-    return NextResponse.json(contact)
+    return successResponse(contact);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
 export async function DELETE(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
 
   const id = params.id
 
   try {
     await prisma.contact.delete({ where: { id } })
-    return NextResponse.json({ success: true })
+    return successResponse({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
+    return handleError(error, request);
   }
 }

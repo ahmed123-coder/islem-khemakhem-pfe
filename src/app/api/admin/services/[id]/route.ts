@@ -1,42 +1,46 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
+import { NotFoundError } from '@/lib/errors/types'
 
 export async function GET(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
 
   const { id } = params
-  const service = await prisma.service.findUnique({
-    where: { id },
-    include: { tiers: true }
-  })
+  
+  try {
+    const service = await prisma.service.findUnique({
+      where: { id },
+      include: { tiers: true }
+    })
 
-  if (!service) {
-    return NextResponse.json({ error: 'Service not found' }, { status: 404 })
+    if (!service) {
+      throw new NotFoundError('Service', id);
+    }
+
+    return successResponse({ ...service, title: service.name, icon: service.category });
+  } catch (error) {
+    return handleError(error, request);
   }
-
-  return NextResponse.json({ ...service, title: service.name, icon: service.category })
 }
 
 export async function PUT(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
 
   const { id } = params
-  const { title, description, icon, logo, isActive } = await req.json()
-
+  
   try {
+    const { title, description, icon, logo, isActive } = await request.json()
+    
     const service = await prisma.service.update({
       where: { id },
       data: {
@@ -47,27 +51,25 @@ export async function PUT(
         isActive: isActive !== undefined ? isActive : true
       }
     })
-    return NextResponse.json({ ...service, title: service.name, icon: service.category })
+    return successResponse({ ...service, title: service.name, icon: service.category });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update service' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
 export async function DELETE(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
 
   const { id } = params
 
   try {
     await prisma.service.delete({ where: { id } })
-    return NextResponse.json({ success: true })
+    return successResponse({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to delete service' }, { status: 500 })
+    return handleError(error, request);
   }
 }

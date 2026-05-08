@@ -1,7 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
+  
   try {
     const orders = await prisma.order.findMany({
       include: {
@@ -15,13 +20,16 @@ export async function GET() {
       },
       orderBy: { createdAt: 'desc' },
     })
-    return NextResponse.json(orders)
+    return successResponse(orders);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch orders' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
+  
   try {
     const body = await request.json()
     const { id, status, messagesUsed, callMinutesUsed } = body
@@ -43,8 +51,8 @@ export async function PUT(request: Request) {
       })
     }
     
-    return NextResponse.json(order)
+    return successResponse(order);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update order' }, { status: 500 })
+    return handleError(error, request);
   }
 }

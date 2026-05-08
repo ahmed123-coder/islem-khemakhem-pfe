@@ -1,7 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
+  
   try {
     const [
       blogs,
@@ -38,7 +43,7 @@ export async function GET() {
 
     const growth = clients > 0 ? ((newClients / clients) * 100).toFixed(1) : "0"
 
-    return NextResponse.json({ 
+    return successResponse({ 
       blogs, 
       services, 
       contacts,
@@ -49,18 +54,8 @@ export async function GET() {
       activeConsultants,
       pendingContacts,
       growth
-    })
+    });
   } catch (error) {
-    return NextResponse.json({ 
-      blogs: 0, 
-      services: 0, 
-      contacts: 0,
-      clients: 0,
-      activeClients: 0,
-      inactiveClients: 0,
-      consultants: 0,
-      activeConsultants: 0,
-      pendingContacts: 0
-    })
+    return handleError(error, request);
   }
 }

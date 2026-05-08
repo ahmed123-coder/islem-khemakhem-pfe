@@ -1,8 +1,13 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { randomUUID } from 'crypto'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
+  
   try {
     const invoices = await prisma.invoice.findMany({
       include: {
@@ -19,13 +24,16 @@ export async function GET() {
       },
       orderBy: { issueDate: 'desc' }
     })
-    return NextResponse.json(invoices)
+    return successResponse(invoices);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
 export async function POST(request: NextRequest) {
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
+  
   try {
     const { clientId, orderId, amount, dueDate, status } = await request.json()
     
@@ -49,14 +57,17 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    return NextResponse.json(invoice)
+    return successResponse(invoice);
   } catch (error) {
     console.error('Invoice creation error:', error)
-    return NextResponse.json({ error: 'Failed to create invoice' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
 export async function PUT(request: NextRequest) {
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
+  
   try {
     const { id, status, dueDate } = await request.json()
     const invoice = await prisma.invoice.update({
@@ -67,21 +78,24 @@ export async function PUT(request: NextRequest) {
         paidAt: status === 'PAID' ? new Date() : undefined
       }
     })
-    return NextResponse.json(invoice)
+    return successResponse(invoice);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
 export async function DELETE(request: NextRequest) {
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
+  
   const { searchParams } = new URL(request.url)
   const id = searchParams.get('id')
-  if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
+  if (!id) return handleError(new Error('Missing ID'), request);
   
   try {
     await prisma.invoice.delete({ where: { id } })
-    return NextResponse.json({ success: true })
+    return successResponse({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed' }, { status: 500 })
+    return handleError(error, request);
   }
 }

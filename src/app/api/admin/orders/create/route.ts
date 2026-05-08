@@ -1,17 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function POST(request: Request) {
-  const admin = await getCurrentUser()
-  if (!admin || admin.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+export async function POST(request: NextRequest) {
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
 
   try {
     const { clientId, serviceTierId } = await request.json()
     if (!clientId || !serviceTierId) {
-      return NextResponse.json({ error: 'clientId and serviceTierId are required' }, { status: 400 })
+      return handleError(new Error('clientId and serviceTierId are required'), request);
     }
 
     const order = await prisma.order.create({
@@ -21,8 +20,8 @@ export async function POST(request: Request) {
       }
     })
 
-    return NextResponse.json(order)
+    return successResponse(order);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create order' }, { status: 500 })
+    return handleError(error, request);
   }
 }
