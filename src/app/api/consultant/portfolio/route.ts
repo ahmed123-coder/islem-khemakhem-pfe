@@ -1,16 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { getConsultantId } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
+import { NotFoundError } from '@/lib/errors/types'
 
 const prisma = new PrismaClient()
 
-export async function GET(req: NextRequest) {
-  const consultantId = await getConsultantId()
-  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(request: NextRequest) {
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
 
   try {
     const consultant = await prisma.consultant.findUnique({
-      where: { id: consultantId },
+      where: { id: authResult.user.userId },
       include: {
         orders: {
           include: {
@@ -32,29 +34,29 @@ export async function GET(req: NextRequest) {
     })
 
     if (!consultant) {
-      return NextResponse.json({ error: 'Consultant not found' }, { status: 404 })
+      throw new NotFoundError('Consultant', authResult.user.userId);
     }
 
-    return NextResponse.json(consultant)
+    return successResponse(consultant);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch portfolio' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
-export async function PATCH(req: NextRequest) {
-  const consultantId = await getConsultantId()
-  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function PATCH(request: NextRequest) {
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
 
   try {
-    const { name, specialty, hourlyRate, bio, imageUrl } = await req.json()
+    const { name, specialty, hourlyRate, bio, imageUrl } = await request.json()
     
     const updated = await prisma.consultant.update({
-      where: { id: consultantId },
+      where: { id: authResult.user.userId },
       data: { name, specialty, hourlyRate, bio, imageUrl }
     })
     
-    return NextResponse.json(updated)
+    return successResponse(updated);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
+    return handleError(error, request);
   }
 }

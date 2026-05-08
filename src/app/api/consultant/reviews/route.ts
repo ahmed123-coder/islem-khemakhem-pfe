@@ -1,17 +1,16 @@
-import { NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
+
   try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'CONSULTANT') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const reviews = await prisma.review.findMany({
       where: {
-        consultantId: user.id,
+        consultantId: authResult.user.userId,
         isPublished: true,
         type: 'CONSULTANT'
       },
@@ -37,9 +36,9 @@ export async function GET() {
       }
     })
 
-    return NextResponse.json(reviews)
+    return successResponse(reviews);
   } catch (error) {
     console.error('[CONSULTANT_REVIEWS_GET]', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return handleError(error, request);
   }
 }

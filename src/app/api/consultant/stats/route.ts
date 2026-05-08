@@ -1,18 +1,14 @@
-import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getAuthToken, verifyToken } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
+
   try {
-    const token = await getAuthToken()
-    if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const payload = verifyToken(token)
-    if (!payload || payload.role !== 'CONSULTANT') {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
-    }
-
-    const consultantId = payload.userId
+    const consultantId = authResult.user.userId
 
     // Get current date boundaries
     const now = new Date()
@@ -103,7 +99,7 @@ export async function GET() {
     const goal = 160
     const progress = Math.min(Math.round((hours / goal) * 100), 100)
 
-    return NextResponse.json({
+    return successResponse({
       appointmentsToday,
       hoursMonth: Math.round(hours),
       progress,
@@ -112,9 +108,9 @@ export async function GET() {
       clientGrowth: recentClientGrowth,
       todayMissions,
       ratings: consultantRatings
-    })
+    });
   } catch (error) {
     console.error('Stats error:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return handleError(error, request);
   }
 }

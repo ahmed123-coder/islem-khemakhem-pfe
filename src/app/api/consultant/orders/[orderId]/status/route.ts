@@ -1,19 +1,21 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getConsultantId } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
+import { NotFoundError } from '@/lib/errors/types'
 
 export async function PATCH(
-  req: NextRequest,
+  request: NextRequest,
   { params }: { params: { orderId: string } }
 ) {
-  const consultantId = await getConsultantId()
-  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
 
   try {
     const { orderId } = params
-    const { status } = await req.json()
+    const { status } = await request.json()
     
-    console.log('[Order Status API] Updating order:', orderId, 'to status:', status, 'by consultant:', consultantId)
+    console.log('[Order Status API] Updating order:', orderId, 'to status:', status, 'by consultant:', authResult.user.userId)
 
     // Verify order ownership
     const order = await prisma.order.findUnique({
@@ -21,11 +23,11 @@ export async function PATCH(
     })
 
     if (!order) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 404 })
+      throw new NotFoundError('Order', orderId);
     }
 
-    if (order.consultantId !== consultantId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    if (order.consultantId !== authResult.user.userId) {
+      return handleError(new Error('Access denied - you do not own this order'), request);
     }
 
     const updatedOrder = await prisma.order.update({
@@ -41,9 +43,9 @@ export async function PATCH(
       console.error('Failed to send notification:', notifyError)
     }
 
-    return NextResponse.json(updatedOrder)
+    return successResponse(updatedOrder);
   } catch (error) {
     console.error('Update order status error:', error)
-    return NextResponse.json({ error: 'Failed to update order status' }, { status: 500 })
+    return handleError(error, request);
   }
 }

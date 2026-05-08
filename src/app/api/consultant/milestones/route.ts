@@ -1,11 +1,17 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
+import { NotFoundError } from '@/lib/errors/types'
 
 const prisma = new PrismaClient()
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
+
   try {
-    const { missionId, title, description, dueDate } = await req.json()
+    const { missionId, title, description, dueDate } = await request.json()
 
     // 1. Verify mission exists and include associated order
     const mission = await prisma.mission.findUnique({
@@ -14,12 +20,17 @@ export async function POST(req: NextRequest) {
     })
 
     if (!mission) {
-      return NextResponse.json({ error: 'Mission not found' }, { status: 404 })
+      throw new NotFoundError('Mission', missionId);
+    }
+
+    // Verify consultant owns the mission
+    if (mission.consultantId !== authResult.user.userId) {
+      return handleError(new Error('Access denied - you do not own this mission'), request);
     }
 
     // 2. Verify order status is active
     if (mission.order.status !== 'ACTIVE') {
-      return NextResponse.json({ error: 'Cannot add milestones to a non-active order' }, { status: 400 })
+      return handleError(new Error('Cannot add milestones to a non-active order'), request);
     }
 
     const milestone = await prisma.milestone.create({
@@ -35,15 +46,29 @@ export async function POST(req: NextRequest) {
     const { notifyMissionUpdate } = await import('@/lib/notification-service')
     await notifyMissionUpdate(missionId, 'Task Added', `New task "${title}" added to mission "${mission.title}".`)
 
-    return NextResponse.json(milestone)
+    return successResponse(milestone);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to create milestone' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
-export async function PATCH(req: NextRequest) {
+export async function PATCH(request: NextRequest) {
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
+
   try {
-    const { milestoneId, status, title, description } = await req.json()
+    const { milestoneId, status, title, description } = await request.json()
+    
+    // Verify ownership through mission
+    const existingMilestone = await prisma.milestone.findUnique({
+      where: { id: milestoneId },
+      include: { mission: true }
+    })
+    
+    if (!existingMilestone || existingMilestone.mission.consultantId !== authResult.user.userId) {
+      return handleError(new Error('Milestone not found or access denied'), request);
+    }
+    
     const milestone = await prisma.milestone.update({
       where: { id: milestoneId },
       include: { mission: true },
@@ -58,24 +83,35 @@ export async function PATCH(req: NextRequest) {
     const { notifyMissionUpdate } = await import('@/lib/notification-service')
     await notifyMissionUpdate(milestone.missionId, 'Task Updated', `Task "${milestone.title}" has been updated.`)
 
-    return NextResponse.json(milestone)
+    return successResponse(milestone);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update milestone' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
-export async function DELETE(req: NextRequest) {
+export async function DELETE(request: NextRequest) {
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
+
   try {
-    const { milestoneId } = await req.json()
-    const milestone = await prisma.milestone.findUnique({ where: { id: milestoneId } })
-    if (!milestone) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    const { milestoneId } = await request.json()
+    const milestone = await prisma.milestone.findUnique({ 
+      where: { id: milestoneId },
+      include: { mission: true }
+    })
+    
+    if (!milestone) throw new NotFoundError('Milestone', milestoneId);
+    
+    if (milestone.mission.consultantId !== authResult.user.userId) {
+      return handleError(new Error('Access denied - you do not own this milestone'), request);
+    }
 
     const { notifyMissionUpdate } = await import('@/lib/notification-service')
     await notifyMissionUpdate(milestone.missionId, 'Task Removed', `Task "${milestone.title}" has been deleted.`)
 
     await prisma.milestone.delete({ where: { id: milestoneId } })
-    return NextResponse.json({ success: true })
+    return successResponse({ success: true });
   } catch (error) {
-    return NextResponse.json({ error: 'Failed' }, { status: 500 })
+    return handleError(error, request);
   }
 }

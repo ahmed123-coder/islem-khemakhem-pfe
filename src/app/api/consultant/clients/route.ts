@@ -1,14 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getConsultantId } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET(req: NextRequest) {
-  const consultantId = await getConsultantId()
-  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(request: NextRequest) {
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
 
   try {
     const orders = await prisma.order.findMany({
-      where: { consultantId },
+      where: { consultantId: authResult.user.userId },
       include: {
         client: { select: { id: true, name: true, email: true, firstName: true } },
         serviceTier: { include: { service: true } },
@@ -16,9 +17,9 @@ export async function GET(req: NextRequest) {
       },
       orderBy: { createdAt: 'desc' }
     })
-    return NextResponse.json(orders || [])
+    return successResponse(orders || []);
   } catch (error) {
     console.error('[CONSULTANT_CLIENTS_GET]', error)
-    return NextResponse.json([], { status: 500 })
+    return handleError(error, request);
   }
 }

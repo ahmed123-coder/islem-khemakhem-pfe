@@ -1,28 +1,34 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { getConsultantId } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
+import { NotFoundError } from '@/lib/errors/types'
 
 const prisma = new PrismaClient()
 
-export async function GET(req: NextRequest) {
-  const consultantId = await getConsultantId()
-  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(request: NextRequest) {
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
 
-  const orderId = req.nextUrl.searchParams.get('orderId')
-  if (!orderId) return NextResponse.json({ error: 'Order ID required' }, { status: 400 })
+  const orderId = request.nextUrl.searchParams.get('orderId')
+  if (!orderId) return handleError(new Error('Order ID required'), request);
 
   try {
     const order = await prisma.order.findUnique({ where: { id: orderId } })
-    if (!order || order.consultantId !== consultantId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    if (!order) {
+      throw new NotFoundError('Order', orderId);
+    }
+    
+    if (order.consultantId !== authResult.user.userId) {
+      return handleError(new Error('Access denied - you do not own this order'), request);
     }
 
     const calls = await prisma.call.findMany({
       where: { orderId },
       orderBy: { startedAt: 'desc' }
     })
-    return NextResponse.json(calls)
+    return successResponse(calls);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch calls' }, { status: 500 })
+    return handleError(error, request);
   }
 }

@@ -1,22 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { PrismaClient } from '@prisma/client'
-import { getConsultantId } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 import { createZoomMeeting } from '@/lib/zoom'
 import { notifyReservationUpdate } from '@/lib/notification-service'
 
 const prisma = new PrismaClient()
 
-export async function GET(req: NextRequest) {
-  const consultantId = await getConsultantId()
-  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(request: NextRequest) {
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
 
-  const { searchParams } = new URL(req.url)
+  const { searchParams } = new URL(request.url)
   const clientId = searchParams.get('clientId')
 
   try {
     const reservations = await prisma.reservation.findMany({
       where: { 
-        consultantId,
+        consultantId: authResult.user.userId,
         ...(clientId ? { clientId } : {})
       },
       include: {
@@ -25,18 +26,18 @@ export async function GET(req: NextRequest) {
       },
       orderBy: { startTime: 'asc' }
     })
-    return NextResponse.json(reservations)
+    return successResponse(reservations);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch reservations' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
-export async function PATCH(req: NextRequest) {
-  const consultantId = await getConsultantId()
-  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function PATCH(request: NextRequest) {
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
 
   try {
-    const { id, status } = await req.json()
+    const { id, status } = await request.json()
     const reservation = await prisma.reservation.findUnique({ 
       where: { id },
       include: {
@@ -45,8 +46,8 @@ export async function PATCH(req: NextRequest) {
       }
     })
     
-    if (!reservation || reservation.consultantId !== consultantId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    if (!reservation || reservation.consultantId !== authResult.user.userId) {
+      return handleError(new Error('Access denied - you do not own this reservation'), request);
     }
 
     let zoomJoinUrl = reservation.zoomJoinUrl
@@ -83,33 +84,33 @@ export async function PATCH(req: NextRequest) {
       }
     })
     await notifyReservationUpdate(id, status)
-    return NextResponse.json(updated)
+    return successResponse(updated);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update reservation' }, { status: 500 })
+    return handleError(error, request);
   }
 }
 
-export async function DELETE(req: NextRequest) {
-  const consultantId = await getConsultantId()
-  if (!consultantId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function DELETE(request: NextRequest) {
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
 
   try {
-    const { id } = await req.json()
+    const { id } = await request.json()
     const { notifyReservationDelete } = await import('@/lib/notification-service')
     
     // Check ownership
     const reservation = await prisma.reservation.findUnique({ where: { id } })
-    if (!reservation || reservation.consultantId !== consultantId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 })
+    if (!reservation || reservation.consultantId !== authResult.user.userId) {
+      return handleError(new Error('Access denied - you do not own this reservation'), request);
     }
 
     // Send notification BEFORE deleting to fetch details
     await notifyReservationDelete(id, 'CONSULTANT')
 
     await prisma.reservation.delete({ where: { id } })
-    return NextResponse.json({ success: true })
+    return successResponse({ success: true });
   } catch (error) {
     console.error('Delete error:', error)
-    return NextResponse.json({ error: 'Failed to delete reservation' }, { status: 500 })
+    return handleError(error, request);
   }
 }
