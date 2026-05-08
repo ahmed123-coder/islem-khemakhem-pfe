@@ -55,9 +55,9 @@ export default function ConsultantWorkspace() {
     Promise.all([
       fetch('/api/auth/me').then(r => r.json()),
       fetch('/api/consultant/stats').then(r => r.json())
-    ]).then(([userData, statsData]) => {
-      setUser(userData)
-      setStats(statsData)
+    ]).then(([userResult, statsResult]) => {
+      setUser(userResult.data || userResult)
+      setStats(statsResult.data || statsResult)
     }).finally(() => setLoading(false))
   }, [])
 

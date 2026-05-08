@@ -58,7 +58,8 @@ export default function AdminDashboard() {
   React.useEffect(() => {
     fetch('/api/admin/stats')
       .then(r => r.json())
-      .then(data => {
+      .then(result => {
+        const data = result.data || result
         setStats({ 
           blogs: data.blogs || 0,
           services: data.services || 0,

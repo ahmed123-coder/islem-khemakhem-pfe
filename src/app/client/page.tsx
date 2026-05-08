@@ -45,7 +45,8 @@ export default function ClientDashboard() {
   const fetchData = async () => {
     try {
       const res = await fetch('/api/client/orders')
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || result
       const allOrders = data.orders || []
       setOrders(allOrders)
       setReservations(data.reservations || [])

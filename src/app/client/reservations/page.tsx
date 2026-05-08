@@ -21,7 +21,8 @@ export default function ClientReservations() {
     try {
       // The orders endpoint conveniently returns both orders and reservations for the client
       const res = await fetch('/api/client/orders')
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || result
       setReservations(data.reservations || [])
       setLoading(false)
     } catch (error) {

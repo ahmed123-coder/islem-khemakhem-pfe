@@ -18,8 +18,9 @@ export default function BillingPage() {
   const fetchInvoices = async () => {
     try {
       const res = await fetch('/api/client/invoices')
-      const data = await res.json()
-      setInvoices(data)
+      const result = await res.json()
+      const invoicesData = result.data || []
+      setInvoices(invoicesData)
       setLoading(false)
     } catch (error) {
       setLoading(false)
