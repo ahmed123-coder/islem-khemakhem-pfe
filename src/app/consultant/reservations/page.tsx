@@ -89,7 +89,8 @@ export default function ConsultantReservations() {
   const fetchReservations = async () => {
     try {
       const res = await fetch('/api/consultant/reservations')
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || result
       setReservations(Array.isArray(data) ? data : [])
     } catch (error) {
       console.error('Fetch error:', error)

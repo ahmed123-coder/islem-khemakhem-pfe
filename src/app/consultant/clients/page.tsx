@@ -129,7 +129,8 @@ export default function ConsultantClients() {
   const fetchClients = async () => {
     try {
       const res = await fetch('/api/consultant/clients')
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || result
       if (Array.isArray(data)) {
         setClients(data)
       } else {
@@ -145,32 +146,36 @@ export default function ConsultantClients() {
   const fetchMessages = async (orderId: string) => {
     try {
       const res = await fetch(`/api/consultant/messages?orderId=${orderId}`)
-      const data = await res.json()
-      setMessages(data)
+      const result = await res.json()
+      const data = result.data || result
+      setMessages(Array.isArray(data) ? data : [])
     } catch (error) { console.error(error) }
   }
 
   const fetchCalls = async (orderId: string) => {
     try {
       const res = await fetch(`/api/consultant/calls?orderId=${orderId}`)
-      const data = await res.json()
-      setCalls(data)
+      const result = await res.json()
+      const data = result.data || result
+      setCalls(Array.isArray(data) ? data : [])
     } catch (error) { console.error(error) }
   }
 
   const fetchMissions = async (orderId: string) => {
     try {
       const res = await fetch(`/api/consultant/missions?orderId=${orderId}`)
-      const data = await res.json()
-      setMissions(data)
+      const result = await res.json()
+      const data = result.data || result
+      setMissions(Array.isArray(data) ? data : [])
     } catch (error) { console.error(error) }
   }
 
   const fetchReservations = async (clientId: string) => {
     try {
       const res = await fetch(`/api/consultant/reservations?clientId=${clientId}`)
-      const data = await res.json()
-      setReservations(data)
+      const result = await res.json()
+      const data = result.data || result
+      setReservations(Array.isArray(data) ? data : [])
     } catch (error) { console.error(error) }
   }
 
@@ -517,7 +522,7 @@ export default function ConsultantClients() {
                       <TabsContent value="messages" className="m-0 focus-visible:ring-0">
                         <div className="flex flex-col h-[calc(100vh-280px)] bg-white rounded-[2rem] border border-slate-200/60 shadow-xl overflow-hidden">
                           <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 bg-[#F9FBFF]">
-                            {messages.length === 0 ? (
+                            {!Array.isArray(messages) || messages.length === 0 ? (
                               <div className="h-full flex flex-col items-center justify-center opacity-30 italic text-sm">
                                 <MessageSquare className="h-12 w-12 mb-3" />
                                 <p>Open a conversation with this client.</p>
@@ -605,7 +610,7 @@ export default function ConsultantClients() {
                         </div>
 
                         <div className="grid grid-cols-1 gap-6">
-                          {missions.map(mission => (
+                          {Array.isArray(missions) && missions.map(mission => (
                             <Card key={mission.id} className="border border-slate-200 shadow-xl shadow-slate-200/30 rounded-[2rem] overflow-hidden bg-white hover:shadow-2xl transition-all">
                               <CardHeader className="bg-slate-50/60 p-8">
                                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
@@ -770,7 +775,7 @@ export default function ConsultantClients() {
 
                       <TabsContent value="calls" className="m-0 focus-visible:ring-0">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {calls.length === 0 ? (
+                          {!Array.isArray(calls) || calls.length === 0 ? (
                             <div className="col-span-full py-24 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-slate-300">
                               <Phone className="h-16 w-16 mb-6 opacity-20" />
                               <p className="font-black uppercase text-[11px] tracking-[0.3em]">No voice records yet</p>

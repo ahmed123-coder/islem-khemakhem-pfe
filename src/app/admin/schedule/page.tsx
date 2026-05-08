@@ -21,7 +21,10 @@ export default function SchedulePage() {
   useEffect(() => {
     fetch(`/api/consultants/schedule?startDate=${startDate}&days=${days}`)
       .then(r => r.json())
-      .then(setConsultants)
+      .then(res => {
+        const data = res.data || res
+        setConsultants(Array.isArray(data) ? data : [])
+      })
   }, [startDate, days])
 
   const hours = Array.from({ length: 9 }, (_, i) => i + 9) // 9h to 17h

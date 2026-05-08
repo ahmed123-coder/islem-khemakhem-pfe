@@ -59,7 +59,8 @@ export default function FaqsAdmin() {
     try {
       const res = await fetch('/api/faqs')
       if (res.ok) {
-        const data = await res.json()
+        const result = await res.json()
+        const data = result.data || result
         setFaqs(Array.isArray(data) ? data : [])
       }
     } finally {

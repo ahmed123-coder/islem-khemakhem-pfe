@@ -113,7 +113,8 @@ export default function ConsultantsPage() {
   const fetchServices = async () => {
     try {
       const res = await fetch('/api/services')
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || result
       setServices(Array.isArray(data) ? data : [])
     } catch (e) {}
   }
@@ -125,7 +126,7 @@ export default function ConsultantsPage() {
       const result = await res.json()
       const data = result.data || result
       if (!Array.isArray(data)) {
-        setError(result.error || 'Erreur de chargement')
+        setError(result.error || result.message || 'Erreur de chargement')
         setConsultants([])
       } else {
         setConsultants(data)

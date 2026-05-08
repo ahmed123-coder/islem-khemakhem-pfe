@@ -23,7 +23,8 @@ export default function AdminReviewsPage() {
     try {
       const res = await fetch('/api/reviews') 
       const result = await res.json()
-      setReviews(result.data || [])
+      const data = result.data || result || []
+      setReviews(data)
     } catch (error) {
       toast.error("Failed to load reviews")
     } finally {

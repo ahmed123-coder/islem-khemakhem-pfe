@@ -32,7 +32,7 @@ export default function AdminBillingPage() {
     try {
       const res = await fetch('/api/admin/users')
       const result = await res.json()
-      const data = result.data || []
+      const data = result.data || result || []
       setClients(data.filter((u: any) => u.role === 'CLIENT' || u.role === 'ADMIN'))
     } catch (error) {
       console.error('Failed to fetch clients')
@@ -43,7 +43,8 @@ export default function AdminBillingPage() {
     try {
       const res = await fetch('/api/admin/billing')
       const result = await res.json()
-      setInvoices(result.data || [])
+      const data = result.data || result || []
+      setInvoices(data)
     } catch (error) {
         console.error('Failed to fetch invoices')
     } finally {

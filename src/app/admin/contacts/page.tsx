@@ -52,7 +52,7 @@ export default function ContactsCRM() {
     try {
       const res = await fetch('/api/admin/contacts')
       const result = await res.json()
-      const data = result.data || []
+      const data = result.data || result || []
       setContacts(data)
       if (data.length > 0 && !selectedId) setSelectedId(data[0].id)
     } finally {

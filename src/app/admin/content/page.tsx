@@ -46,7 +46,8 @@ export default function SiteVisualEditor() {
     try {
       const res = await fetch(`/api/content/${activeTab}`)
       if (res.ok) {
-        const data = await res.json()
+        const result = await res.json()
+        const data = result.data || result
         setContent(data.value || {})
       }
     } finally {

@@ -122,7 +122,8 @@ export default function ServicesCMS() {
     const res = await fetch(`/api/admin/services/tiers?serviceId=${serviceId}`)
     if (res.ok) {
       const result = await res.json()
-      setTiers(result.data || result)
+      const data = result.data || result
+      setTiers(Array.isArray(data) ? data : [])
     }
   }
 

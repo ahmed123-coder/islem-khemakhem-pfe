@@ -40,15 +40,16 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
       .then(r => r.json())
       .then(res => {
         const user = res.data || res
-        if (!user.error) setCurrentUser(user)
+        if (user && !user.error && user.id) setCurrentUser(user)
         setAuthLoading(false)
       })
       .catch(() => setAuthLoading(false))
 
     fetch('/api/services/with-tiers')
       .then(r => r.json())
-      .then(data => {
-        const service = data.find((s: any) => s.id === serviceId)
+      .then(res => {
+        const data = res.data || res
+        const service = Array.isArray(data) ? data.find((s: any) => s.id === serviceId) : null
         if (service) {
           setSelectedService(service)
         } else {
@@ -65,7 +66,8 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
       const fetchUrl = `/api/consultants/schedule?startDate=${startDateStr}&days=7&serviceTierId=${selectedTier.id}`
       fetch(fetchUrl)
         .then(r => r.json())
-        .then(data => {
+        .then(res => {
+          const data = res.data || res
           if (Array.isArray(data)) {
             setConsultants(data)
           } else {

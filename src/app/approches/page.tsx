@@ -14,8 +14,9 @@ async function getFaqs() {
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
     const res = await fetch(`${baseUrl}/api/faqs`, { cache: 'no-store' });
     if (!res.ok) return [];
-    const faqs = await res.json();
-    return faqs.filter((faq: any) => faq.isActive);
+    const result = await res.json();
+    const data = result.data || result
+    return Array.isArray(data) ? data.filter((faq: any) => faq.isActive) : [];
   } catch (error) {
     console.error("Fetch faqs error:", error);
     return [];

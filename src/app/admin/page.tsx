@@ -60,18 +60,20 @@ export default function AdminDashboard() {
       .then(r => r.json())
       .then(result => {
         const data = result.data || result
-        setStats({ 
-          blogs: data.blogs || 0,
-          services: data.services || 0,
-          contacts: data.contacts || 0,
-          clients: data.clients || 0,
-          activeClients: data.activeClients || 0,
-          inactiveClients: data.inactiveClients || 0,
-          consultants: data.consultants || 0,
-          activeConsultants: data.activeConsultants || 0,
-          pendingContacts: data.pendingContacts || 0,
-          growth: data.growth || "0"
-        })
+        if (data) {
+          setStats({ 
+            blogs: data.blogs || 0,
+            services: data.services || 0,
+            contacts: data.contacts || 0,
+            clients: data.clients || 0,
+            activeClients: data.activeClients || 0,
+            inactiveClients: data.inactiveClients || 0,
+            consultants: data.consultants || 0,
+            activeConsultants: data.activeConsultants || 0,
+            pendingContacts: data.pendingContacts || 0,
+            growth: data.growth || "0"
+          })
+        }
       })
       .catch(() => {})
   }, [])

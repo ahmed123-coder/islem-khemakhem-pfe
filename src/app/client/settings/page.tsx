@@ -16,9 +16,9 @@ export default function ClientSettingsPage() {
     Promise.all([
       fetch('/api/client/profile').then(r => r.json()),
       fetch('/api/client/subscription').then(r => r.json())
-    ]).then(([profileData, subData]) => {
-      setProfile(profileData)
-      setSubscription(subData)
+    ]).then(([profileRes, subRes]) => {
+      setProfile(profileRes.data || profileRes)
+      setSubscription(subRes.data || subRes)
     }).finally(() => setLoading(false))
   }, [])
 

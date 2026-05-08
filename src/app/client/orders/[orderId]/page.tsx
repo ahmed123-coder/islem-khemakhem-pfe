@@ -142,7 +142,8 @@ export default function OrderDetails() {
         router.push('/client')
         return
       }
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || result
       setOrder(data)
       setLoading(false)
     } catch (error) {
@@ -153,7 +154,8 @@ export default function OrderDetails() {
   const fetchReservations = async () => {
     try {
       const res = await fetch(`/api/client/orders/${orderId}/reservations`)
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || result
       setReservations(Array.isArray(data) ? data : [])
     } catch (error) { console.error(error) }
   }
@@ -161,8 +163,9 @@ export default function OrderDetails() {
   const fetchMessages = async () => {
     try {
       const res = await fetch(`/api/client/orders/${orderId}/messages`)
-      const data = await res.json()
-      setMessages(data)
+      const result = await res.json()
+      const data = result.data || result
+      setMessages(Array.isArray(data) ? data : [])
     } catch (error) { console.error(error) }
   }
 
@@ -796,7 +799,7 @@ export default function OrderDetails() {
 
              <TabsContent value="messages" className="m-0 flex-1 flex flex-col focus-visible:ring-0">
                 <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 md:p-10 space-y-6 scroll-smooth">
-                   {messages.length === 0 ? (
+                   {!Array.isArray(messages) || messages.length === 0 ? (
                      <div className="h-full flex flex-col items-center justify-center text-center opacity-40 py-20">
                         <div className="w-20 h-20 rounded-[2rem] bg-slate-100 flex items-center justify-center mb-6">
                            <MessageSquare className="w-8 h-8 text-slate-400" />

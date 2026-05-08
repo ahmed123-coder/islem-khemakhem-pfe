@@ -44,15 +44,16 @@ export default function ClientServicesPage() {
       .then(r => r.json())
       .then(res => {
         const user = res.data || res
-        if (!user.error) setCurrentUser(user)
+        if (user && !user.error && user.id) setCurrentUser(user)
       })
       .catch(() => {})
 
     fetch('/api/services/with-tiers')
       .then(r => r.json())
-      .then(data => {
-        setServices(data)
-        if (serviceIdParam) {
+      .then(res => {
+        const data = res.data || res
+        setServices(Array.isArray(data) ? data : [])
+        if (serviceIdParam && Array.isArray(data)) {
           const service = data.find((s: any) => s.id === serviceIdParam)
           if (service) setSelectedService(service)
         }
@@ -67,7 +68,8 @@ export default function ClientServicesPage() {
       const fetchUrl = `/api/consultants/schedule?startDate=${startDateStr}&days=7&serviceTierId=${selectedTier.id}`
       fetch(fetchUrl)
         .then(r => r.json())
-        .then(data => {
+        .then(res => {
+          const data = res.data || res
           if (Array.isArray(data)) {
             setConsultants(data)
           } else {

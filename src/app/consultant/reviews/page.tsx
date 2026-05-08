@@ -16,7 +16,8 @@ export default function ConsultantReviewsPage() {
   React.useEffect(() => {
     fetch('/api/consultant/reviews')
       .then(r => r.json())
-      .then(data => {
+      .then(res => {
+        const data = res.data || res
         if (Array.isArray(data)) setReviews(data)
       })
       .finally(() => setLoading(false))

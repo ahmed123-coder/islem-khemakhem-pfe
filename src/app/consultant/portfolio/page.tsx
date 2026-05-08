@@ -21,7 +21,8 @@ export default function ConsultantPortfolio() {
   const fetchPortfolio = async () => {
     try {
       const res = await fetch('/api/consultant/portfolio')
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || result
       setConsultant(data)
       setFormData({
         name: data.name || '',

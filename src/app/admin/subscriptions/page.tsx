@@ -47,7 +47,8 @@ export default function SubscriptionsPage() {
   const fetchOrders = async () => {
     try {
       const res = await fetch('/api/admin/orders')
-      const data = await res.json()
+      const result = await res.json()
+      const data = result.data || result
       if (res.ok && Array.isArray(data)) {
         setOrders(data)
       } else {

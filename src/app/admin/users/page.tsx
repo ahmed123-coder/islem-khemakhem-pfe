@@ -132,7 +132,7 @@ export default function UsersPage() {
     try {
       const res = await fetch('/api/admin/users')
       const result = await res.json()
-      const data = result.data || []
+      const data = result.data || result || []
       setUsers(data.filter((u: User) => u.role === 'CLIENT'))
     } finally {
       setLoading(false)
