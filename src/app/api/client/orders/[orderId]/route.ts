@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth, requireOwnership } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
+import { NotFoundError } from '@/lib/errors/types'
 
-export async function GET(req: NextRequest, { params }: { params: { orderId: string } }) {
+export async function GET(request: NextRequest, { params }: { params: { orderId: string } }) {
+  const authResult = requireAuth(request, ['CLIENT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
+
   try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'CLIENT') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
     const order = await prisma.order.findUnique({
       where: { id: params.orderId },
       include: {
@@ -22,8 +22,14 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
       }
     })
 
-    if (!order || order.clientId !== user.id) {
-      return NextResponse.json({ error: 'Order not found' }, { status: 403 })
+    if (!order) {
+      throw new NotFoundError('Order', params.orderId);
+    }
+
+    // Check ownership (ADMIN bypass)
+    const ownershipResult = requireOwnership(authResult.user, order.clientId);
+    if (!ownershipResult.success) {
+      return ownershipResult.response;
     }
 
     const reviews = await prisma.review.findMany({
@@ -35,8 +41,8 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
       reviews
     }
 
-    return NextResponse.json(orderWithReviews)
+    return successResponse(orderWithReviews);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch order' }, { status: 500 })
+    return handleError(error, request);
   }
 }

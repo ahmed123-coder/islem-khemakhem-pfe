@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth, requireOwnership } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
+import { NotFoundError } from '@/lib/errors/types'
 
-export async function PATCH(req: NextRequest) {
+export async function PATCH(request: NextRequest) {
+  const authResult = requireAuth(request, ['CLIENT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
+
   try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'CLIENT') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
-
-    const { milestoneId, status } = await req.json()
+    const { milestoneId, status } = await request.json()
 
     if (!['PENDING', 'COMPLETED'].includes(status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
+      return handleError(new Error('Invalid status'), request);
     }
 
     // Verify the milestone belongs to a mission in an order owned by this client
@@ -27,8 +27,14 @@ export async function PATCH(req: NextRequest) {
       }
     })
 
-    if (!milestone || milestone.mission.order.clientId !== user.id) {
-      return NextResponse.json({ error: 'Milestone not found or unauthorized' }, { status: 403 })
+    if (!milestone) {
+      throw new NotFoundError('Milestone', milestoneId);
+    }
+
+    // Check ownership (ADMIN bypass)
+    const ownershipResult = requireOwnership(authResult.user, milestone.mission.order.clientId);
+    if (!ownershipResult.success) {
+      return ownershipResult.response;
     }
 
     const updatedMilestone = await prisma.milestone.update({
@@ -42,8 +48,8 @@ export async function PATCH(req: NextRequest) {
     const { notifyConsultantMilestoneUpdate } = await import('@/lib/notification-service')
     await notifyConsultantMilestoneUpdate(milestone.missionId, 'Task Updated', `Task "${milestone.title}" has been updated.`)
 
-    return NextResponse.json(updatedMilestone)
+    return successResponse(updatedMilestone);
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to update milestone' }, { status: 500 })
+    return handleError(error, request);
   }
 }

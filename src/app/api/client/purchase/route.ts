@@ -1,16 +1,16 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
+import { NotFoundError } from '@/lib/errors/types'
 import { createZoomMeeting } from '@/lib/zoom'
 import { BillingService } from '@/lib/billing'
 
 export async function POST(request: NextRequest) {
-  try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'CLIENT') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const authResult = requireAuth(request, ['CLIENT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
 
+  try {
     const { 
       serviceTierId, 
       consultantId, 
@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     } = await request.json()
 
     if (!serviceTierId) {
-      return NextResponse.json({ error: 'Missing serviceTierId' }, { status: 400 })
+      return handleError(new Error('Missing serviceTierId'), request);
     }
 
     const serviceTier = await prisma.serviceTier.findUnique({
@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
     })
 
     if (!serviceTier) {
-      return NextResponse.json({ error: 'Service tier not found' }, { status: 404 })
+      throw new NotFoundError('Service tier', serviceTierId);
     }
 
     let consultant = null
@@ -42,14 +42,14 @@ export async function POST(request: NextRequest) {
       })
 
       if (!consultant && paymentMethod === 'CARD') {
-        return NextResponse.json({ error: 'Consultant not found' }, { status: 404 })
+        throw new NotFoundError('Consultant', consultantId);
       }
     }
 
     // --- Logic for CARD Payment (Requires Slot Validation & Instant Reservation) ---
     if (paymentMethod === 'CARD') {
       if (!startTime || !endTime) {
-        return NextResponse.json({ error: 'Time slots are required for card payments' }, { status: 400 })
+        return handleError(new Error('Time slots are required for card payments'), request);
       }
 
       // Check for overlapping reservations
@@ -67,13 +67,13 @@ export async function POST(request: NextRequest) {
       })
 
       if (overlapping) {
-        return NextResponse.json({ error: 'Ce créneau est déjà réservé' }, { status: 409 })
+        return handleError(new Error('Ce créneau est déjà réservé'), request);
       }
 
       // Create ACTIVE order
       const order = await prisma.order.create({
         data: {
-          clientId: user.id,
+          clientId: authResult.user.userId,
           consultantId: consultantId,
           serviceTierId: serviceTierId,
           status: 'ACTIVE',
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       const reservation = await prisma.reservation.create({
         data: {
           orderId: order.id,
-          clientId: user.id,
+          clientId: authResult.user.userId,
           consultantId: consultantId,
           serviceTierId: serviceTierId,
           startTime: new Date(startTime),
@@ -103,20 +103,20 @@ export async function POST(request: NextRequest) {
 
       await prisma.notification.create({
         data: {
-          userId: user.id,
+          userId: authResult.user.userId,
           type: 'ORDER',
           title: 'Commande créée',
           message: `Votre commande pour ${serviceTier.service.name} (${serviceTier.tierType}) a été validée. RDV le ${new Date(startTime).toLocaleDateString('fr-FR')} à ${new Date(startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}.`
         }
       })
 
-      return NextResponse.json({ order, reservation, consultant })
+      return successResponse({ order, reservation, consultant });
     }
 
     // --- Logic for VIREMENT or SUR_PLACE (Order created as PENDING, no reservation) ---
     const order = await prisma.order.create({
       data: {
-        clientId: user.id,
+        clientId: authResult.user.userId,
         consultantId: consultantId,
         serviceTierId: serviceTierId,
         status: 'PENDING',
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
 
     await prisma.notification.create({
       data: {
-        userId: user.id,
+        userId: authResult.user.userId,
         type: 'ORDER',
         title: 'Commande en attente',
         message
@@ -148,24 +148,14 @@ export async function POST(request: NextRequest) {
       rib: "30006 00001 23456789012 34"
     } : null;
 
-    return NextResponse.json({ 
+    return successResponse({ 
       order, 
       bankDetails,
       paymentMethod,
       message: "Votre commande a été enregistrée. Elle sera activée dès réception de votre paiement."
-    })
-
-    return NextResponse.json({
-      order,
-      reservation,
-      consultant: {
-        id: consultant.id,
-        name: consultant.name,
-        specialty: consultant.specialty
-      }
-    })
+    });
   } catch (error) {
     console.error('Purchase error:', error)
-    return NextResponse.json({ error: 'Purchase failed' }, { status: 500 })
+    return handleError(error, request);
   }
 }

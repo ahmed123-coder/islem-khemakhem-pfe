@@ -1,35 +1,41 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { requireAuth, requireOwnership } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
+import { NotFoundError } from '@/lib/errors/types'
 import { notifyReservationDelete } from '@/lib/notification-service'
 
-export async function DELETE(req: NextRequest) {
-  try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'CLIENT') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+export async function DELETE(request: NextRequest) {
+  const authResult = requireAuth(request, ['CLIENT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
 
-    const { id } = await req.json()
+  try {
+    const { id } = await request.json()
     const reservation = await prisma.reservation.findUnique({
       where: { id }
     })
 
-    if (!reservation || reservation.clientId !== user.id) {
-      return NextResponse.json({ error: 'Unauthorized or not found' }, { status: 403 })
+    if (!reservation) {
+      throw new NotFoundError('Reservation', id);
+    }
+
+    // Check ownership (ADMIN bypass)
+    const ownershipResult = requireOwnership(authResult.user, reservation.clientId);
+    if (!ownershipResult.success) {
+      return ownershipResult.response;
     }
 
     // Client can only delete PENDING reservations
     if (reservation.status !== 'PENDING') {
-      return NextResponse.json({ error: 'You can only cancel pending reservations' }, { status: 400 })
+      return handleError(new Error('You can only cancel pending reservations'), request);
     }
 
     await notifyReservationDelete(id, 'CLIENT')
     await prisma.reservation.delete({ where: { id } })
 
-    return NextResponse.json({ success: true })
+    return successResponse({ success: true });
   } catch (error) {
     console.error('Reservation cancellation error:', error)
-    return NextResponse.json({ error: 'Failed to cancel reservation' }, { status: 500 })
+    return handleError(error, request);
   }
 }

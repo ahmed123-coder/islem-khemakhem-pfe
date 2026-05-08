@@ -1,16 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
 export async function GET(request: NextRequest) {
-  try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'CLIENT') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const authResult = requireAuth(request, ['CLIENT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
 
+  try {
     const invoices = await prisma.invoice.findMany({
-      where: { clientId: user.id },
+      where: { clientId: authResult.user.userId },
       include: {
         order: {
           include: {
@@ -23,9 +22,9 @@ export async function GET(request: NextRequest) {
       orderBy: { issueDate: 'desc' }
     })
 
-    return NextResponse.json(invoices)
+    return successResponse(invoices);
   } catch (error) {
     console.error('List invoices error:', error)
-    return NextResponse.json({ error: 'Failed to list invoices' }, { status: 500 })
+    return handleError(error, request);
   }
 }
