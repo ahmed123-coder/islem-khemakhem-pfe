@@ -200,7 +200,7 @@ export async function notifyNewReservation(reservationId: string) {
     id: reservation.id,
     type: 'RESERVATION',
     orderId: reservation.orderId,
-    title: 'New Reservation Request',
+    title: 'New Reservation',
     message: `New reservation from ${reservation.client.name || reservation.client.email} for ${new Date(reservation.startTime).toLocaleString()}`,
     timestamp: new Date().toISOString()
   }

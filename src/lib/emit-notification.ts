@@ -22,6 +22,9 @@ export function emitNotification(userId: string, payload: NotificationPayload) {
 export function emitToRoom(room: string, event: string, payload: any) {
   const io = (global as any).io
   if (io) {
+    console.log(`[Socket] Emitting ${event} to room ${room}`)
     io.to(room).emit(event, payload)
+  } else {
+    console.warn(`[Socket] WARNING: Global IO instance not found during emission to room ${room}`)
   }
 }

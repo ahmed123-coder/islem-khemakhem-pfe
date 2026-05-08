@@ -147,12 +147,12 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         }
       })
 
-      // Notify the consultant
-      const { notifyNewReservation } = await import('@/lib/notification-service')
-      await notifyNewReservation(reservation.id)
-
       return reservation
     })
+
+    // Notify the consultant AFTER transaction is committed
+    const { notifyNewReservation } = await import('@/lib/notification-service')
+    await notifyNewReservation(result.id)
 
     return successResponse(result, 'Reservation created successfully', 201)
   } catch (error: any) {

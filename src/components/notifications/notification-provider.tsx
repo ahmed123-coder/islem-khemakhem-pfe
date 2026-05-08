@@ -37,7 +37,10 @@ export default function NotificationProvider({ children }: { children: React.Rea
       socketInstance = initSocketClient(userId, role)
       if (socketInstance) {
         console.log(`[Socket] Initializing for ${role}: ${userId}`)
-        socketInstance.on('notification', handler)
+        socketInstance.on('notification', (data: any) => {
+          console.log('[Socket] Received notification:', data)
+          handler(data)
+        })
         window.dispatchEvent(new CustomEvent('socket-ready'))
       }
     }
