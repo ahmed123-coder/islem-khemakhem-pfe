@@ -80,7 +80,7 @@ export async function notifyReservationUpdate(reservationId: string, status: str
   if (!reservation) return
 
   await createNotification(reservation.clientId, 'CLIENT', 'RESERVATION', 'RDV mis à jour', `Votre RDV a été ${status.toLowerCase()}`, reservation.orderId ?? undefined)
-  await notifyAdmins('RESERVATION', 'RDV mis à jour', `RDV de ${reservation.client.name || reservation.client.email} : statut ${status.toLowerCase()}`, reservation.orderId ?? undefined)
+  // await notifyAdmins('RESERVATION', 'RDV mis à jour', `RDV de ${reservation.client.name || reservation.client.email} : statut ${status.toLowerCase()}`, reservation.orderId ?? undefined)
 }
 
 export async function notifyOrderStatusUpdate(orderId: string, status: string) {
@@ -164,7 +164,7 @@ export async function notifyNewReservation(reservationId: string) {
   await createNotification(reservation.consultantId, 'CONSULTANT', 'RESERVATION', 'Nouveau RDV', `Nouveau RDV de ${reservation.client.name || reservation.client.email} le ${dateStr}`, reservation.orderId ?? undefined)
   emitToRoom(`user:${reservation.consultantId}`, 'notification', { type: 'RESERVATION', orderId: reservation.orderId, title: 'Nouveau RDV', message: `RDV de ${reservation.client.name || reservation.client.email} le ${dateStr}`, timestamp: new Date().toISOString() })
 
-  await notifyAdmins('RESERVATION', 'Nouveau RDV', `${reservation.client.name || reservation.client.email} a pris un RDV le ${dateStr}`, reservation.orderId ?? undefined)
+  // await notifyAdmins('RESERVATION', 'Nouveau RDV', `${reservation.client.name || reservation.client.email} a pris un RDV le ${dateStr}`, reservation.orderId ?? undefined)
 }
 
 export async function notifyReservationDelete(reservationId: string, deletedBy: 'CLIENT' | 'CONSULTANT') {
@@ -179,6 +179,6 @@ export async function notifyReservationDelete(reservationId: string, deletedBy: 
   const senderLabel = deletedBy === 'CLIENT' ? 'client' : 'consultant'
 
   await createNotification(recipientId as string, recipientType, 'RESERVATION', 'RDV annulé', `Un RDV avec votre ${senderLabel} a été annulé.`, reservation.orderId ?? undefined)
-  await notifyAdmins('RESERVATION', 'RDV annulé', `RDV annulé par le ${senderLabel} ${reservation.client.name || reservation.client.email}`, reservation.orderId ?? undefined)
+  // await notifyAdmins('RESERVATION', 'RDV annulé', `RDV annulé par le ${senderLabel} ${reservation.client.name || reservation.client.email}`, reservation.orderId ?? undefined)
 }
 
