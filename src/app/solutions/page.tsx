@@ -11,15 +11,24 @@ export default function Services() {
 
   const [heroData, setHeroData] = useState<any>(null)
 
+  const [reviews, setReviews] = useState<any[]>([])
+
   useEffect(() => {
     Promise.all([
       fetch('/api/services').then(res => res.json()),
-      fetch('/api/content/hero-solutions').then(res => res.ok ? res.json() : null)
+      fetch('/api/content/hero-solutions').then(res => res.ok ? res.json() : null),
+      fetch('/api/reviews').then(res => res.ok ? res.json() : [])
     ])
-      .then(([data, heroJSON]) => {
-        setServices(data)
+      .then(([servicesData, heroJSON, reviewsData]) => {
+        setServices(servicesData)
         if (heroJSON && heroJSON.value) {
           setHeroData(heroJSON.value)
+        }
+        // If reviewsData is the standard response structure { success: true, data: [...] }
+        if (reviewsData && reviewsData.data) {
+          setReviews(reviewsData.data)
+        } else if (Array.isArray(reviewsData)) {
+          setReviews(reviewsData)
         }
         setLoading(false)
       })
@@ -30,7 +39,7 @@ export default function Services() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-[#2B5A8E] border-t-transparent rounded-full animate-spin"></div>
           <p className="text-gray-500 font-medium tracking-tight">Chargement des solutions...</p>
         </div>
       </div>
@@ -80,9 +89,20 @@ export default function Services() {
                         {service.category}
                       </div>
                     )}
-                    <h2 className="text-4xl font-serif font-extrabold text-gray-900 mb-6 leading-tight group-hover:text-[#2B5A8E] transition-colors duration-300">
+                    <h2 className="text-4xl font-serif font-extrabold text-gray-900 mb-4 leading-tight group-hover:text-[#2B5A8E] transition-colors duration-300">
                       {service.name}
                     </h2>
+                    
+                    {/* Rating Badge */}
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="flex items-center bg-amber-50 text-amber-700 px-3 py-1 rounded-lg border border-amber-100 font-bold text-sm">
+                        <span className="text-amber-500 mr-1.5">★</span>
+                        {service.avgRating > 0 ? service.avgRating.toFixed(1) : '5.0'}
+                      </div>
+                      <span className="text-gray-400 text-sm font-medium">
+                        ({service.reviewCount || 0} avis clients)
+                      </span>
+                    </div>
                     <p className="text-lg text-gray-600 mb-8 leading-relaxed">
                       {service.description}
                     </p>
@@ -117,50 +137,57 @@ export default function Services() {
       </section>
 
       {/* Testimonials Section */}
-      <section className="py-20 bg-white">
+      <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="text-3xl">⭐</span>
-            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">Ce que nos clients disent</h2>
-            <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full"></div>
+          <div className="text-center mb-16">
+            <div className="inline-flex items-center justify-center w-12 h-12 bg-[#7AB648]/10 rounded-full mb-4">
+              <span className="text-2xl">⭐</span>
+            </div>
+            <h2 className="text-4xl lg:text-5xl font-serif font-bold text-[#1B3F7A] mb-4">Ce que nos clients disent</h2>
+            <p className="text-gray-500 max-w-2xl mx-auto text-lg mb-6">Découvrez les retours d'expérience de ceux qui nous font confiance pour leur transformation.</p>
+            <div className="w-24 h-1.5 bg-[#7AB648] mx-auto rounded-full"></div>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                name: 'Ahmed Khalil',
-                role: 'Directeur Général, Groupe Industriel',
-                testimonial: 'DSL a transformé notre approche du management. En 6 mois, nous avons identifié et résolu les dysfonctionnements invisibles qui freinaient notre croissance. Un partenariat stratégique vrai.',
-                rating: 5
-              },
-              {
-                name: 'Fatima Ben Ali',
-                role: 'RH Manager, Entreprise Technologique',
-                testimonial: 'L\'expertise en gestion des talents et conduite du changement de DSL a été déterminante pour notre transformation digitale. Les équipes sont plus engagées que jamais.',
-                rating: 5
-              },
-              {
-                name: 'Mohamed Zahra',
-                role: 'Directeur Planning, PME Services',
-                testimonial: 'Les solutions personnalisées et l\'accompagnement opérationnel de DSL ont dépassé nos attentes. Nos KPIs ont augmenté de 40% en 12 mois. Fortement recommandé.',
-                rating: 5
-              }
-            ].map((testimonial, i) => (
-              <div key={i} className="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
-                <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, j) => (
-                    <span key={j} className="text-[#7AB648] text-lg">★</span>
-                  ))}
+          
+          {reviews.length > 0 ? (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {reviews.map((review, i) => (
+                <div key={review.id || i} className="bg-[#f8faff] rounded-[2rem] p-10 border border-blue-50 hover:border-blue-100 hover:shadow-2xl hover:shadow-blue-500/5 transition-all duration-500 flex flex-col group">
+                  <div className="flex gap-1 mb-6">
+                    {[...Array(5)].map((_, j) => (
+                      <span key={j} className={`text-xl ${j < review.rating ? 'text-[#7AB648]' : 'text-gray-200'}`}>
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  <div className="relative flex-grow">
+                    <span className="absolute -top-4 -left-2 text-6xl text-[#7AB648]/10 font-serif leading-none">“</span>
+                    <p className="text-gray-700 italic leading-relaxed mb-8 text-base relative z-10 line-clamp-6 group-hover:line-clamp-none transition-all duration-500">
+                      {review.comment || "Aucun commentaire laissé, mais une excellente expérience globale avec nos services."}
+                    </p>
+                  </div>
+                  <div className="mt-auto pt-8 border-t border-blue-100/50 flex items-center gap-4">
+                    <div className="w-12 h-12 bg-[#2B5A8E] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-inner">
+                      {review.client?.firstName?.[0] || review.client?.name?.[0] || 'C'}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-[#1B3F7A] tracking-tight">
+                        {review.client?.firstName} {review.client?.name}
+                      </p>
+                      <p className="text-xs text-gray-400 font-medium">
+                        Client DSL {review.service?.name || review.order?.serviceTier?.service?.name ? `• ${review.service?.name || review.order?.serviceTier?.service?.name}` : ''}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-gray-700 italic leading-relaxed mb-6 text-sm">
-                  "{testimonial.testimonial}"
-                </p>
-                <div className="border-t border-gray-200 pt-4">
-                  <p className="text-sm font-bold text-[#1B3F7A]">{testimonial.name}</p>
-                  <p className="text-xs text-gray-500">{testimonial.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 bg-gray-50 rounded-[3rem] border-2 border-dashed border-gray-200">
+              <div className="text-6xl mb-6 grayscale opacity-20">💬</div>
+              <h3 className="text-2xl font-bold text-gray-400">Aucun avis pour le moment</h3>
+              <p className="text-gray-400 mt-2">Revenez bientôt pour lire les témoignages de nos clients.</p>
+            </div>
+          )}
         </div>
       </section>
     </div>

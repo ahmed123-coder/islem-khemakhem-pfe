@@ -112,6 +112,17 @@ export async function GET(req: NextRequest) {
         },
         service: {
           select: { name: true }
+        },
+        order: {
+          include: {
+            serviceTier: {
+              include: {
+                service: {
+                  select: { name: true }
+                }
+              }
+            }
+          }
         }
       },
       orderBy: {
