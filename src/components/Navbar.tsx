@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button'
 import { usePathname } from 'next/navigation'
 
 const NAV_LINKS = [
+  { label: 'Accueil', href: '/' },
   { label: 'Solutions', href: '/solutions' },
-  { label: 'Contact', href: '/contact' },
   { label: 'Approches', href: '/approches' },
+  { label: 'Contact', href: '/contact' },
 ]
 
 export default function Navbar() {
@@ -53,11 +54,9 @@ export default function Navbar() {
             )}
           </Link>
 
-          {/* Right side container */ }
-          <div className="hidden md:flex items-center justify-end w-full pl-8">
-            
-            {/* Center-ish Links (pushed slightly towards Connexion but not too close) */}
-            <div className="flex items-center space-x-10 mr-12 lg:mr-20">
+          {/* Center: Nav Links */}
+          <div className="hidden md:flex items-center justify-center flex-1">
+            <div className="flex items-center space-x-10">
               {NAV_LINKS.map((link, i) => (
                 <Link
                   key={i}
@@ -68,16 +67,16 @@ export default function Navbar() {
                 </Link>
               ))}
             </div>
+          </div>
 
-            {/* Right: Connexion */}
-            <div className="flex items-center shrink-0">
+          {/* Right: Connexion */}
+          <div className="hidden md:flex items-center shrink-0">
               <Link href="/login" className="flex items-center gap-2 text-[#1B3F7A] hover:text-[#152f5c] transition-colors font-medium">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#7AB648]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
                 </svg>
                 Connexion
               </Link>
-            </div>
           </div>
 
           <div className="md:hidden flex items-center shrink-0">

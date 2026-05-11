@@ -1,6 +1,7 @@
 import { prisma } from './prisma';
-import { jsPDF } from 'jspdf';
-import 'jspdf-autotable';
+import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class BillingService {
   /**
@@ -49,7 +50,7 @@ export class BillingService {
   }
 
   /**
-   * Generates a PDF buffer for an invoice
+   * Generates a PDF buffer for an invoice using the Facturevierge template
    */
   static async generateInvoicePDF(invoiceId: string) {
     const invoice = await prisma.invoice.findUnique({
@@ -66,63 +67,84 @@ export class BillingService {
 
     if (!invoice) throw new Error('Invoice not found');
 
-    const doc = new jsPDF() as any;
-    
-    // Header
-    doc.setFontSize(22);
-    doc.setTextColor(43, 90, 142); // Private Blue
-    doc.text('CONSULTPRO EXPERTIES', 20, 20);
-    
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-    doc.text(`Facture N°: ${invoice.invoiceNumber}`, 20, 35);
-    doc.text(`Date d'émission: ${new Date(invoice.issueDate).toLocaleDateString('fr-FR')}`, 20, 40);
-    doc.text(`Date d'échéance: ${new Date(invoice.dueDate).toLocaleDateString('fr-FR')}`, 20, 45);
-    doc.text(`Statut du paiement: ${invoice.status}`, 20, 50);
+    // Load template
+    const templatePath = path.join(process.cwd(), 'public', 'Facturevierge.jpg.pdf');
+    const templateBytes = fs.readFileSync(templatePath);
+    const pdfDoc = await PDFDocument.load(templateBytes);
+    const page = pdfDoc.getPages()[0];
+    const { width, height } = page.getSize();
 
-    // Client Details
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('Facturer à:', 20, 65);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.text(invoice.client.name || invoice.client.email, 20, 70);
-    doc.text(invoice.client.email, 20, 75);
-    if (invoice.client.address) doc.text(invoice.client.address, 20, 80);
+    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const blue = rgb(0.11, 0.25, 0.48); // #1B3F7A
+    const black = rgb(0, 0, 0);
+    const gray = rgb(0.4, 0.4, 0.4);
 
-    // Table
-    const tableData = [
-      [
-        invoice.order?.serviceTier.service.name || 'Prestation de service de conseil',
-        invoice.order?.serviceTier.tierType || 'Standard',
-        '1',
-        `${invoice.amount} €`
-      ]
-    ];
+    // Helper: y from top (pdf-lib uses bottom-left origin)
+    const y = (fromTop: number) => height - fromTop;
 
-    // Note: in jspdf-autotable, it's often imported as doc.autoTable
-    if (doc.autoTable) {
-        doc.autoTable({
-          startY: 90,
-          head: [['Description', 'Catégorie Pack', 'Quantité', 'Prix HT']],
-          body: tableData,
-          theme: 'striped',
-          headStyles: { fillColor: [43, 90, 142] },
-          styles: { fontSize: 9 }
-        });
+    // --- Numéro de facture ---
+    page.drawText(invoice.invoiceNumber, {
+      x: 370, y: y(97), size: 10, font: fontBold, color: blue
+    });
+
+    // --- Dates ---
+    page.drawText(new Date(invoice.issueDate).toLocaleDateString('fr-FR'), {
+      x: 370, y: y(110), size: 9, font, color: black
+    });
+    page.drawText(new Date(invoice.dueDate).toLocaleDateString('fr-FR'), {
+      x: 370, y: y(122), size: 9, font, color: black
+    });
+
+    // --- Client ---
+    const clientName = `${invoice.client.firstName || ''} ${invoice.client.name || ''}`.trim() || invoice.client.email;
+    page.drawText(clientName, {
+      x: 30, y: y(152), size: 10, font: fontBold, color: black
+    });
+    page.drawText(invoice.client.email, {
+      x: 30, y: y(164), size: 9, font, color: gray
+    });
+    if (invoice.client.phone) {
+      page.drawText(invoice.client.phone, {
+        x: 30, y: y(176), size: 9, font, color: gray
+      });
+    }
+    if (invoice.client.address) {
+      page.drawText(invoice.client.address, {
+        x: 30, y: y(188), size: 9, font, color: gray
+      });
     }
 
-    const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 15 : 120;
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`MONTANT TOTAL TTC: ${invoice.amount} EUR`, 140, finalY);
+    // --- Ligne de service ---
+    const serviceName = invoice.order?.serviceTier?.service?.name || 'Prestation de conseil';
+    const tierType = invoice.order?.serviceTier?.tierType || 'Standard';
+    page.drawText(serviceName, {
+      x: 30, y: y(232), size: 9, font, color: black
+    });
+    page.drawText(tierType, {
+      x: 200, y: y(232), size: 9, font, color: black
+    });
+    page.drawText('1', {
+      x: 330, y: y(232), size: 9, font, color: black
+    });
+    page.drawText(`${invoice.amount.toFixed(2)} TND`, {
+      x: 430, y: y(232), size: 9, font: fontBold, color: black
+    });
 
-    // Footer
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.text('Merci de votre confiance. Pour toute question, contactez-nous à support@consultpro.com', 105, 280, { align: 'center' });
+    // --- Total ---
+    page.drawText(`${invoice.amount.toFixed(2)} TND`, {
+      x: 430, y: y(270), size: 11, font: fontBold, color: blue
+    });
 
-    return Buffer.from(doc.output('arraybuffer'));
+    // --- Statut ---
+    const statusColor = invoice.status === 'PAID' ? rgb(0.1, 0.6, 0.2) : invoice.status === 'PENDING' ? rgb(0.8, 0.5, 0) : rgb(0.8, 0.1, 0.1);
+    const statusLabel = invoice.status === 'PAID' ? 'PAYÉ' : invoice.status === 'PENDING' ? 'EN ATTENTE' : 'NON PAYÉ';
+    page.drawText(statusLabel, {
+      x: 430, y: y(285), size: 9, font: fontBold, color: statusColor
+    });
+
+    const pdfBytes = await pdfDoc.save();
+    return Buffer.from(pdfBytes);
   }
 
   /**

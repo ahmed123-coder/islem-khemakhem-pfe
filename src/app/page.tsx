@@ -164,53 +164,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="text-3xl">⭐</span>
-            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">Ce que nos clients disent</h2>
-            <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full"></div>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                name: 'Ahmed Khalil',
-                role: 'Directeur Général, Groupe Industriel',
-                testimonial: 'DSL a transformé notre approche du management. En 6 mois, nous avons identifié et résolu les dysfonctionnements invisibles qui freinaient notre croissance. Un partenariat stratégique vrai.',
-                rating: 5
-              },
-              {
-                name: 'Fatima Ben Ali',
-                role: 'RH Manager, Entreprise Technologique',
-                testimonial: 'L\'expertise en gestion des talents et conduite du changement de DSL a été déterminante pour notre transformation digitale. Les équipes sont plus engagées que jamais.',
-                rating: 5
-              },
-              {
-                name: 'Mohamed Zahra',
-                role: 'Directeur Planning, PME Services',
-                testimonial: 'Les solutions personnalisées et l\'accompagnement opérationnel de DSL ont dépassé nos attentes. Nos KPIs ont augmenté de 40% en 12 mois. Fortement recommandé.',
-                rating: 5
-              }
-            ].map((testimonial, i) => (
-              <div key={i} className="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
-                <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, j) => (
-                    <span key={j} className="text-[#7AB648] text-lg">★</span>
-                  ))}
-                </div>
-                <p className="text-gray-700 italic leading-relaxed mb-6 text-sm">
-                  "{testimonial.testimonial}"
-                </p>
-                <div className="border-t border-gray-200 pt-4">
-                  <p className="text-sm font-bold text-[#1B3F7A]">{testimonial.name}</p>
-                  <p className="text-xs text-gray-500">{testimonial.role}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section className="relative py-24 overflow-hidden" style={{background: 'linear-gradient(135deg, #1B3F7A 0%, #1a6b6b 100%)'}}>

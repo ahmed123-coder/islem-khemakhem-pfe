@@ -155,28 +155,7 @@ export default async function ApprochesPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-serif font-bold text-[#1B3F7A] mb-6">Prêt à transformer votre organisation ?</h2>
-          <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full mb-8"></div>
-          <p className="text-lg text-gray-600 leading-relaxed mb-10 max-w-2xl mx-auto">
-            Parlons de vos défis et découvrez comment nos approches peuvent vous accompagner vers la performance et la durabilité.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/contact">
-              <Button className="bg-[#7AB648] hover:bg-[#639a3a] text-white rounded-lg px-8 py-6 text-base font-semibold">
-                Nous contacter →
-              </Button>
-            </Link>
-            <Link href="/">
-              <Button className="bg-white text-[#1B3F7A] hover:bg-gray-100 rounded-lg px-8 py-6 text-base font-semibold border-2 border-[#1B3F7A]">
-                Retour à l'accueil
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+
     </>
   )
 }

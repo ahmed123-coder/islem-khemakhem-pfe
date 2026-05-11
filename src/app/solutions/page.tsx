@@ -40,21 +40,24 @@ export default function Services() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section 
-        className="bg-[#2B5A8E] text-white py-20 relative bg-cover bg-center"
-        style={heroData?.image ? { backgroundImage: `url(${heroData.image})` } : {}}
+      <section
+        className="relative bg-[#2B4F8A] text-white overflow-hidden min-h-[400px]"
+        style={heroData?.image 
+          ? { backgroundImage: `url(${heroData.image})`, backgroundSize: 'cover', backgroundPosition: 'center' } 
+          : { backgroundImage: `url('/solutionHero.jpeg')`, backgroundSize: 'cover', backgroundPosition: 'center' }
+        }
       >
-        {heroData?.image && <div className="absolute inset-0 bg-[#2B5A8E]/80 mix-blend-multiply" />}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="inline-block bg-[#F59E0B]/20 text-[#FCD34D] px-4 py-2 rounded-full text-sm font-medium mb-6">
-            Nos Solutions
+        <div className="absolute inset-0  bg-[#2B4F8A]/80 mix-blend-multiply" /> 
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
+          <div className="max-w-3xl">
+            <h1 className="text-5xl lg:text-6xl font-serif font-bold mb-6 leading-tight tracking-tight text-white">
+              {heroData?.title || 'Nos Solutions'}
+              <div className="w-22 h-1 bg-[#7AB648] rounded-full mt-4"></div>
+            </h1>
+            <p className="text-lg text-white/90 leading-relaxed border-l-4 border-[#7AB648] pl-4 whitespace-pre-line">
+              {heroData?.subtitle || 'Des expertises au service de votre performance pour une transformation globale et pérenne de votre entreprise.'}
+            </p>
           </div>
-          <h1 className="text-5xl md:text-6xl font-serif font-bold mb-6 max-w-4xl">
-            {heroData?.title || 'Des expertises au service de votre performance'}
-          </h1>
-          <p className="text-xl text-blue-100 max-w-3xl leading-relaxed whitespace-pre-line">
-            {heroData?.subtitle || 'Quatre domaines d\'intervention complémentaires pour une transformation globale et pérenne de votre entreprise.'}
-          </p>
         </div>
       </section>
 
@@ -113,60 +116,51 @@ export default function Services() {
         </div>
       </section>
 
-      {/* Methodology Section */}
+      {/* Testimonials Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="inline-block bg-orange-100 text-orange-600 px-4 py-2 rounded-full text-sm font-medium mb-4">
-              NOTRE MÉTHODOLOGIE
-            </div>
-            <h2 className="text-4xl md:text-5xl font-serif font-bold text-gray-900 mb-4">
-              Un processus éprouvé en 4 étapes
-            </h2>
-            <p className="text-gray-500 max-w-2xl mx-auto font-medium">Une approche structurée pour garantir le succès de votre projet.</p>
+          <div className="text-center mb-14">
+            <span className="text-3xl">⭐</span>
+            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">Ce que nos clients disent</h2>
+            <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full"></div>
           </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid md:grid-cols-3 gap-8">
             {[
-              { number: 1, icon: '🎯', title: 'Diagnostic', description: 'Audit complet de votre organisation et identification des axes d\'amélioration.' },
-              { number: 2, icon: '📋', title: 'Plan d\'action', description: 'Élaboration d\'un plan d\'action personnalisé avec des objectifs mesurables.' },
-              { number: 3, icon: '🎓', title: 'Accompagnement', description: 'Mise en œuvre, formation des équipes et transfert de compétences.' },
-              { number: 4, icon: '📊', title: 'Suivi & Mesure', description: 'Pilotage des résultats et ajustements pour garantir la pérennité.' }
-            ].map((step, index) => (
-              <div key={index} className="text-center group p-6 rounded-3xl hover:bg-gray-50 transition-colors duration-500">
-                <div className="inline-flex items-center justify-center w-24 h-24 bg-blue-50 rounded-full text-4xl mb-6 border-4 border-white shadow-sm group-hover:scale-110 transition-transform duration-500">
-                  {step.icon}
+              {
+                name: 'Ahmed Khalil',
+                role: 'Directeur Général, Groupe Industriel',
+                testimonial: 'DSL a transformé notre approche du management. En 6 mois, nous avons identifié et résolu les dysfonctionnements invisibles qui freinaient notre croissance. Un partenariat stratégique vrai.',
+                rating: 5
+              },
+              {
+                name: 'Fatima Ben Ali',
+                role: 'RH Manager, Entreprise Technologique',
+                testimonial: 'L\'expertise en gestion des talents et conduite du changement de DSL a été déterminante pour notre transformation digitale. Les équipes sont plus engagées que jamais.',
+                rating: 5
+              },
+              {
+                name: 'Mohamed Zahra',
+                role: 'Directeur Planning, PME Services',
+                testimonial: 'Les solutions personnalisées et l\'accompagnement opérationnel de DSL ont dépassé nos attentes. Nos KPIs ont augmenté de 40% en 12 mois. Fortement recommandé.',
+                rating: 5
+              }
+            ].map((testimonial, i) => (
+              <div key={i} className="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
+                <div className="flex gap-1 mb-4">
+                  {[...Array(testimonial.rating)].map((_, j) => (
+                    <span key={j} className="text-[#7AB648] text-lg">★</span>
+                  ))}
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  {step.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed text-sm">
-                  {step.description}
+                <p className="text-gray-700 italic leading-relaxed mb-6 text-sm">
+                  "{testimonial.testimonial}"
                 </p>
+                <div className="border-t border-gray-200 pt-4">
+                  <p className="text-sm font-bold text-[#1B3F7A]">{testimonial.name}</p>
+                  <p className="text-xs text-gray-500">{testimonial.role}</p>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-[#2B5A8E] text-white py-20 relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full -ml-32 -mt-32 blur-3xl"></div>
-        <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full -mr-48 -mb-48 blur-3xl"></div>
-        
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <h2 className="text-4xl md:text-5xl font-serif font-bold mb-6">
-            Besoin d&apos;un accompagnement personnalisé ?
-          </h2>
-          <p className="text-xl text-blue-100 mb-8 opacity-90 max-w-2xl mx-auto leading-relaxed">
-            Contactez-nous pour un diagnostic gratuit de votre organisation et découvrez comment nous pouvons vous aider.
-          </p>
-          <Link 
-            href="/contact"
-            className="inline-block bg-[#F59E0B] hover:bg-[#D97706] text-white font-black uppercase tracking-widest px-10 py-5 rounded-2xl transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1 active:scale-95"
-          >
-            Réserver un créneau
-          </Link>
         </div>
       </section>
     </div>

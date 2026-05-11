@@ -1,7 +1,5 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { v2 as cloudinary } from 'cloudinary'
-import { requireAuth } from '@/lib/auth/middleware'
-import { handleError, successResponse } from '@/lib/errors/handler'
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -22,30 +20,37 @@ function uploadToCloudinary(buffer: Buffer, folder: string, resourceType: 'raw' 
   })
 }
 
-export async function POST(request: NextRequest) {
-  const authResult = requireAuth(request)
-  if (!authResult.success) return authResult.response!
+const ALLOWED_TYPES = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
+const ALLOWED_EXTS = ['.pdf', '.png', '.jpg', '.jpeg', '.doc', '.docx']
 
+export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const file = formData.get('file') as File
     const folder = (formData.get('folder') as string) || 'documents'
 
     if (!file) {
-      return handleError(new Error('No file provided'), request)
+      return NextResponse.json({ error: 'Aucun fichier fourni' }, { status: 400 })
+    }
+
+    const ext = '.' + file.name.split('.').pop()?.toLowerCase()
+
+    if (!ALLOWED_TYPES.includes(file.type) && !ALLOWED_EXTS.includes(ext)) {
+      return NextResponse.json({ error: 'Type de fichier non autorisé. Formats acceptés : PDF, PNG, JPG, DOC, DOCX' }, { status: 400 })
     }
 
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
-    const isPdf = file.type === 'application/pdf' || file.name.endsWith('.pdf')
-    const resourceType = isPdf ? 'raw' : 'image'
+    const isPdf = file.type === 'application/pdf' || ext === '.pdf'
+    const isDoc = ['.doc', '.docx'].includes(ext)
+    const resourceType = (isPdf || isDoc) ? 'raw' : 'image'
 
     const url = await uploadToCloudinary(buffer, folder, resourceType)
 
-    return successResponse({ url }, 'Document uploaded successfully')
+    return NextResponse.json({ url })
   } catch (error) {
-    return handleError(error, request)
+    const message = error instanceof Error ? error.message : 'Erreur lors du téléchargement'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
-

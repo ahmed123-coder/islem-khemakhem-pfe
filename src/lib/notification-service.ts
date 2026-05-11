@@ -1,6 +1,15 @@
 import { prisma } from '@/lib/prisma'
 import { emitNotification, emitToRoom } from '@/lib/emit-notification'
 
+// Helper: get all admin IDs
+async function getAdminIds(): Promise<string[]> {
+  const admins = await prisma.user.findMany({
+    where: { role: 'ADMIN' },
+    select: { id: true }
+  })
+  return admins.map(a => a.id)
+}
+
 async function createNotification(recipientId: string, recipientType: 'CLIENT' | 'CONSULTANT' | 'ADMIN', type: any, title: string, message: string, orderId?: string) {
   try {
     const notification = await prisma.notification.create({
@@ -25,6 +34,13 @@ async function createNotification(recipientId: string, recipientType: 'CLIENT' |
     return notification
   } catch (error) {
     console.error('Failed to create notification:', error)
+  }
+}
+
+async function notifyAdmins(type: any, title: string, message: string, orderId?: string) {
+  const adminIds = await getAdminIds()
+  for (const adminId of adminIds) {
+    await createNotification(adminId, 'ADMIN', type, title, message, orderId)
   }
 }
 
@@ -63,24 +79,8 @@ export async function notifyReservationUpdate(reservationId: string, status: str
   })
   if (!reservation) return
 
-  await createNotification(
-    reservation.clientId,
-    'CLIENT',
-    'RESERVATION',
-    'Reservation Updated',
-    `Your reservation has been ${status.toLowerCase()}`,
-    reservation.orderId ?? undefined
-  )
-
-  if (reservation.orderId) {
-    emitToRoom(`order:${reservation.orderId}`, 'notification', {
-      type: 'RESERVATION',
-      orderId: reservation.orderId,
-      title: 'Reservation Updated',
-      message: `Reservation status changed to ${status.toLowerCase()}`,
-      timestamp: new Date().toISOString()
-    })
-  }
+  await createNotification(reservation.clientId, 'CLIENT', 'RESERVATION', 'RDV mis à jour', `Votre RDV a été ${status.toLowerCase()}`, reservation.orderId ?? undefined)
+  await notifyAdmins('RESERVATION', 'RDV mis à jour', `RDV de ${reservation.client.name || reservation.client.email} : statut ${status.toLowerCase()}`, reservation.orderId ?? undefined)
 }
 
 export async function notifyOrderStatusUpdate(orderId: string, status: string) {
@@ -104,46 +104,14 @@ export async function notifyNewOrder(orderId: string) {
   })
   if (!order) return
 
-  // 1. Notify Client (Confirmation)
-  await createNotification(
-    order.clientId,
-    'CLIENT',
-    'ORDER',
-    'Order Placed',
-    `Your order for ${order.serviceTier.service.name} has been placed.`,
-    orderId
-  )
+  await createNotification(order.clientId, 'CLIENT', 'ORDER', 'Commande passée', `Votre commande pour ${order.serviceTier.service.name} a été passée.`, orderId)
 
-  // 2. Notify Consultant (if assigned)
   if (order.consultantId) {
-    await createNotification(
-      order.consultantId,
-      'CONSULTANT',
-      'ORDER',
-      'New Order Assigned',
-      `You have been assigned a new order for ${order.serviceTier.service.name} from ${order.client.name || order.client.email}.`,
-      orderId
-    )
-    
-    // Real-time socket
-    emitToRoom(`user:${order.consultantId}`, 'notification', {
-      type: 'ORDER',
-      orderId,
-      title: 'New Order Assigned',
-      message: `New order for ${order.serviceTier.service.name} from ${order.client.name || order.client.email}`,
-      timestamp: new Date().toISOString()
-    })
+    await createNotification(order.consultantId, 'CONSULTANT', 'ORDER', 'Nouvelle commande assignée', `Nouvelle commande pour ${order.serviceTier.service.name} de ${order.client.name || order.client.email}.`, orderId)
+    emitToRoom(`user:${order.consultantId}`, 'notification', { type: 'ORDER', orderId, title: 'Nouvelle commande assignée', message: `Nouvelle commande de ${order.client.name || order.client.email}`, timestamp: new Date().toISOString() })
   }
 
-  // 3. Notify Admin (Global)
-  // We don't have a specific Admin ID, but we could emit to role:ADMIN room
-  emitToRoom('role:ADMIN', 'notification', {
-    type: 'ORDER',
-    orderId,
-    title: 'New Site Order',
-    message: `A new order has been placed by ${order.client.name || order.client.email}`,
-    timestamp: new Date().toISOString()
-  })
+  await notifyAdmins('ORDER', 'Nouvelle commande', `${order.client.name || order.client.email} a passé une commande pour ${order.serviceTier.service.name}`, orderId)
 }
 
 export async function notifyMissionUpdate(missionId: string, title: string, message: string) {
@@ -170,59 +138,33 @@ export async function notifyConsultantMilestoneUpdate(missionId: string, title: 
     })
     if (!mission || !mission.consultantId) return
 
-    await createNotification(
-        mission.consultantId,
-        'CONSULTANT',
-        'MISSION',
-        title,
-        message,
-        mission.orderId
-    )
+    await createNotification(mission.consultantId, 'CONSULTANT', 'MISSION', title, message, mission.orderId)
+}
+
+export async function notifyNewClientRegistration(clientId: string) {
+  const client = await prisma.user.findUnique({ where: { id: clientId } })
+  if (!client) return
+  await notifyAdmins('ORDER', 'Nouveau client inscrit', `${client.name || client.firstName || client.email} vient de s'inscrire en tant que client.`)
+}
+
+export async function notifyNewConsultantRegistration(consultantId: string) {
+  const consultant = await prisma.consultant.findUnique({ where: { id: consultantId } })
+  if (!consultant) return
+  await notifyAdmins('ORDER', 'Nouveau consultant inscrit', `${consultant.name || consultant.firstName || consultant.email} vient de s'inscrire en tant que consultant. Dossier à valider.`)
 }
 export async function notifyNewReservation(reservationId: string) {
-  console.log(`[Notification] Starting notifyNewReservation for ${reservationId}`)
   const reservation = await prisma.reservation.findUnique({ 
     where: { id: reservationId },
     include: { client: true, order: true }
   })
-  
-  if (!reservation) {
-    console.warn(`[Notification] Reservation ${reservationId} not found`)
-    return
-  }
+  if (!reservation || !reservation.consultantId) return
 
-  if (!reservation.consultantId) {
-    console.warn(`[Notification] Reservation ${reservationId} has no consultantId`)
-    return
-  }
+  const dateStr = new Date(reservation.startTime).toLocaleString('fr-FR')
 
-  const payload = {
-    id: reservation.id,
-    type: 'RESERVATION',
-    orderId: reservation.orderId,
-    title: 'New Reservation',
-    message: `New reservation from ${reservation.client.name || reservation.client.email} for ${new Date(reservation.startTime).toLocaleString()}`,
-    timestamp: new Date().toISOString()
-  }
+  await createNotification(reservation.consultantId, 'CONSULTANT', 'RESERVATION', 'Nouveau RDV', `Nouveau RDV de ${reservation.client.name || reservation.client.email} le ${dateStr}`, reservation.orderId ?? undefined)
+  emitToRoom(`user:${reservation.consultantId}`, 'notification', { type: 'RESERVATION', orderId: reservation.orderId, title: 'Nouveau RDV', message: `RDV de ${reservation.client.name || reservation.client.email} le ${dateStr}`, timestamp: new Date().toISOString() })
 
-  console.log(`[Notification] Creating DB entry and emitting to consultant: ${reservation.consultantId}`)
-  
-  await createNotification(
-    reservation.consultantId,
-    'CONSULTANT',
-    'RESERVATION',
-    payload.title,
-    payload.message,
-    reservation.orderId ?? undefined
-  )
-
-  // Double emission to ensure the room name matches (user:id)
-  emitToRoom(`user:${reservation.consultantId}`, 'notification', payload)
-  console.log(`[Notification] Success: Emitted to user:${reservation.consultantId}`)
-
-  if (reservation.orderId) {
-    emitToRoom(`order:${reservation.orderId}`, 'notification', payload)
-  }
+  await notifyAdmins('RESERVATION', 'Nouveau RDV', `${reservation.client.name || reservation.client.email} a pris un RDV le ${dateStr}`, reservation.orderId ?? undefined)
 }
 
 export async function notifyReservationDelete(reservationId: string, deletedBy: 'CLIENT' | 'CONSULTANT') {
@@ -236,23 +178,7 @@ export async function notifyReservationDelete(reservationId: string, deletedBy: 
   const recipientType = deletedBy === 'CLIENT' ? 'CONSULTANT' : 'CLIENT'
   const senderLabel = deletedBy === 'CLIENT' ? 'client' : 'consultant'
 
-  await createNotification(
-    recipientId as string,
-    recipientType,
-    'RESERVATION',
-    'Reservation Cancelled',
-    `A reservation with your ${senderLabel} has been deleted.`,
-    reservation.orderId ?? undefined
-  )
-
-  if (reservation.orderId) {
-    emitToRoom(`order:${reservation.orderId}`, 'notification', {
-      type: 'RESERVATION',
-      orderId: reservation.orderId,
-      title: 'Reservation Cancelled',
-      message: `A reservation has been deleted by the ${senderLabel}`,
-      timestamp: new Date().toISOString()
-    })
-  }
+  await createNotification(recipientId as string, recipientType, 'RESERVATION', 'RDV annulé', `Un RDV avec votre ${senderLabel} a été annulé.`, reservation.orderId ?? undefined)
+  await notifyAdmins('RESERVATION', 'RDV annulé', `RDV annulé par le ${senderLabel} ${reservation.client.name || reservation.client.email}`, reservation.orderId ?? undefined)
 }
 

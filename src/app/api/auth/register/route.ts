@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import * as bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/prisma'
 import { createToken, setAuthCookie } from '@/lib/auth'
+import { notifyNewClientRegistration, notifyNewConsultantRegistration } from '@/lib/notification-service'
 
 export async function POST(request: Request) {
   try {
@@ -38,6 +39,9 @@ export async function POST(request: Request) {
           isActive: false 
         }
       })
+      // Notify admins
+      const newConsultant = await prisma.consultant.findUnique({ where: { email } })
+      if (newConsultant) await notifyNewConsultantRegistration(newConsultant.id)
       return NextResponse.json({ message: 'Consultant account created, awaiting activation' }, { status: 201 })
     }
 
@@ -60,7 +64,9 @@ export async function POST(request: Request) {
         isActive: false 
       }
     })
-
+    // Notify admins
+    const newUser = await prisma.user.findUnique({ where: { email } })
+    if (newUser) await notifyNewClientRegistration(newUser.id)
     return NextResponse.json({ message: 'Compte créé, en attente de validation par un administrateur.' }, { status: 201 })
   } catch (error) {
     console.error('Register error:', error)

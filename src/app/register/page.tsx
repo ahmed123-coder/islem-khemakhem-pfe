@@ -110,7 +110,10 @@ export default function RegisterPage() {
       fd.append('folder', 'consultant-cvs')
       const cvRes = await fetch('/api/upload/document', { method: 'POST', body: fd })
       
-      if (!cvRes.ok) throw new Error('Échec du téléchargement du CV')
+      if (!cvRes.ok) {
+        const cvErr = await cvRes.json()
+        throw new Error(cvErr.error || 'Échec du téléchargement du CV')
+      }
       const { url: cvUrl } = await cvRes.json()
 
       // 2. Upload Certifications
