@@ -17,7 +17,8 @@ import {
   Calendar,
   Settings2,
   Sparkles,
-  MessageSquare
+  MessageSquare,
+  Star
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import {
@@ -164,7 +165,7 @@ export function AdminTopBar() {
                              "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 shadow-sm",
                              !n.isRead ? "bg-blue-600 text-white" : "bg-white border border-slate-100 text-slate-400"
                            )}>
-                              {n.type === 'MESSAGE' ? <MessageSquare className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+                              {n.type === 'MESSAGE' ? <MessageSquare className="w-4 h-4" /> : n.type === 'REVIEW' ? <Star className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
                            </div>
                            <div className="flex-1 min-w-0">
                               <p className={cn("text-xs leading-relaxed mb-1", !n.isRead ? "font-bold text-slate-900" : "font-medium text-slate-500")}>

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { requireAuth, authenticateUser } from '@/lib/auth/middleware'
 import { handleError, successResponse } from '@/lib/errors/handler'
 import { updateConsultantRating, updateServiceRating } from '@/lib/review-service'
+import { notifyNewReview } from '@/lib/notification-service'
 
 export async function POST(req: NextRequest) {
   const authResult = requireAuth(req, ['CLIENT'])
@@ -76,6 +77,9 @@ export async function POST(req: NextRequest) {
     } else if (type === 'SERVICE' && serviceId) {
       await updateServiceRating(serviceId)
     }
+
+    // Notify admins about the new review
+    await notifyNewReview(review.id)
 
     return successResponse(review, 'Review created successfully', 201)
   } catch (error) {

@@ -192,3 +192,35 @@ export async function notifyReservationDelete(reservationId: string, deletedBy: 
   // await notifyAdmins('RESERVATION', 'RDV annulé', `RDV annulé par le ${senderLabel} ${reservation.client.name || reservation.client.email}`, reservation.orderId ?? undefined)
 }
 
+export async function notifyNewReview(reviewId: string) {
+  const review = await prisma.review.findUnique({
+    where: { id: reviewId },
+    include: {
+      client: true,
+      consultant: true,
+      service: true,
+    }
+  })
+  if (!review) return
+
+  const clientName = review.client.name || review.client.firstName || review.client.email
+  const targetName = review.type === 'CONSULTANT'
+    ? (review.consultant?.name || 'un consultant')
+    : (review.service?.name || 'un service')
+  const targetLabel = review.type === 'CONSULTANT' ? 'consultant' : 'service'
+
+  // Notify all admins via DB
+  await notifyAdmins(
+    'REVIEW',
+    'Nouvel avis',
+    `${clientName} a laissé un avis (${review.rating}★) sur le ${targetLabel} ${targetName}`,
+  )
+
+  // Broadcast to admin role room for instant real-time delivery
+  emitToRoom('role:ADMIN', 'notification', {
+    type: 'REVIEW',
+    title: 'Nouvel avis',
+    message: `${clientName} a laissé un avis (${review.rating}★) sur le ${targetLabel} ${targetName}`,
+    timestamp: new Date().toISOString()
+  })
+}

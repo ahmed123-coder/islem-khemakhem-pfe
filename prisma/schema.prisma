@@ -371,6 +371,7 @@ enum NotificationType {
   MISSION
   SYSTEM
   RESERVATION
+  REVIEW
 }
 
 enum PaymentMethod {

@@ -19,7 +19,7 @@ export default function AdminReviewsPage() {
   const [reviews, setReviews] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
 
-  const fetchReviews = async () => {
+  const fetchReviews = React.useCallback(async () => {
     try {
       const res = await fetch('/api/reviews') 
       const result = await res.json()
@@ -30,11 +30,24 @@ export default function AdminReviewsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   React.useEffect(() => {
     fetchReviews()
-  }, [])
+
+    // Listen for real-time REVIEW notifications to auto-refresh the list
+    const handleNotification = (e: any) => {
+      const data = e.detail
+      if (data && data.type === 'REVIEW') {
+        fetchReviews()
+      }
+    }
+
+    window.addEventListener('notification', handleNotification)
+    return () => {
+      window.removeEventListener('notification', handleNotification)
+    }
+  }, [fetchReviews])
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this review?")) return
