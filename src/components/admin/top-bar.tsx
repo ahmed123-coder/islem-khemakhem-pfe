@@ -44,6 +44,29 @@ export function AdminTopBar() {
   React.useEffect(() => {
     setMounted(true)
     fetchNotifications()
+
+    // Listen for real-time notifications from socket (dispatched by NotificationProvider)
+    const handleNewNotification = (e: any) => {
+      const data = e.detail
+      if (data) {
+        // Add the new notification to the top of the list immediately
+        setNotifications(prev => [{
+          id: data.id || Math.random().toString(36).substr(2, 9),
+          type: data.type,
+          title: data.title,
+          message: data.message,
+          isRead: false,
+          createdAt: data.timestamp || new Date().toISOString(),
+          orderId: data.orderId
+        }, ...prev])
+        setUnreadCount(prev => prev + 1)
+      }
+    }
+
+    window.addEventListener('notification', handleNewNotification)
+    return () => {
+      window.removeEventListener('notification', handleNewNotification)
+    }
   }, [])
 
   const fetchNotifications = async () => {

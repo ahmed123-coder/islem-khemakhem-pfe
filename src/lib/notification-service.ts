@@ -111,7 +111,17 @@ export async function notifyNewOrder(orderId: string) {
     emitToRoom(`user:${order.consultantId}`, 'notification', { type: 'ORDER', orderId, title: 'Nouvelle commande assignée', message: `Nouvelle commande de ${order.client.name || order.client.email}`, timestamp: new Date().toISOString() })
   }
 
+  // Create DB notifications for each admin
   await notifyAdmins('ORDER', 'Nouvelle commande', `${order.client.name || order.client.email} a passé une commande pour ${order.serviceTier.service.name}`, orderId)
+
+  // Also broadcast to the admin role room for instant real-time delivery
+  emitToRoom('role:ADMIN', 'notification', {
+    type: 'ORDER',
+    orderId,
+    title: 'Nouvelle commande',
+    message: `${order.client.name || order.client.email} a passé une commande pour ${order.serviceTier.service.name}`,
+    timestamp: new Date().toISOString()
+  })
 }
 
 export async function notifyMissionUpdate(missionId: string, title: string, message: string) {

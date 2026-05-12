@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -20,6 +21,7 @@ interface Order {
 }
 
 export default function SubscriptionsPage() {
+  const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [editOrder, setEditOrder] = useState<Order | null>(null)
@@ -28,23 +30,7 @@ export default function SubscriptionsPage() {
   const [statusFilter, setStatusFilter] = useState('ALL')
   const [methodFilter, setMethodFilter] = useState('ALL')
 
-  useEffect(() => {
-    fetchOrders()
-  }, [])
-
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      order.client.name?.toLowerCase().includes(search.toLowerCase()) || 
-      order.client.email.toLowerCase().includes(search.toLowerCase()) ||
-      order.id.toLowerCase().includes(search.toLowerCase())
-    
-    const matchesStatus = statusFilter === 'ALL' || order.status === statusFilter
-    const matchesMethod = methodFilter === 'ALL' || order.paymentMethod === methodFilter
-    
-    return matchesSearch && matchesStatus && matchesMethod
-  })
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const res = await fetch('/api/admin/orders')
       const result = await res.json()
@@ -59,7 +45,38 @@ export default function SubscriptionsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    fetchOrders()
+
+    // Listen for real-time ORDER notifications to auto-refresh the list
+    const handleNotification = (e: any) => {
+      const data = e.detail
+      if (data && data.type === 'ORDER') {
+        // Re-fetch orders when a new order notification arrives
+        fetchOrders()
+      }
+    }
+
+    window.addEventListener('notification', handleNotification)
+    return () => {
+      window.removeEventListener('notification', handleNotification)
+    }
+  }, [fetchOrders])
+
+  const filteredOrders = orders.filter(order => {
+    const matchesSearch = 
+      order.client.name?.toLowerCase().includes(search.toLowerCase()) || 
+      order.client.email.toLowerCase().includes(search.toLowerCase()) ||
+      order.id.toLowerCase().includes(search.toLowerCase())
+    
+    const matchesStatus = statusFilter === 'ALL' || order.status === statusFilter
+    const matchesMethod = methodFilter === 'ALL' || order.paymentMethod === methodFilter
+    
+    return matchesSearch && matchesStatus && matchesMethod
+  })
+
 
   const handleDownloadInvoice = async (orderId: string) => {
     try {
