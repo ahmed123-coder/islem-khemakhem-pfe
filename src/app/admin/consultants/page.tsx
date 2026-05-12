@@ -105,21 +105,16 @@ export default function ConsultantsPage() {
   const cvRef = React.useRef<HTMLInputElement>(null)
   const certRef = React.useRef<HTMLInputElement>(null)
 
-  React.useEffect(() => { 
-    fetchConsultants()
-    fetchServices() 
-  }, [])
-
-  const fetchServices = async () => {
+  const fetchServices = React.useCallback(async () => {
     try {
       const res = await fetch('/api/services')
       const result = await res.json()
       const data = result.data || result
       setServices(Array.isArray(data) ? data : [])
     } catch (e) {}
-  }
+  }, [])
 
-  const fetchConsultants = async () => {
+  const fetchConsultants = React.useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch('/api/admin/consultants')
@@ -134,7 +129,25 @@ export default function ConsultantsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  React.useEffect(() => { 
+    fetchConsultants()
+    fetchServices()
+
+    // Listen for real-time REGISTRATION notifications to auto-refresh the list
+    const handleNotification = (e: any) => {
+      const data = e.detail
+      if (data && data.type === 'REGISTRATION') {
+        fetchConsultants()
+      }
+    }
+
+    window.addEventListener('notification', handleNotification)
+    return () => {
+      window.removeEventListener('notification', handleNotification)
+    }
+  }, [fetchConsultants, fetchServices])
 
   const handleOpenCreate = () => {
     setEditItem(null)

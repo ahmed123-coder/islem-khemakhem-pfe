@@ -123,11 +123,7 @@ export default function UsersPage() {
   const [selectedTier, setSelectedTier] = React.useState('')
   const [orderLoading, setOrderLoading] = React.useState(false)
 
-  React.useEffect(() => { 
-    fetchUsers() 
-  }, [])
-
-  const fetchUsers = async () => {
+  const fetchUsers = React.useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch('/api/admin/users')
@@ -137,7 +133,24 @@ export default function UsersPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  React.useEffect(() => { 
+    fetchUsers()
+
+    // Listen for real-time REGISTRATION notifications to auto-refresh the list
+    const handleNotification = (e: any) => {
+      const data = e.detail
+      if (data && data.type === 'REGISTRATION') {
+        fetchUsers()
+      }
+    }
+
+    window.addEventListener('notification', handleNotification)
+    return () => {
+      window.removeEventListener('notification', handleNotification)
+    }
+  }, [fetchUsers])
 
   const handleOpenCreate = () => {
     setEditUser(null)

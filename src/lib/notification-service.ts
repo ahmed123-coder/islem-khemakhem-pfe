@@ -154,13 +154,31 @@ export async function notifyConsultantMilestoneUpdate(missionId: string, title: 
 export async function notifyNewClientRegistration(clientId: string) {
   const client = await prisma.user.findUnique({ where: { id: clientId } })
   if (!client) return
-  await notifyAdmins('ORDER', 'Nouveau client inscrit', `${client.name || client.firstName || client.email} vient de s'inscrire en tant que client.`)
+  const clientLabel = client.name || client.firstName || client.email
+  await notifyAdmins('REGISTRATION', 'Nouveau client inscrit', `${clientLabel} vient de s'inscrire en tant que client.`)
+
+  // Broadcast to admin role room for instant real-time delivery
+  emitToRoom('role:ADMIN', 'notification', {
+    type: 'REGISTRATION',
+    title: 'Nouveau client inscrit',
+    message: `${clientLabel} vient de s'inscrire en tant que client.`,
+    timestamp: new Date().toISOString()
+  })
 }
 
 export async function notifyNewConsultantRegistration(consultantId: string) {
   const consultant = await prisma.consultant.findUnique({ where: { id: consultantId } })
   if (!consultant) return
-  await notifyAdmins('ORDER', 'Nouveau consultant inscrit', `${consultant.name || consultant.firstName || consultant.email} vient de s'inscrire en tant que consultant. Dossier à valider.`)
+  const consultantLabel = consultant.name || consultant.firstName || consultant.email
+  await notifyAdmins('REGISTRATION', 'Nouveau consultant inscrit', `${consultantLabel} vient de s'inscrire en tant que consultant. Dossier à valider.`)
+
+  // Broadcast to admin role room for instant real-time delivery
+  emitToRoom('role:ADMIN', 'notification', {
+    type: 'REGISTRATION',
+    title: 'Nouveau consultant inscrit',
+    message: `${consultantLabel} vient de s'inscrire en tant que consultant. Dossier à valider.`,
+    timestamp: new Date().toISOString()
+  })
 }
 export async function notifyNewReservation(reservationId: string) {
   const reservation = await prisma.reservation.findUnique({ 
