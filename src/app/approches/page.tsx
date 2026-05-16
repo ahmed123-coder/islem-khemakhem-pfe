@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Nos Approches - DSL Conseil',
   description: 'Découvrez nos trois approches complémentaires : Coaching professionnel, Conduite du changement, Formation & Sensibilisation.',

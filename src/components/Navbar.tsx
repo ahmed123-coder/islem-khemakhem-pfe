@@ -19,11 +19,12 @@ export default function Navbar() {
   const pathname = usePathname()
 
   useEffect(() => {
-    fetch('/api/content/logo')
+    fetch('/api/content/logo', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => {
-        if (data && data.value && data.value.url) {
-          setLogoUrl(data.value.url)
+        const val = data?.data?.value || data?.value;
+        if (val && val.url) {
+          setLogoUrl(val.url)
         }
       })
       .catch(() => setLogoUrl(null))

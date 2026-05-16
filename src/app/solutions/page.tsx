@@ -15,14 +15,15 @@ export default function Services() {
 
   useEffect(() => {
     Promise.all([
-      fetch('/api/services').then(res => res.json()),
-      fetch('/api/content/hero-solutions').then(res => res.ok ? res.json() : null),
-      fetch('/api/reviews').then(res => res.ok ? res.json() : [])
+      fetch('/api/services', { cache: 'no-store' }).then(res => res.json()),
+      fetch('/api/content/hero-solutions', { cache: 'no-store' }).then(res => res.ok ? res.json() : null),
+      fetch('/api/reviews', { cache: 'no-store' }).then(res => res.ok ? res.json() : [])
     ])
       .then(([servicesData, heroJSON, reviewsData]) => {
         setServices(servicesData)
-        if (heroJSON && heroJSON.value) {
-          setHeroData(heroJSON.value)
+        const heroVal = heroJSON?.data?.value || heroJSON?.value;
+        if (heroVal) {
+          setHeroData(heroVal)
         }
         // If reviewsData is the standard response structure { success: true, data: [...] }
         if (reviewsData && reviewsData.data) {
