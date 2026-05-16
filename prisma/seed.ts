@@ -262,6 +262,7 @@ async function main() {
           subtitle: 'Accédez à un réseau d’experts métier engagés et inspirants afin de favoriser la pérennité de votre entreprise.',
           ctaText: 'Prendre rendez-vous',
           ctaLink: '/login',
+          image: '/solutionHero.jpeg',
         },
       },
       {
@@ -280,6 +281,7 @@ async function main() {
         value: {
           title: 'Des expertises au service de votre performance',
           subtitle: 'Quatre domaines d\'intervention complémentaires pour une transformation globale et pérenne de votre entreprise.',
+          image: '/solutionHero.jpeg',
         },
       },
       {
@@ -287,6 +289,7 @@ async function main() {
         value: {
           title: 'Nos approches',
           subtitle: 'Depuis 2018, nous accompagnons les entreprises dans le renforcement de la réussite de leurs projets, grâce à trois approches complémentaires.',
+          image: '/solutionHero.jpeg',
         },
       },
     ],

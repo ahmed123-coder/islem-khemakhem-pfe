@@ -75,12 +75,13 @@ export default function SiteVisualEditor() {
         })
         const uploadData = await uploadRes.json()
         
-        if (uploadData.success) {
+        if (uploadRes.ok) {
+          const resData = uploadData.data || uploadData;
           if (isLogo) {
-            finalContent.url = uploadData.logoUrl
-            setLogoUrl(uploadData.logoUrl)
+            finalContent.url = resData.logoUrl
+            setLogoUrl(resData.logoUrl)
           } else {
-            finalContent.image = uploadData.imageUrl
+            finalContent.image = resData.imageUrl
           }
         }
       }

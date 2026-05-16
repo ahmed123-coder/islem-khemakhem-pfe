@@ -8,42 +8,24 @@ import type { HeroContent } from '@/lib/content'
 
 export default function Hero() {
   const [content, setContent] = useState<HeroContent | null>(null)
-  const [images, setImages] = useState<string[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
 
   useEffect(() => {
     fetch('/api/content/hero', { cache: 'no-store' })
       .then(res => res.json())
       .then(data => setContent(data?.data?.value || data?.value))
       .catch(() => setContent(null))
-    
-    fetch('/api/hero', { cache: 'no-store' })
-      .then(res => res.json())
-      .then(data => setImages(data.images || []))
   }, [])
 
-  useEffect(() => {
-    if (images.length > 1) {
-      const interval = setInterval(() => {
-        setCurrentIndex((prev) => (prev + 1) % images.length)
-      }, 5000)
-      return () => clearInterval(interval)
-    }
-  }, [images.length])
+  const heroImage = content?.image || 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1600';
 
   return (
     <>
       <section className="relative bg-[#2B4F8A] text-white overflow-hidden min-h-[500px]">
         <div className="absolute inset-0">
-          {(images.length > 0 ? images : (content?.image ? [content.image] : ['https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1600'])).map((img, index) => (
-            <div
-              key={index}
-              className={`absolute inset-0 bg-cover transition-opacity duration-1000 ${
-                index === currentIndex || images.length === 0 ? 'opacity-30' : 'opacity-0'
-              }`}
-              style={{ backgroundImage: `url(${img})`, backgroundPosition: 'center 30%' }}
-            />
-          ))}
+          <div
+            className="absolute inset-0 bg-cover opacity-30"
+            style={{ backgroundImage: `url(${heroImage})`, backgroundPosition: 'center 30%' }}
+          />
         </div>
         
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
@@ -73,19 +55,7 @@ export default function Hero() {
           </div>
         </div>
 
-        {images.length > 1 && (
-          <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex gap-2">
-            {images.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentIndex(index)}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  index === currentIndex ? 'bg-white w-8' : 'bg-white/50'
-                }`}
-              />
-            ))}
-          </div>
-        )}
+
       </section>
 
       {/* Vision & Mission Section */}
