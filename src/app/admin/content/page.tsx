@@ -36,9 +36,13 @@ export default function SiteVisualEditor() {
   const [content, setContent] = React.useState<any>({})
   const [logoUrl, setLogoUrl] = React.useState('/logo.jpeg')
   const [isLoading, setIsLoading] = React.useState(false)
+  const [selectedFile, setSelectedFile] = React.useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null)
 
   React.useEffect(() => {
     loadContent()
+    setSelectedFile(null)
+    setPreviewUrl(null)
   }, [activeTab])
 
   const loadContent = async () => {
@@ -57,12 +61,44 @@ export default function SiteVisualEditor() {
 
   const handleSave = async () => {
     setIsLoading(true)
-    await fetch(`/api/content/${activeTab}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ value: content })
-    })
-    setIsLoading(false)
+    try {
+      let finalContent = { ...content }
+
+      if (selectedFile) {
+        const formData = new FormData()
+        const isLogo = activeTab === 'logo'
+        formData.append(isLogo ? 'logo' : 'image', selectedFile)
+        
+        const uploadRes = await fetch(isLogo ? '/api/upload/logo' : '/api/upload/image', {
+          method: 'POST',
+          body: formData,
+        })
+        const uploadData = await uploadRes.json()
+        
+        if (uploadData.success) {
+          if (isLogo) {
+            finalContent.url = uploadData.logoUrl
+            setLogoUrl(uploadData.logoUrl)
+          } else {
+            finalContent.image = uploadData.imageUrl
+          }
+        }
+      }
+
+      await fetch(`/api/content/${activeTab}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ value: finalContent })
+      })
+
+      setContent(finalContent)
+      setSelectedFile(null)
+      setPreviewUrl(null)
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -122,30 +158,22 @@ export default function SiteVisualEditor() {
                    <div className="space-y-4">
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Hero Background Slideshow</label>
                       <div className="group relative h-48 rounded-[32px] border-2 border-dashed border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/50 transition-all cursor-pointer overflow-hidden">
-                        <CloudUpload className="w-12 h-12 text-slate-300 mb-3 group-hover:text-blue-600 transition-colors" />
-                        <span className="text-xs font-bold text-slate-500">Drag & Drop new visual assets</span>
+                        {(previewUrl || content.image) ? (
+                          <img src={previewUrl || content.image} className="w-full h-full object-cover" alt="Hero Background Preview" />
+                        ) : (
+                          <>
+                            <CloudUpload className="w-12 h-12 text-slate-300 mb-3 group-hover:text-blue-600 transition-colors" />
+                            <span className="text-xs font-bold text-slate-500">Drag & Drop new visual assets</span>
+                          </>
+                        )}
                         <input 
                           type="file" 
                           className="absolute inset-0 opacity-0 cursor-pointer" 
-                          onChange={async (e) => {
+                          onChange={(e) => {
                             if (e.target.files && e.target.files[0]) {
-                              setIsLoading(true)
-                              const formData = new FormData()
-                              formData.append('image', e.target.files[0])
-                              try {
-                                const res = await fetch('/api/upload/image', {
-                                  method: 'POST',
-                                  body: formData,
-                                })
-                                const data = await res.json()
-                                if (data.success) {
-                                  setContent({ ...content, image: data.imageUrl })
-                                }
-                              } catch(error) {
-                                console.error(error)
-                              } finally {
-                                setIsLoading(false)
-                              }
+                              const file = e.target.files[0]
+                              setSelectedFile(file)
+                              setPreviewUrl(URL.createObjectURL(file))
                             }
                           }}
                         />
@@ -226,33 +254,18 @@ export default function SiteVisualEditor() {
                    </div>
                    <div className="flex items-center gap-3">
                       <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 overflow-hidden">
-                         <img src={content.url || logoUrl} className="w-full h-full object-contain p-2" alt="Current Logo" />
+                         <img src={previewUrl || content.url || logoUrl} className="w-full h-full object-contain p-2" alt="Current Logo" />
                       </div>
                       <div className="relative">
                         <Button variant="outline" className="rounded-xl font-bold text-xs h-11 px-6 border-slate-200">Replace Logo</Button>
                         <input 
                           type="file" 
                           className="absolute inset-0 opacity-0 cursor-pointer" 
-                          onChange={async (e) => {
+                          onChange={(e) => {
                             if (e.target.files && e.target.files[0]) {
-                              setIsLoading(true)
-                              const formData = new FormData()
-                              formData.append('logo', e.target.files[0])
-                              try {
-                                const res = await fetch('/api/upload/logo', {
-                                  method: 'POST',
-                                  body: formData,
-                                })
-                                const data = await res.json()
-                                if (data.success) {
-                                  setContent({ ...content, url: data.logoUrl })
-                                  setLogoUrl(data.logoUrl)
-                                }
-                              } catch(error) {
-                                console.error(error)
-                              } finally {
-                                setIsLoading(false)
-                              }
+                              const file = e.target.files[0]
+                              setSelectedFile(file)
+                              setPreviewUrl(URL.createObjectURL(file))
                             }
                           }}
                         />
