@@ -1,0 +1,235 @@
+{
+  "common": {
+    "home": "Home",
+    "about": "About",
+    "solutions": "Solutions",
+    "services": "Services",
+    "contact": "Contact",
+    "blog": "Blog",
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "search": "Search",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "view": "View",
+    "add": "Add",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "warning": "Warning",
+    "info": "Info",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "all": "All",
+    "none": "None",
+    "required": "Required",
+    "optional": "Optional",
+    "language": "Language",
+    "selectLanguage": "Select Language"
+  },
+  "navigation": {
+    "home": "Home",
+    "solutions": "Solutions",
+    "approaches": "Approaches",
+    "contact": "Contact",
+    "login": "Login",
+    "register": "Register",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "home": {
+    "hero": {
+      "title": "DSL Consulting - Business Consulting & Management Solutions",
+      "subtitle": "Transform your business with excellence. Management, HR, quality, and performance consulting.",
+      "cta": "Get Started",
+      "ctaSecondary": "Explore Services"
+    },
+    "values": {
+      "title": "Our Values — The Meaning of DSL",
+      "determination": {
+        "title": "Determination",
+        "description": "We move forward with rigor and commitment to achieve our clients' goals. Each project is driven by a will to succeed, together."
+      },
+      "success": {
+        "title": "Success",
+        "description": "Success is not individual: it is born from our close collaboration with our clients. It is the result of shared determination and results-oriented actions."
+      },
+      "loyalty": {
+        "title": "Loyalty",
+        "description": "We place trust and loyalty at the heart of our relationships. We are devoted to our clients and build lasting partnerships based on respect and integrity."
+      }
+    },
+    "approaches": {
+      "title": "Our Approaches",
+      "coaching": "Professional Coaching",
+      "change": "Change Management",
+      "training": "Training & Awareness"
+    },
+    "solutions": {
+      "title": "Our Solutions",
+      "performance": "Performance Management",
+      "gpec": "Strategic Workforce Planning",
+      "employerBrand": "Employer Brand"
+    },
+    "whyChoose": {
+      "title": "Why Choose DSL",
+      "description": "The difference between an organization that evolves and one that stagnates lies not only in its resources, but in its ability to mobilize the right expertise at the right time.",
+      "benefits": [
+        "Pilot your performance with more clarity and efficiency",
+        "Optimize your resources and master your challenges",
+        "Benefit from concrete solutions tailored to your issues",
+        "Quickly access rigorously selected experts"
+      ]
+    },
+    "cta": {
+      "title": "Access our specialized approaches directly.",
+      "subtitle": "Choose the solution adapted to your unique needs or connect for personalized support.",
+      "createAccount": "Create Account",
+      "viewServices": "View Services",
+      "contactUs": "Contact Us"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to access your dashboard",
+      "email": "Email Address",
+      "password": "Password",
+      "rememberMe": "Remember me",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign In",
+      "noAccount": "Don't have an account?",
+      "registerLink": "Create one"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Join us to transform your business",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "email": "Email Address",
+      "password": "Password",
+      "confirmPassword": "Confirm Password",
+      "company": "Company Name",
+      "phone": "Phone Number",
+      "terms": "I accept the terms and conditions",
+      "submit": "Create Account",
+      "hasAccount": "Already have an account?",
+      "loginLink": "Sign in"
+    },
+    "validation": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email",
+      "passwordRequired": "Password is required",
+      "passwordMin": "Password must be at least 8 characters",
+      "firstNameRequired": "First name is required",
+      "lastNameRequired": "Last name is required",
+      "passwordsDoNotMatch": "Passwords do not match",
+      "termsRequired": "You must accept the terms and conditions"
+    },
+    "errors": {
+      "invalidCredentials": "Invalid email or password",
+      "accountLocked": "Your account has been locked",
+      "tooManyAttempts": "Too many login attempts. Please try again later."
+    }
+  },
+  "dashboard": {
+    "common": {
+      "welcome": "Welcome back",
+      "hereWhatsHappening": "Here's what's happening with your consulting",
+      "stayUpdated": "Stay updated",
+      "noNotifications": "Activity updates will appear here",
+      "markAllRead": "Mark all read",
+      "markAsRead": "Mark as read"
+    },
+    "admin": {
+      "title": "Admin Dashboard",
+      "overview": "Overview",
+      "users": "Users",
+      "consultants": "Consultants",
+      "clients": "Clients",
+      "services": "Services",
+      "billing": "Billing",
+      "content": "Content",
+      "settings": "Settings"
+    },
+    "client": {
+      "title": "My Dashboard",
+      "myOrders": "My Orders",
+      "myReservations": "My Reservations",
+      "myInvoices": "My Invoices",
+      "mySolutions": "My Solutions",
+      "billing": "Billing",
+      "settings": "Settings"
+    },
+    "consultant": {
+      "title": "Consultant Dashboard",
+      "myClients": "My Clients",
+      "myMissions": "My Missions",
+      "myPortfolio": "My Portfolio",
+      "myReservations": "Reservations",
+      "myReviews": "Reviews",
+      "settings": "Settings"
+    }
+  },
+  "forms": {
+    "validation": {
+      "required": "This field is required",
+      "email": "Please enter a valid email",
+      "minLength": "Minimum {min} characters required",
+      "maxLength": "Maximum {max} characters allowed",
+      "pattern": "Invalid format",
+      "selectRequired": "Please make a selection"
+    },
+    "buttons": {
+      "submit": "Submit",
+      "cancel": "Cancel",
+      "save": "Save",
+      "reset": "Reset"
+    }
+  },
+  "table": {
+    "noData": "No data available",
+    "noResults": "No results found",
+    "loading": "Loading data...",
+    "showing": "Showing {start} to {end} of {total} entries",
+    "actions": "Actions"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "pending": "Pending",
+    "completed": "Completed",
+    "cancelled": "Cancelled",
+    "inProgress": "In Progress",
+    "onHold": "On Hold",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "published": "Published",
+    "draft": "Draft"
+  },
+  "empty": {
+    "title": "No data yet",
+    "description": "There are no items to display",
+    "action": "Get Started"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "notFound": "Page not found",
+    "unauthorized": "You are not authorized to view this page",
+    "serverError": "Server error. Please try again later."
+  },
+  "seo": {
+    "title": "DSL Consulting - Business Consulting & Management Solutions",
+    "description": "Leading business consulting firm specializing in strategic management, HR solutions, quality assurance, and performance optimization.",
+    "keywords": "business consulting, management consulting, HR solutions, quality management, performance optimization"
+  }
+}

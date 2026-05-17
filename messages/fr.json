@@ -1,0 +1,235 @@
+{
+  "common": {
+    "home": "Accueil",
+    "about": "À propos",
+    "solutions": "Solutions",
+    "services": "Services",
+    "contact": "Contact",
+    "blog": "Blog",
+    "login": "Connexion",
+    "logout": "Déconnexion",
+    "register": "Inscription",
+    "search": "Rechercher",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "view": "Voir",
+    "add": "Ajouter",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "warning": "Attention",
+    "info": "Info",
+    "confirm": "Confirmer",
+    "yes": "Oui",
+    "no": "Non",
+    "all": "Tous",
+    "none": "Aucun",
+    "required": "Requis",
+    "optional": "Optionnel",
+    "language": "Langue",
+    "selectLanguage": "Sélectionner la langue"
+  },
+  "navigation": {
+    "home": "Accueil",
+    "solutions": "Solutions",
+    "approaches": "Approches",
+    "contact": "Contact",
+    "login": "Connexion",
+    "register": "Inscription",
+    "dashboard": "Tableau de bord",
+    "profile": "Profil",
+    "settings": "Paramètres",
+    "logout": "Déconnexion"
+  },
+  "home": {
+    "hero": {
+      "title": "DSL Conseil - Conseil en Entreprise et Solutions de Gestion",
+      "subtitle": "Transformez votre entreprise avec l'excellence. Conseil en management, RH, qualité et performance.",
+      "cta": "Commencer",
+      "ctaSecondary": "Découvrir nos services"
+    },
+    "values": {
+      "title": "Nos valeurs — Le sens de DSL",
+      "determination": {
+        "title": "Détermination",
+        "description": "Nous avançons avec rigueur et engagement vers l'atteinte des objectifs de nos clients. Chaque projet est porté par une volonté de réussir, ensemble."
+      },
+      "success": {
+        "title": "Succès",
+        "description": "Le succès n'est pas individuel : il naît de notre collaboration étroite avec nos clients. Il est le fruit d'une détermination partagée et d'actions concrètes orientées résultats."
+      },
+      "loyalty": {
+        "title": "Loyauté",
+        "description": "Nous plaçons la confiance et la fidélité au cœur de nos relations. Nous sommes dévoués à nos clients et nous construisons des partenariats durables basés sur le respect et l'intégrité."
+      }
+    },
+    "approaches": {
+      "title": "Nos approches",
+      "coaching": "Coaching professionnel",
+      "change": "Conduite du changement",
+      "training": "Formation et Sensibilisation"
+    },
+    "solutions": {
+      "title": "Nos solutions",
+      "performance": "Management de la performance cachée",
+      "gpec": "Gestion prévisionnelle des emplois et des compétences",
+      "employerBrand": "Marque employeur"
+    },
+    "whyChoose": {
+      "title": "Pourquoi choisir DSL",
+      "description": "La différence entre une organisation qui évolue et celle qui stagne ne réside pas uniquement dans ses ressources, mais dans sa capacité à mobiliser les bonnes expertises au bon moment.",
+      "benefits": [
+        "Piloter votre performance avec plus de clarté et d'efficacité",
+        "Optimiser vos ressources et maîtriser vos défis et vos goulots",
+        "Bénéficier de solutions concrètes, bien adaptées à vos enjeux",
+        "Accéder rapidement à des experts rigoureusement sélectionnés"
+      ]
+    },
+    "cta": {
+      "title": "Accédez directement à nos approches spécialisées.",
+      "subtitle": "Choisissez la solution adaptée à vos besoins uniques ou connectez-vous pour un accompagnement sur mesure.",
+      "createAccount": "Créer un compte",
+      "viewServices": "Voir les services",
+      "contactUs": "Nous contacter"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Bon retour",
+      "subtitle": "Connectez-vous pour accéder à votre tableau de bord",
+      "email": "Adresse e-mail",
+      "password": "Mot de passe",
+      "rememberMe": "Se souvenir de moi",
+      "forgotPassword": "Mot de passe oublié ?",
+      "submit": "Se connecter",
+      "noAccount": "Pas de compte ?",
+      "registerLink": "Créer un compte"
+    },
+    "register": {
+      "title": "Créer un compte",
+      "subtitle": "Rejoignez-nous pour transformer votre entreprise",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "email": "Adresse e-mail",
+      "password": "Mot de passe",
+      "confirmPassword": "Confirmer le mot de passe",
+      "company": "Nom de l'entreprise",
+      "phone": "Numéro de téléphone",
+      "terms": "J'accepte les conditions générales",
+      "submit": "Créer le compte",
+      "hasAccount": "Déjà un compte ?",
+      "loginLink": "Se connecter"
+    },
+    "validation": {
+      "emailRequired": "L'e-mail est requis",
+      "emailInvalid": "Veuillez entrer une adresse e-mail valide",
+      "passwordRequired": "Le mot de passe est requis",
+      "passwordMin": "Le mot de passe doit contenir au moins 8 caractères",
+      "firstNameRequired": "Le prénom est requis",
+      "lastNameRequired": "Le nom est requis",
+      "passwordsDoNotMatch": "Les mots de passe ne correspondent pas",
+      "termsRequired": "Vous devez accepter les conditions générales"
+    },
+    "errors": {
+      "invalidCredentials": "E-mail ou mot de passe invalide",
+      "accountLocked": "Votre compte a été verrouillé",
+      "tooManyAttempts": "Trop de tentatives de connexion. Veuillez réessayer plus tard."
+    }
+  },
+  "dashboard": {
+    "common": {
+      "welcome": "Bon retour",
+      "hereWhatsHappening": "Voici ce qui se passe avec votre accompagnement",
+      "stayUpdated": "Restez informé",
+      "noNotifications": "Les mises à jour apparaîtront ici",
+      "markAllRead": "Tout marquer comme lu",
+      "markAsRead": "Marquer comme lu"
+    },
+    "admin": {
+      "title": "Tableau de bord Admin",
+      "overview": "Aperçu",
+      "users": "Utilisateurs",
+      "consultants": "Consultants",
+      "clients": "Clients",
+      "services": "Services",
+      "billing": "Facturation",
+      "content": "Contenu",
+      "settings": "Paramètres"
+    },
+    "client": {
+      "title": "Mon tableau de bord",
+      "myOrders": "Mes commandes",
+      "myReservations": "Mes réservations",
+      "myInvoices": "Mes factures",
+      "mySolutions": "Mes solutions",
+      "billing": "Facturation",
+      "settings": "Paramètres"
+    },
+    "consultant": {
+      "title": "Tableau de bord Consultant",
+      "myClients": "Mes clients",
+      "myMissions": "Mes missions",
+      "myPortfolio": "Mon portfolio",
+      "myReservations": "Réservations",
+      "myReviews": "Avis",
+      "settings": "Paramètres"
+    }
+  },
+  "forms": {
+    "validation": {
+      "required": "Ce champ est requis",
+      "email": "Veuillez entrer une adresse e-mail valide",
+      "minLength": "Minimum {min} caractères requis",
+      "maxLength": "Maximum {max} caractères autorisés",
+      "pattern": "Format invalide",
+      "selectRequired": "Veuillez faire une sélection"
+    },
+    "buttons": {
+      "submit": "Soumettre",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "reset": "Réinitialiser"
+    }
+  },
+  "table": {
+    "noData": "Aucune donnée disponible",
+    "noResults": "Aucun résultat trouvé",
+    "loading": "Chargement des données...",
+    "showing": "Affichage de {start} à {end} sur {total} entrées",
+    "actions": "Actions"
+  },
+  "status": {
+    "active": "Actif",
+    "inactive": "Inactif",
+    "pending": "En attente",
+    "completed": "Terminé",
+    "cancelled": "Annulé",
+    "inProgress": "En cours",
+    "onHold": "En pause",
+    "approved": "Approuvé",
+    "rejected": "Rejeté",
+    "published": "Publié",
+    "draft": "Brouillon"
+  },
+  "empty": {
+    "title": "Pas encore de données",
+    "description": "Aucun élément à afficher",
+    "action": "Commencer"
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite. Veuillez réessayer.",
+    "notFound": "Page introuvable",
+    "unauthorized": "Vous n'êtes pas autorisé à voir cette page",
+    "serverError": "Erreur serveur. Veuillez réessayer plus tard."
+  },
+  "seo": {
+    "title": "DSL Conseil - Conseil en Entreprise et Solutions de Gestion",
+    "description": "Cabinet de conseil leader en management stratégique, solutions RH, assurance qualité et optimisation de la performance.",
+    "keywords": "conseil en entreprise, conseil en gestion, solutions RH, gestion de la qualité, optimisation de la performance"
+  }
+}

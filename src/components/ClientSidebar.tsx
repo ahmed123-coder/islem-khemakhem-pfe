@@ -2,25 +2,27 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import { Package, Search, Settings, LogOut, Home, CreditCard } from 'lucide-react'
 import { DashboardSidebar, SidebarNavGroup } from '@/components/dashboard/DashboardSidebar'
 
 export default function ClientSidebar() {
   const router = useRouter()
+  const pathname = usePathname()
+  const locale = pathname.split('/')[1] || 'en'
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/login')
+    router.push(`/${locale}/login`)
   }
 
   const groups: SidebarNavGroup[] = [
     {
       items: [
-        { href: '/client', label: 'Subscriptions', icon: Package },
-        { href: '/client/solutions', label: 'Solutions', icon: Search },
-        { href: '/client/billing', label: 'Billing', icon: CreditCard },
-        { href: '/client/settings', label: 'Settings', icon: Settings },
+        { href: `/${locale}/client`, label: 'Subscriptions', icon: Package },
+        { href: `/${locale}/client/solutions`, label: 'Solutions', icon: Search },
+        { href: `/${locale}/client/billing`, label: 'Billing', icon: CreditCard },
+        { href: `/${locale}/client/settings`, label: 'Settings', icon: Settings },
       ]
     }
   ]
@@ -46,7 +48,7 @@ export default function ClientSidebar() {
       </div>
 
       <Link 
-        href="/" 
+        href={`/${locale}/`} 
         className="flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition-all font-bold text-xs uppercase tracking-widest"
       >
         <Home className="w-4 h-4" />

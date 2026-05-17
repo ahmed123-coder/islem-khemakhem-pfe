@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { 
   LayoutDashboard, 
   Users, 
@@ -13,21 +14,30 @@ import {
 import { DashboardSidebar, SidebarNavGroup } from '@/components/dashboard/DashboardSidebar'
 
 export function ConsultantSidebar() {
+  const pathname = usePathname()
+  const router = useRouter()
+  const locale = pathname.split('/')[1] || 'en'
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    router.push(`/${locale}/login`)
+  }
+
   const groups: SidebarNavGroup[] = [
     {
       title: 'Productivity',
       items: [
-        { href: '/consultant', label: 'Workspace', icon: LayoutDashboard },
-        { href: '/consultant/reservations', label: 'Reservations', icon: Calendar },
-        { href: '/consultant/clients', label: 'Clients', icon: Users },
-        { href: '/consultant/reviews', label: 'Reviews', icon: MessageSquare },
-        { href: '/consultant/portfolio', label: 'Portfolio', icon: Award },
+        { href: `/${locale}/consultant`, label: 'Workspace', icon: LayoutDashboard },
+        { href: `/${locale}/consultant/reservations`, label: 'Reservations', icon: Calendar },
+        { href: `/${locale}/consultant/clients`, label: 'Clients', icon: Users },
+        { href: `/${locale}/consultant/reviews`, label: 'Reviews', icon: MessageSquare },
+        { href: `/${locale}/consultant/portfolio`, label: 'Portfolio', icon: Award },
       ]
     },
     {
       title: 'Account',
       items: [
-        { href: '/consultant/settings', label: 'Settings', icon: Settings2 },
+        { href: `/${locale}/consultant/settings`, label: 'Settings', icon: Settings2 },
       ]
     }
   ]
@@ -41,7 +51,7 @@ export function ConsultantSidebar() {
       </div>
       <p className="text-xs font-bold text-slate-300 mb-4 leading-relaxed">Ready for high-impact consulting.</p>
       <button 
-        onClick={() => fetch('/api/auth/logout', { method: 'POST' }).then(() => window.location.href = '/login')}
+        onClick={handleLogout}
         className="flex items-center gap-2 text-xs font-black text-white hover:text-emerald-400 transition-colors"
       >
         <LogOut className="w-4 h-4" />

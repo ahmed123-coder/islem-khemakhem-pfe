@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -12,8 +12,11 @@ function LoginContent() {
   const [loading, setLoading] = useState(false)
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
   const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect')
+  
+  const locale = pathname.split('/')[1] || 'en'
 
   useEffect(() => {
     fetch('/api/content/logo')
@@ -44,16 +47,17 @@ function LoginContent() {
       const role = data.user.role
       
       const defaultPath =
-        role === 'ADMIN' ? '/admin' :
-        role === 'CONSULTANT' ? '/consultant' :
-        role === 'CLIENT' ? '/client' : '/dashboard'
+        role === 'ADMIN' ? `/${locale}/admin` :
+        role === 'CONSULTANT' ? `/${locale}/consultant` :
+        role === 'CLIENT' ? `/${locale}/client` : `/${locale}/dashboard`
 
       localStorage.setItem('userId', data.user.id)
       localStorage.setItem('role', role)
       window.dispatchEvent(new CustomEvent('auth-change'))
       
       // Respect redirect param if role is client
-      router.push(redirect && role === 'CLIENT' ? redirect : defaultPath)
+      const finalPath = redirect && role === 'CLIENT' ? redirect : defaultPath
+      router.push(finalPath)
       router.refresh()
     } else {
       const data = await res.json()
@@ -78,7 +82,7 @@ function LoginContent() {
 
           <div className="px-8 py-10">
             <div className="flex justify-center mb-8">
-              <Link href="/">
+              <Link href={`/${locale}/`}>
                 <Image src={logoUrl || "/logo-1772242356501-removebg-preview.png"} alt="DSL Consulting" width={140} height={70} className="object-contain hover:opacity-80 transition-opacity" />
               </Link>
             </div>
@@ -132,7 +136,7 @@ function LoginContent() {
 
             <p className="text-center text-gray-500 text-sm mt-6">
               Pas encore de compte ?{' '}
-              <Link href="/register" className="text-[#7AB648] hover:text-[#639a3a] font-semibold">S&apos;inscrire</Link>
+              <Link href={`/${locale}/register`} className="text-[#7AB648] hover:text-[#639a3a] font-semibold">S&apos;inscrire</Link>
             </p>
           </div>
         </div>

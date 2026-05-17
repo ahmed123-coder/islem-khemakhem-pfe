@@ -8,22 +8,22 @@ import { useRouter } from 'next/navigation'
 export default function AdminSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const locale = pathname.split('/')[1] || 'en'
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/login')
+    router.push(`/${locale}/login`)
   }
 
   const links = [
-    { href: '/admin', label: 'Dashboard', icon: Home },
-    { href: '/admin/users', label: 'Users (Clients)', icon: Users },
-    { href: '/admin/consultants', label: 'Consultants', icon: UserCheck },
-    { href: '/admin/subscriptions', label: 'Subscriptions', icon: ShoppingCart },
-    { href: '/admin/billing', label: 'Billing Management', icon: Receipt },
-    { href: '/admin/content', label: 'Content Editor', icon: Settings },
-    { href: '/admin/blogs', label: 'Blogs', icon: FileText },
-    { href: '/admin/services', label: 'Services', icon: Briefcase },
-    { href: '/admin/contacts', label: 'Contacts', icon: Mail },
+    { href: `/${locale}/admin`, label: 'Dashboard', icon: Home },
+    { href: `/${locale}/admin/users`, label: 'Users (Clients)', icon: Users },
+    { href: `/${locale}/admin/consultants`, label: 'Consultants', icon: UserCheck },
+    { href: `/${locale}/admin/subscriptions`, label: 'Subscriptions', icon: ShoppingCart },
+    { href: `/${locale}/admin/billing`, label: 'Billing Management', icon: Receipt },
+    { href: `/${locale}/admin/content`, label: 'Content Editor', icon: Settings },
+    { href: `/${locale}/admin/solution`, label: 'Services', icon: Briefcase },
+    { href: `/${locale}/admin/contacts`, label: 'Contacts', icon: Mail },
   ]
 
   return (
@@ -57,7 +57,7 @@ export default function AdminSidebar() {
       </nav>
 
       <div className="p-2 md:p-4 border-t border-gray-700/50 space-y-1">
-        <Link href="/" title="Back to Site" className="flex items-center justify-center md:justify-start gap-2 px-2 md:px-4 py-2 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group md:hover:translate-x-1">
+        <Link href={`/${locale}/`} title="Back to Site" className="flex items-center justify-center md:justify-start gap-2 px-2 md:px-4 py-2 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group md:hover:translate-x-1">
           <Home size={16} className="group-hover:scale-110 transition-transform" />
           <span className="hidden md:block text-sm">Back to Site</span>
         </Link>

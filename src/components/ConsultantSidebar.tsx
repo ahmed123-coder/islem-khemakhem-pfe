@@ -7,18 +7,19 @@ import { Home, Settings, LogOut, Users, Calendar, Briefcase } from 'lucide-react
 export default function ConsultantSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const locale = pathname.split('/')[1] || 'en'
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/login')
+    router.push(`/${locale}/login`)
   }
 
   const links = [
-    { href: '/consultant', label: 'Dashboard', icon: Home },
-    { href: '/consultant/clients', label: 'Clients', icon: Users },
-    { href: '/consultant/reservations', label: 'Reservations', icon: Calendar },
-    { href: '/consultant/portfolio', label: 'Portfolio', icon: Briefcase },
-    { href: '/consultant/settings', label: 'Settings', icon: Settings },
+    { href: `/${locale}/consultant`, label: 'Dashboard', icon: Home },
+    { href: `/${locale}/consultant/clients`, label: 'Clients', icon: Users },
+    { href: `/${locale}/consultant/reservations`, label: 'Reservations', icon: Calendar },
+    { href: `/${locale}/consultant/portfolio`, label: 'Portfolio', icon: Briefcase },
+    { href: `/${locale}/consultant/settings`, label: 'Settings', icon: Settings },
   ]
 
   return (
@@ -49,7 +50,7 @@ export default function ConsultantSidebar() {
       </nav>
 
       <div className="p-2 md:p-4 border-t border-gray-700/50 space-y-1">
-        <Link href="/" title="Back to Site" className="flex items-center justify-center md:justify-start gap-2 px-2 md:px-4 py-2 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group md:hover:translate-x-1">
+        <Link href={`/${locale}/`} title="Back to Site" className="flex items-center justify-center md:justify-start gap-2 px-2 md:px-4 py-2 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group md:hover:translate-x-1">
           <Home size={16} className="group-hover:scale-110 transition-transform" />
           <span className="hidden md:block text-sm">Back to Site</span>
         </Link>

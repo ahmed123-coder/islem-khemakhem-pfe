@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { usePathname, useRouter } from 'next/navigation'
 import { 
   LayoutDashboard, 
   Users, 
@@ -18,26 +19,35 @@ import {
 import { DashboardSidebar, SidebarNavGroup } from '@/components/dashboard/DashboardSidebar'
 
 export function AdminSidebar() {
+  const pathname = usePathname()
+  const router = useRouter()
+  const locale = pathname.split('/')[1] || 'en'
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout', { method: 'POST' })
+    router.push(`/${locale}/login`)
+  }
+
   const groups: SidebarNavGroup[] = [
     {
       title: 'System Management',
       items: [
-        { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/admin/users', label: 'Users', icon: Users },
-        { href: '/admin/consultants', label: 'Consultants', icon: UserSquare2 },
-        { href: '/admin/subscriptions', label: 'Subscriptions', icon: CreditCard },
-        { href: '/admin/billing', label: 'Billing', icon: Receipt },
-        { href: '/admin/reviews', label: 'Reviews', icon: Star },
+        { href: `/${locale}/admin`, label: 'Dashboard', icon: LayoutDashboard },
+        { href: `/${locale}/admin/users`, label: 'Users', icon: Users },
+        { href: `/${locale}/admin/consultants`, label: 'Consultants', icon: UserSquare2 },
+        { href: `/${locale}/admin/subscriptions`, label: 'Subscriptions', icon: CreditCard },
+        { href: `/${locale}/admin/billing`, label: 'Billing', icon: Receipt },
+        { href: `/${locale}/admin/reviews`, label: 'Reviews', icon: Star },
       ]
     },
     {
       title: 'Content & Media',
       items: [
-        { href: '/admin/content', label: 'Site Editor', icon: Settings2 },
-        { href: '/admin/approches', label: 'Approches', icon: FileEdit },
-        { href: '/admin/solution', label: 'Solutions', icon: Briefcase },
-        { href: '/admin/contacts', label: 'Contacts', icon: Mail },
-        { href: '/admin/faqs', label: 'FAQs', icon: HelpCircle },
+        { href: `/${locale}/admin/content`, label: 'Site Editor', icon: Settings2 },
+        { href: `/${locale}/admin/approches`, label: 'Approches', icon: FileEdit },
+        { href: `/${locale}/admin/solution`, label: 'Solutions', icon: Briefcase },
+        { href: `/${locale}/admin/contacts`, label: 'Contacts', icon: Mail },
+        { href: `/${locale}/admin/faqs`, label: 'FAQs', icon: HelpCircle },
       ]
     }
   ]
@@ -51,7 +61,7 @@ export function AdminSidebar() {
         <span className="text-sm font-semibold">System Online</span>
       </div>
       <button 
-        onClick={() => fetch('/api/auth/logout', { method: 'POST' }).then(() => window.location.href = '/login')}
+        onClick={handleLogout}
         className="flex items-center gap-2 text-xs font-bold text-slate-300 hover:text-white transition-colors"
       >
         <LogOut className="w-4 h-4" />
