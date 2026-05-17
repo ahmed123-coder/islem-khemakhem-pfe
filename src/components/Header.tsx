@@ -16,6 +16,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
+import { SidebarToggle } from '@/components/dashboard/SidebarToggle'
+
 
 interface HeaderProps {
     title: string
@@ -95,13 +97,16 @@ export default function Header({ title }: HeaderProps) {
 
   return (
     <header className="h-20 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 flex items-center justify-between px-8 md:px-12 sticky top-0 z-40 font-sans">
-      <div className="flex flex-col">
-        <h2 className="text-xl font-black text-slate-900 tracking-tight">
-          {user ? `Welcome back, ${user.name || 'User'}!` : 'Welcome back!'}
-        </h2>
-        <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1">
-          Here is what's happening with your consulting.
-        </p>
+      <div className="flex items-center gap-3">
+        <SidebarToggle theme="client" />
+        <div className="flex flex-col">
+          <h2 className="text-xl font-black text-slate-900 tracking-tight">
+            {user ? `Welcome back, ${user.name || 'User'}!` : 'Welcome back!'}
+          </h2>
+          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1 hidden sm:block">
+            Here is what's happening with your consulting.
+          </p>
+        </div>
       </div>
       
       <div className="flex items-center gap-4 md:gap-6">

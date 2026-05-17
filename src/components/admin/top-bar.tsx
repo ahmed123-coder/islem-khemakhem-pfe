@@ -35,6 +35,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import Link from 'next/link'
 
 import { useRouter } from 'next/navigation'
+import { SidebarToggle } from '@/components/dashboard/SidebarToggle'
+
 
 export function AdminTopBar() {
   const router = useRouter()
@@ -111,7 +113,8 @@ export function AdminTopBar() {
   if (!mounted) return null
 
   return (
-    <header className="h-20 border-b border-slate-200/60 bg-white/50 backdrop-blur-xl sticky top-0 z-40 px-6 md:px-10 flex items-center justify-end font-sans">
+    <header className="h-20 border-b border-slate-200/60 bg-white/50 backdrop-blur-xl sticky top-0 z-40 px-6 md:px-10 flex items-center justify-between font-sans">
+      <SidebarToggle theme="admin" />
 
       <div className="flex items-center gap-4">
         
