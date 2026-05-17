@@ -99,10 +99,10 @@ function handleAppError(
  * Handle Zod validation errors (Requirement 3.3)
  */
 function handleValidationError(
-  error: ZodError,
+  error: any,
   context: Record<string, unknown>
 ): NextResponse<ErrorResponse> {
-  const errors = error.errors.map(err => ({
+  const errors = error.errors.map((err: any) => ({
     field: err.path.join('.'),
     message: err.message
   }));

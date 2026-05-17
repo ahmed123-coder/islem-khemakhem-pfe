@@ -17,7 +17,7 @@ interface Order {
   closedAt: string | null
   client: { id: string; name: string | null; email: string }
   consultant: { id: string; name: string } | null
-  serviceTier: { id: string; tierType: string; price: string; service: { name: string } }
+  serviceTier: { id: string; tierType: string; price: string; maxMessages: number | null; maxCallDuration: number | null; service: { id: string; name: string } }
 }
 
 export default function SubscriptionsPage() {

@@ -72,7 +72,7 @@ export default function ConsultantReviewsPage() {
                             </p>
                           </div>
                         </div>
-                        <Rating value={review.rating} readOnly size={20} />
+                        <Rating value={review.rating} readonly size={20} />
                       </div>
 
                       <div className="relative">

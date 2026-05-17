@@ -48,7 +48,7 @@ export function validate<T>(
   const result = schema.safeParse(data);
   
   if (!result.success) {
-    const errors = result.error.errors.map(err => ({
+    const errors = (result.error as any).errors.map((err: any) => ({
       field: err.path.join('.'),
       message: err.message,
       code: err.code
@@ -75,7 +75,7 @@ export function validateSafe<T>(
   if (!result.success) {
     return {
       success: false,
-      errors: result.error.errors.map(err => ({
+      errors: (result.error as any).errors.map((err: any) => ({
         field: err.path.join('.'),
         message: err.message,
         code: err.code

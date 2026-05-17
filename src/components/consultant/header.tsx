@@ -46,9 +46,9 @@ const navItems = [
   { href: '/consultant/settings', label: 'Settings', icon: Settings2 },
 ]
 
-export function ConsultantHeader() {
+export function ConsultantHeader({ user: propUser }: { user?: any } = {}) {
   const pathname = usePathname()
-  const [user, setUser] = React.useState<any>(null)
+  const [user, setUser] = React.useState<any>(propUser || null)
   const [notifications, setNotifications] = React.useState<any[]>([])
   const [unreadCount, setUnreadCount] = React.useState(0)
   const [mounted, setMounted] = React.useState(false)

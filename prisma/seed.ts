@@ -292,6 +292,14 @@ async function main() {
           image: '/solutionHero.jpeg',
         },
       },
+      {
+        key: 'hero-contact',
+        value: {
+          title: 'Parlons de votre projet',
+          subtitle: 'Notre équipe vous répond sous 24 heures. Contactez-nous pour transformer vos défis en opportunités de croissance.',
+          image: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1600',
+        },
+      },
     ],
   });
   console.log('✅ Created site content');

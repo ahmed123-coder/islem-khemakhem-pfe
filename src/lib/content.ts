@@ -10,6 +10,7 @@ export interface HeroContent {
   subtitle: string
   ctaText: string
   ctaLink: string
+  image?: string
 }
 
 export interface FooterContent {

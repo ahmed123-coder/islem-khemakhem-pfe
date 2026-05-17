@@ -29,7 +29,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { cn } from '@/lib/utils'
 
-type Section = 'hero' | 'logo' | 'footer' | 'hero-solutions' | 'hero-approches'
+type Section = 'hero' | 'logo' | 'footer' | 'hero-solutions' | 'hero-approches' | 'hero-contact'
 
 export default function SiteVisualEditor() {
   const [activeTab, setActiveTab] = React.useState<Section>('hero')
@@ -120,6 +120,9 @@ export default function SiteVisualEditor() {
             <TabsTrigger value="hero-approches" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
               <AppWindow className="w-4 h-4" /> Approches Hero
             </TabsTrigger>
+            <TabsTrigger value="hero-contact" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
+              <AppWindow className="w-4 h-4" /> Contact Hero
+            </TabsTrigger>
             <TabsTrigger value="logo" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
               <ImageIcon className="w-4 h-4" /> Global Logo
             </TabsTrigger>
@@ -143,7 +146,7 @@ export default function SiteVisualEditor() {
         </div>
 
         <TabsContent value={activeTab} className="mt-0 outline-none">
-          {['hero', 'hero-solutions', 'hero-approches'].includes(activeTab) && (
+          {['hero', 'hero-solutions', 'hero-approches', 'hero-contact'].includes(activeTab) && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Control Panel */}
             <div className="lg:col-span-12 space-y-8">

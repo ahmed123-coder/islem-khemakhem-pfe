@@ -260,7 +260,7 @@ export default function OrderDetails() {
   const updateMilestoneStatus = async (milestoneId: string, status: string) => {
     try {
       // Optimistic update
-      setOrder(prev => {
+      setOrder((prev: any) => {
         if (!prev) return prev
         return {
           ...prev,

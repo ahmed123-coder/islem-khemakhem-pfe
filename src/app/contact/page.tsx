@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -18,6 +18,19 @@ export default function Contact() {
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
+  const [heroData, setHeroData] = useState<any>(null)
+
+  useEffect(() => {
+    fetch('/api/content/hero-contact', { cache: 'no-store' })
+      .then(res => res.ok ? res.json() : null)
+      .then(heroJSON => {
+        const heroVal = heroJSON?.data?.value || heroJSON?.value;
+        if (heroVal) {
+          setHeroData(heroVal)
+        }
+      })
+      .catch(err => console.error(err))
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -50,21 +63,27 @@ export default function Contact() {
 
   return (
     <div>
-      {/* Hero Section - Styled like home page */}
-      <section className="relative bg-[#2B4F8A] text-white overflow-hidden min-h-[300px]">
-        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1600')] bg-cover bg-center opacity-30"></div>
+      {/* Hero Section */}
+      <section 
+        className="relative bg-[#2B4F8A] text-white overflow-hidden min-h-[300px]"
+        style={heroData?.image 
+          ? { backgroundImage: `url(${heroData.image})`, backgroundSize: 'cover', backgroundPosition: 'center' } 
+          : { backgroundImage: `url('https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1600')`, backgroundSize: 'cover', backgroundPosition: 'center' }
+        }
+      >
+        <div className="absolute inset-0 bg-[#2B4F8A]/80 mix-blend-multiply" />
         
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 z-10">
           <div className="max-w-4xl">
             <div className="inline-block bg-[#7AB648] text-white px-4 py-2 rounded-full text-sm font-medium mb-6">
               Contact
             </div>
             <h1 className="text-5xl lg:text-6xl font-serif font-bold mb-6 leading-tight text-white">
-              Parlons de votre projet
+              {heroData?.title || 'Parlons de votre projet'}
               <div className="w-22 h-1 bg-[#7AB648] rounded-full mt-4"></div>
             </h1>
-            <p className="text-base text-white/75 leading-relaxed border-l-4 border-[#7AB648] pl-4 italic">
-              Notre équipe vous répond sous 24 heures. Contactez-nous pour transformer vos défis en opportunités de croissance.
+            <p className="text-base text-white/90 leading-relaxed border-l-4 border-[#7AB648] pl-4 italic whitespace-pre-line">
+              {heroData?.subtitle || 'Notre équipe vous répond sous 24 heures. Contactez-nous pour transformer vos défis en opportunités de croissance.'}
             </p>
           </div>
         </div>
