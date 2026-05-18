@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslations } from 'next-intl'
 import { 
   Plus, 
   Trash2, 
@@ -58,6 +59,7 @@ type Tier = {
 }
 
 export default function ServicesCMS() {
+  const t = useTranslations("adminPage.solution")
   const [services, setServices] = React.useState<Service[]>([])
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [form, setForm] = React.useState<Partial<Service>>({})
@@ -233,9 +235,9 @@ export default function ServicesCMS() {
 
   return (
     <StandardPage
-      title="Services Engine"
-      description="Design and manage your service portfolio, pricing tiers, and capabilities."
-      breadcrumbs={[{ label: 'Content' }, { label: 'Services' }]}
+      title={t("title")}
+      description={t("description")}
+      breadcrumbs={[{ label: t("breadcrumbs.content") }, { label: t("breadcrumbs.services") }]}
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: List Pane */}
@@ -244,7 +246,7 @@ export default function ServicesCMS() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Filter services..."
+              placeholder={t("filterServices")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full h-12 pl-12 pr-4 rounded-2xl bg-white border border-slate-100 shadow-sm focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 text-sm placeholder:text-slate-400 transition-all font-medium"
@@ -262,7 +264,7 @@ export default function ServicesCMS() {
               <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                 <Plus className="w-4 h-4" />
               </div>
-              Define New Service
+              Define New {t("service")}
             </button>
 
             {filteredServices.map((service, idx) => (
@@ -331,15 +333,15 @@ export default function ServicesCMS() {
                   <div className="absolute -inset-2 bg-blue-50 rounded-[40px] -z-10 animate-pulse" />
                   <Sparkles className="w-10 h-10 text-blue-200" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">No Service Selected</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{t("noServiceSelected")}</h3>
                 <p className="text-sm text-slate-500 max-w-xs font-medium mb-8">
-                  Pick a service or create a new offering to manage parameters, tiers, and capabilities.
+                  {t("noServiceDesc")}
                 </p>
                 <Button 
                   onClick={handleCreateNew}
                   className="rounded-2xl bg-slate-900 hover:bg-black text-white px-8 h-12 font-bold shadow-xl shadow-slate-200 transition-all hover:-translate-y-1"
                 >
-                  Get Started <ArrowRight className="w-4 h-4 ml-2" />
+                  {t("getStarted")} <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </motion.div>
             ) : (
@@ -361,9 +363,9 @@ export default function ServicesCMS() {
                         </div>
                         <div>
                           <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                            {selectedId ? 'Refine Service' : 'New Offering'}
+                            {selectedId ? t("refineService") : t("newOffering")}
                           </h2>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{selectedId ? `SERVICE ID: ${selectedId.slice(0,8)}` : 'Strategic Resource Creation'}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{selectedId ? `${t("serviceId")}: ${selectedId.slice(0,8)}` : t("strategicResource")}</p>
                         </div>
                       </div>
                       <Button 
@@ -380,20 +382,20 @@ export default function ServicesCMS() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-6">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Service Identity</label>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">{t("serviceIdentity")}</label>
                           <Input 
                             value={form.name || ''} 
                             onChange={(e) => setForm({ ...form, name: e.target.value })}
-                            placeholder="e.g. Strategic Audit" 
+                            placeholder={t("eService")} 
                             className="h-14 rounded-2xl border-slate-100 bg-white/50 backdrop-blur-sm shadow-sm focus:ring-4 focus:ring-blue-600/5 text-base font-bold placeholder:font-medium transition-all"
                           />
                         </div>
                         <div className="space-y-2">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Classification</label>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">{t("classification")}</label>
                           <Input 
                             value={form.category || ''} 
                             onChange={(e) => setForm({ ...form, category: e.target.value })}
-                            placeholder="e.g. Business Strategy" 
+                            placeholder={t("eClassification")} 
                             className="h-14 rounded-2xl border-slate-100 bg-white/50 backdrop-blur-sm shadow-sm focus:ring-4 focus:ring-blue-600/5 text-base font-bold placeholder:font-medium transition-all"
                           />
                         </div>
@@ -401,11 +403,11 @@ export default function ServicesCMS() {
 
                       <div className="space-y-6">
                         <div className="space-y-2 h-full flex flex-col">
-                          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">Value Proposition (Bio)</label>
+                          <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1">{t("valueProp")}</label>
                           <Textarea 
                             value={form.description || ''} 
                             onChange={(e) => setForm({ ...form, description: e.target.value })}
-                            placeholder="Explain the service impact..." 
+                            placeholder={t("explainImpact")} 
                             className="flex-1 rounded-3xl border-slate-100 bg-white/50 backdrop-blur-sm shadow-sm focus:ring-4 focus:ring-blue-600/5 text-sm font-medium resize-none p-4"
                           />
                         </div>
@@ -413,7 +415,7 @@ export default function ServicesCMS() {
 
                       {/* Visual Content: Image Dropzones */}
                       <div className="md:col-span-2">
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 mb-3 block">Digital Assets</label>
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 mb-3 block">{t("digitalAssets")}</label>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <label className="group relative h-40 rounded-[32px] border-2 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer overflow-hidden">
                             {(iconFile || form.icon) ? (
@@ -421,11 +423,11 @@ export default function ServicesCMS() {
                             ) : (
                               <>
                                 <Upload className="w-8 h-8 text-slate-300 group-hover:text-blue-400 transition-colors mb-2" />
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Brand Icon</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("brandIcon")}</span>
                               </>
                             )}
                             <input type="file" accept="image/*" onChange={e => handleFileChange(e, 'icon')} className="hidden" />
-                            <div className="absolute inset-x-0 bottom-0 p-2 bg-white/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-center text-blue-600 uppercase tracking-widest">Change Icon</div>
+                            <div className="absolute inset-x-0 bottom-0 p-2 bg-white/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-center text-blue-600 uppercase tracking-widest">{t("changeIcon")}</div>
                           </label>
 
                           <label className="group relative h-40 rounded-[32px] border-2 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer overflow-hidden">
@@ -434,11 +436,11 @@ export default function ServicesCMS() {
                             ) : (
                               <>
                                 <ImageIcon className="w-8 h-8 text-slate-300 group-hover:text-blue-400 transition-colors mb-2" />
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hero Image</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t("heroImage")}</span>
                               </>
                             )}
                             <input type="file" accept="image/*" onChange={e => handleFileChange(e, 'image')} className="hidden" />
-                            <div className="absolute inset-x-0 bottom-0 p-2 bg-white/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-center text-blue-600 uppercase tracking-widest">Change Cover</div>
+                            <div className="absolute inset-x-0 bottom-0 p-2 bg-white/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-center text-blue-600 uppercase tracking-widest">{t("changeCover")}</div>
                           </label>
                         </div>
                       </div>
@@ -447,9 +449,9 @@ export default function ServicesCMS() {
                     {/* Tier Management Suite */}
                     <section className="pt-10 border-t border-slate-100">
                       <div className="flex items-center justify-between mb-8">
-                        <div>
-                          <h3 className="text-xl font-bold text-slate-900">Tier Architecture</h3>
-                          <p className="text-xs text-slate-400 font-medium">Configure value packages and resource constraints.</p>
+<div>
+                           <h3 className="text-xl font-bold text-slate-900">{t("tierArchitecture")}</h3>
+                           <p className="text-xs text-slate-400 font-medium">{t("tierArchitectureDesc")}</p>
                         </div>
                         <Button 
                           variant="outline" 
@@ -457,7 +459,7 @@ export default function ServicesCMS() {
                           onClick={handleAddNewTier}
                           className="rounded-xl border-slate-200 font-bold text-[10px] uppercase tracking-widest px-4 h-10 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
                         >
-                          <FolderPlus className="w-4 h-4 mr-2" /> Synthesize Tier
+                          <FolderPlus className="w-4 h-4 mr-2" /> {t("synthesizeTier")}
                         </Button>
                       </div>
 
@@ -466,15 +468,15 @@ export default function ServicesCMS() {
                         {editTierId && (
                            <Card className="p-6 rounded-[32px] border-2 border-blue-600 shadow-xl shadow-blue-50 bg-white/50 backdrop-blur-sm mb-6 animate-in slide-in-from-top-4 duration-300">
                              <header className="flex items-center justify-between mb-6">
-                               <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">
-                                 {editTierId === 'new' ? 'New Implementation' : 'Modify Parameters'}
-                               </h4>
+<h4 className="text-sm font-black text-slate-900 uppercase tracking-widest">
+                                  {editTierId === 'new' ? t("newImplementation") : t("modifyParameters")}
+                                </h4>
                                <Button variant="ghost" size="icon" onClick={() => setEditTierId(null)} className="rounded-xl"><X className="w-4 h-4 text-slate-400" /></Button>
                              </header>
                              
                              <div className="grid grid-cols-2 gap-6 mb-6">
-                               <div className="space-y-2">
-                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Class Type</label>
+<div className="space-y-2">
+                                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("classType")}</label>
                                  <select 
                                     className="w-full h-12 bg-white rounded-2xl border-slate-100 px-4 font-bold text-sm outline-none focus:ring-4 focus:ring-blue-600/5 transition-all"
                                     value={tierForm.tierType}
@@ -486,18 +488,18 @@ export default function ServicesCMS() {
                                     <option value="ULTIMATE">ULTIMATE</option>
                                   </select>
                                </div>
-                               <div className="space-y-2">
-                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Yield Price (DT)</label>
+<div className="space-y-2">
+                                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("yieldPrice")}</label>
                                  <Input type="number" value={tierForm.price || 0} onChange={e => setTierForm({ ...tierForm, price: Number(e.target.value) })} className="h-12 rounded-2xl bg-white font-black italic" />
                                </div>
-                               <div className="space-y-2">
-                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Max Messages</label>
-                                 <Input placeholder="Unlimited" type="number" value={tierForm.maxMessages || ''} onChange={e => setTierForm({ ...tierForm, maxMessages: e.target.value ? Number(e.target.value) : null })} className="h-12 rounded-2xl bg-white font-bold" />
-                               </div>
-                               <div className="space-y-2">
-                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Call Quota (Min)</label>
-                                 <Input 
-                                   placeholder={tierForm.tierType === 'ULTIMATE' ? 'Unlimited' : 'None'} 
+<div className="space-y-2">
+                                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("maxMessages")}</label>
+                                  <Input placeholder={t("unlimited")} type="number" value={tierForm.maxMessages || ''} onChange={e => setTierForm({ ...tierForm, maxMessages: e.target.value ? Number(e.target.value) : null })} className="h-12 rounded-2xl bg-white font-bold" />
+                                </div>
+                                <div className="space-y-2">
+                                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("callQuota")}</label>
+                                  <Input 
+                                    placeholder={tierForm.tierType === 'ULTIMATE' ? t("unlimited") : t("none")}
                                    type="number" 
                                    disabled={tierForm.tierType === 'ULTIMATE'}
                                    value={tierForm.tierType === 'ULTIMATE' ? '' : (tierForm.maxCallDuration || '')} 
@@ -509,9 +511,9 @@ export default function ServicesCMS() {
                                {/* Sessions Config Section */}
                                <div className="col-span-2 space-y-4 pt-4 border-t border-slate-50">
                                  <div className="flex items-center justify-between">
-                                    <div className="flex flex-col">
-                                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-900">Config: Reservation Pipeline</label>
-                                      <p className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Define sequence of engagement sessions</p>
+<div className="flex flex-col">
+                                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-900">{t("configPipeline")}</label>
+                                       <p className="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">{t("configPipelineDesc")}</p>
                                     </div>
                                     <Button 
                                       type="button"
@@ -519,11 +521,11 @@ export default function ServicesCMS() {
                                       size="sm" 
                                       onClick={() => setTierForm({ 
                                         ...tierForm, 
-                                        sessionsConfig: [...(tierForm.sessionsConfig || []), { duration: 60, label: `Session ${(tierForm.sessionsConfig?.length || 0) + 1}` }] 
+                                        sessionsConfig: [...(tierForm.sessionsConfig || []), { duration: 60, label: `${t("session")} ${(tierForm.sessionsConfig?.length || 0) + 1}` }] 
                                       })}
                                       className="text-blue-600 font-bold text-[10px] h-8 rounded-lg bg-blue-50 hover:bg-blue-100"
                                     >
-                                      <Plus className="w-3 h-3 mr-1" /> Add Phase
+                                      <Plus className="w-3 h-3 mr-1" /> {t("addPhase")}
                                     </Button>
                                  </div>
 
@@ -532,8 +534,8 @@ export default function ServicesCMS() {
                                      <div key={idx} className="flex items-center gap-3 animate-in fade-in slide-in-from-left-2 duration-300">
                                        <div className="flex-1 flex items-center gap-2">
                                           <div className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400">{idx + 1}</div>
-                                          <Input 
-                                              placeholder="Label (e.g. Kickoff)" 
+<Input 
+                                               placeholder={t("eKickoff")}
                                               value={session.label} 
                                               onChange={e => {
                                                 const newCfg = [...(tierForm.sessionsConfig || [])]
@@ -554,7 +556,7 @@ export default function ServicesCMS() {
                                             }}
                                             className="w-20 h-8 border-none bg-transparent text-xs font-black text-center" 
                                           />
-                                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter pr-2">Min</span>
+                                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter pr-2">{t("min")}</span>
                                        </div>
                                        <Button 
                                          type="button"
@@ -581,10 +583,10 @@ export default function ServicesCMS() {
                                        : "bg-emerald-50 border-emerald-100 text-emerald-600"
                                    )}>
                                       <AlertCircle className="w-4 h-4" />
-                                      <span className="text-[10px] font-bold uppercase tracking-tight">
-                                        Pipeline Total: {tierForm.sessionsConfig.reduce((acc, s) => acc + s.duration, 0)} min 
-                                        {tierForm.tierType === 'ULTIMATE' ? ' (Illimité autorisé)' : ` / ${tierForm.maxCallDuration || 0} min allocation`}
-                                      </span>
+<span className="text-[10px] font-bold uppercase tracking-tight">
+                                         {t("pipelineTotal")}: {tierForm.sessionsConfig.reduce((acc, s) => acc + s.duration, 0)} {t("min")}
+                                         {tierForm.tierType === 'ULTIMATE' ? ` (${t("unlimited")})` : ` / ${tierForm.maxCallDuration || 0} ${t("minAllocation")}`}
+                                       </span>
                                    </div>
                                  )}
                                </div>
@@ -597,18 +599,18 @@ export default function ServicesCMS() {
                                     onChange={e => setTierForm({ ...tierForm, canSelectConsultant: e.target.checked })}
                                     className="w-4 h-4 rounded-lg text-blue-600"
                                   />
-                                  <label htmlFor="canSelect" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 cursor-pointer">Protocol: Allow expert selection</label>
+                                  <label htmlFor="canSelect" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 cursor-pointer">{t("allowExpert")}</label>
                                </div>
-                               <div className="col-span-2 space-y-2">
-                                 <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Constraint Bio</label>
+<div className="col-span-2 space-y-2">
+                                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">{t("constraintBio")}</label>
                                  <Textarea value={tierForm.description || ''} onChange={e => setTierForm({ ...tierForm, description: e.target.value })} className="rounded-2xl bg-white h-20" />
                                </div>
                              </div>
                              
-                             <footer className="flex gap-3 pt-6 border-t border-slate-100">
-                               <Button onClick={handleTierSubmit} className="rounded-xl bg-blue-600 text-white font-black italic h-12 flex-1 shadow-lg shadow-blue-100">Commit Tier</Button>
-                               <Button variant="ghost" onClick={() => setEditTierId(null)} className="rounded-xl font-bold h-12">Abandon</Button>
-                             </footer>
+<footer className="flex gap-3 pt-6 border-t border-slate-100">
+                               <Button onClick={handleTierSubmit} className="rounded-xl bg-blue-600 text-white font-black italic h-12 flex-1 shadow-lg shadow-blue-100">{t("commitTier")}</Button>
+                               <Button variant="ghost" onClick={() => setEditTierId(null)} className="rounded-xl font-bold h-12">{t("abandon")}</Button>
+                            </footer>
                            </Card>
                         )}
 
@@ -630,12 +632,12 @@ export default function ServicesCMS() {
                                     </div>
                                     <div>
                                       <div className="flex items-center gap-2">
-                                        <span className="font-black text-slate-900 uppercase tracking-tighter">{tier.tierType} Protocol</span>
+                                        <span className="font-black text-slate-900 uppercase tracking-tighter">{tier.tierType} {t("protocol")}</span>
                                         <Badge className="bg-blue-50 text-blue-600 border-none font-black text-[9px] uppercase">{tier.price} DT</Badge>
                                       </div>
-                                      <span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.15em]">
-                                        {tier.maxMessages ? `${tier.maxMessages} COMMS` : 'UNLIMITED COMMS'} • {tier.maxCallDuration ? `${tier.maxCallDuration} MIN SYNC` : 'NO LIVE SYNC'}
-                                      </span>
+<span className="text-[9px] text-slate-400 font-bold uppercase tracking-[0.15em]">
+                                         {tier.maxMessages ? `${tier.maxMessages} ${t("comms")}` : t("unlimitedComms")} • {tier.maxCallDuration ? `${tier.maxCallDuration} ${t("minSync")}` : t("noLiveSync")}
+                                       </span>
                                     </div>
                                   </div>
                                 </AccordionTrigger>
@@ -661,13 +663,13 @@ export default function ServicesCMS() {
                               </div>
                               <AccordionContent className="px-6 pb-6 pt-2">
                                 <div className="p-4 rounded-2xl bg-white border border-slate-100">
-                                   <p className="text-xs font-bold text-slate-600 leading-relaxed italic">
-                                     {tier.description || 'Standard operating procedure for this tier allocation.'}
-                                   </p>
+<p className="text-xs font-bold text-slate-600 leading-relaxed italic">
+                                      {tier.description || t("standardProc")}
+                                    </p>
                                    <div className="mt-4 flex gap-4 border-t border-slate-50 pt-4">
                                       <div className="flex items-center gap-2">
                                         <div className={cn("w-2 h-2 rounded-full", tier.canSelectConsultant ? "bg-emerald-500 animate-pulse" : "bg-slate-300")} />
-                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Expert Freedom: {tier.canSelectConsultant ? 'Granted' : 'Locked'}</span>
+                                        <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">{t("expertFreedom")}: {tier.canSelectConsultant ? t("granted") : t("locked")}</span>
                                       </div>
                                    </div>
                                 </div>
@@ -678,10 +680,10 @@ export default function ServicesCMS() {
                       </div>
                       
                       {tiers.length === 0 && !editTierId && (
-                        <div className="p-12 rounded-[40px] bg-slate-50/50 border border-dashed border-slate-200 text-center">
-                          <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-                          <p className="text-xs font-black uppercase tracking-widest text-slate-400">Pricing Pipeline Empty</p>
-                          <p className="text-[10px] font-bold text-slate-300 mt-1 uppercase">Initialize at least one engagement tier.</p>
+<div className="p-12 rounded-[40px] bg-slate-50/50 border border-dashed border-slate-200 text-center">
+                           <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                           <p className="text-xs font-black uppercase tracking-widest text-slate-400">{t("pipelineEmpty")}</p>
+                           <p className="text-[10px] font-bold text-slate-300 mt-1 uppercase">{t("initTier")}</p>
                         </div>
                       )}
                     </section>
@@ -695,7 +697,7 @@ export default function ServicesCMS() {
                         className="text-red-400 hover:text-red-500 hover:bg-red-50 rounded-2xl font-bold text-xs uppercase tracking-widest px-6"
                         onClick={handleDelete}
                       >
-                        <Trash2 className="w-4 h-4 mr-2" /> Dismantle Service
+                        <Trash2 className="w-4 h-4 mr-2" /> {t("dismantleService")}
                       </Button>
                     )}
                     <Button 
@@ -703,7 +705,7 @@ export default function ServicesCMS() {
                       onClick={handleSubmit}
                       className="rounded-[28px] bg-blue-600 hover:bg-blue-700 text-white font-black italic text-lg px-12 h-16 shadow-2xl shadow-blue-100 transition-all hover:scale-105 active:scale-95 disabled:bg-slate-300"
                     >
-                      {submitting ? 'Synthesizing...' : 'Commit Changes'} <Save className="w-5 h-5 ml-3" />
+                      {submitting ? t("synthesizing") : t("commitChanges")} <Save className="w-5 h-5 ml-3" />
                     </Button>
                   </div>
                 </Card>

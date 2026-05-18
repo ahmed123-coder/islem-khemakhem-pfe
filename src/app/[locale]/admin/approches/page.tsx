@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslations } from 'next-intl'
 import { 
   Plus, 
   Trash2, 
@@ -43,6 +44,7 @@ type Blog = {
 }
 
 export default function BlogsCMS() {
+  const t = useTranslations("adminPage.approches")
   const [blogs, setBlogs] = React.useState<Blog[]>([])
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [form, setForm] = React.useState<Partial<Blog>>({ published: false })
@@ -158,9 +160,9 @@ export default function BlogsCMS() {
 
   return (
     <StandardPage
-      title="Content Engine"
-      description="Draft, edit, and publish engaging blog articles and company updates."
-      breadcrumbs={[{ label: 'Content' }, { label: 'Blogs' }]}
+      title={t("title")}
+      description={t("description")}
+      breadcrumbs={[{ label: t("breadcrumbs.content") }, { label: t("breadcrumbs.blogs") }]}
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Feed Pane */}
@@ -169,7 +171,7 @@ export default function BlogsCMS() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Search drafts & articles..."
+              placeholder={t("searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full h-12 pl-12 pr-4 rounded-2xl bg-white border border-slate-100 shadow-sm focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 text-sm placeholder:text-slate-400 transition-all font-medium"
@@ -187,7 +189,7 @@ export default function BlogsCMS() {
               <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                 <Plus className="w-4 h-4" />
               </div>
-              Draft New Entry
+              Draft {t("newEntry")}
             </button>
 
             {filteredBlogs.map((blog, idx) => (
@@ -227,7 +229,7 @@ export default function BlogsCMS() {
                         </Badge>
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
                           <Calendar className="w-2.5 h-2.5" />
-                          {blog.createdAt ? new Date(blog.createdAt).toLocaleDateString() : 'Few mins ago'}
+                          {blog.createdAt ? new Date(blog.createdAt).toLocaleDateString() : t("fewMinsAgo")}
                         </span>
                       </div>
                     </div>
@@ -257,15 +259,15 @@ export default function BlogsCMS() {
                   <div className="absolute -inset-2 bg-blue-50 rounded-[40px] -z-10 animate-pulse" />
                   <Rocket className="w-10 h-10 text-blue-200" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Editor Ready</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{t("editorReady")}</h3>
                 <p className="text-sm text-slate-500 max-w-xs font-medium mb-8">
-                  Create beautiful, high-impact articles to build authority and reach more clients.
+                  {t("editorReadyDesc")}
                 </p>
                 <Button 
                   onClick={handleCreateNew}
                   className="rounded-2xl bg-slate-900 hover:bg-black text-white px-8 h-12 font-bold shadow-xl shadow-slate-200 transition-all hover:-translate-y-1"
                 >
-                  Create New Article <ArrowRight className="w-4 h-4 ml-2" />
+                  {t("createNew")} <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </motion.div>
             ) : (
@@ -284,9 +286,9 @@ export default function BlogsCMS() {
                         checked={form.published} 
                         onCheckedChange={(v) => setForm({ ...form, published: v })} 
                        />
-                       <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">
-                         {form.published ? 'Published' : 'Draft Mode'}
-                       </span>
+<span className="text-xs font-bold text-slate-600 uppercase tracking-widest">
+                          {form.published ? t("published") : t("draftMode")}
+                        </span>
                     </div>
                     <div className="h-4 w-px bg-slate-100" />
                     <button 
@@ -297,7 +299,7 @@ export default function BlogsCMS() {
                       )}
                     >
                       <Eye className="w-4 h-4" />
-                      {showPreview ? 'Hide Preview' : 'Live Preview'}
+                      {showPreview ? t("hidePreview") : t("livePreview")}
                     </button>
                   </div>
                   <Button 
@@ -321,12 +323,12 @@ export default function BlogsCMS() {
                     <div className="relative space-y-8">
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
-                          <Type className="w-3 h-3" /> Article Headline
+                          <Type className="w-3 h-3" /> {t("articleHeadline")}
                         </label>
                         <Input 
                           value={form.title || ''} 
                           onChange={(e) => setForm({ ...form, title: e.target.value })}
-                          placeholder="What's the big story?" 
+                          placeholder={t("whatsTheStory")} 
                           className="h-16 text-2xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0 placeholder:text-slate-200"
                         />
                       </div>
@@ -334,7 +336,7 @@ export default function BlogsCMS() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
-                            <ImageIcon className="w-3 h-3" /> Hero Image
+                            <ImageIcon className="w-3 h-3" /> {t("heroImage")}
                           </label>
                           <div className="group relative h-48 rounded-[32px] border-2 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer overflow-hidden">
                             <input 
@@ -350,7 +352,7 @@ export default function BlogsCMS() {
                             ) : (
                               <>
                                 <Plus className="w-10 h-10 text-slate-200 group-hover:text-blue-400 transition-colors" />
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">Select Brilliance</span>
+                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">{t("selectBrilliance")}</span>
                               </>
                             )}
                           </div>
@@ -358,7 +360,7 @@ export default function BlogsCMS() {
 
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
-                            <Sparkles className="w-3 h-3" /> Icon
+                            <Sparkles className="w-3 h-3" /> {t("icon")}
                           </label>
                           <div className="group relative h-48 rounded-[32px] border-2 border-dashed border-slate-100 bg-slate-50/50 flex flex-col items-center justify-center hover:border-blue-400 hover:bg-blue-50/30 transition-all cursor-pointer overflow-hidden">
                             <input 
@@ -374,7 +376,7 @@ export default function BlogsCMS() {
                             ) : (
                               <>
                                 <Plus className="w-10 h-10 text-slate-200 group-hover:text-blue-400 transition-colors" />
-                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">Upload Icon</span>
+                                <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] mt-3">{t("uploadIcon")}</span>
                               </>
                             )}
                           </div>
@@ -383,19 +385,19 @@ export default function BlogsCMS() {
 
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
-                          <AlignLeft className="w-3 h-3" /> Short Excerpt
+                          <AlignLeft className="w-3 h-3" /> {t("shortExcerpt")}
                         </label>
                         <Textarea 
                           value={form.excerpt || ''} 
                           onChange={(e) => setForm({ ...form, excerpt: e.target.value })}
-                          placeholder="A quick summary..." 
+                          placeholder={t("quickSummary")} 
                           className="min-h-[80px] border border-slate-100 rounded-2xl bg-white shadow-sm px-4 py-3 text-sm font-medium resize-none placeholder:text-slate-300 focus-visible:ring-blue-600/20"
                         />
                       </div>
 
                       <div className="space-y-4 pt-4 border-t border-slate-50">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
-                          <AlignLeft className="w-3 h-3" /> Narrative Body
+                          <AlignLeft className="w-3 h-3" /> {t("narrativeBody")}
                         </label>
                         
                         {/* Simulation of a Rich Text toolbar */}
@@ -411,7 +413,7 @@ export default function BlogsCMS() {
                         <Textarea 
                           value={form.content || ''} 
                           onChange={(e) => setForm({ ...form, content: e.target.value })}
-                          placeholder="Begin your narrative here..." 
+                          placeholder={t("beginNarrative")} 
                           className="min-h-[400px] border-none bg-transparent shadow-none px-0 focus-visible:ring-0 text-base font-medium leading-relaxed resize-none placeholder:text-slate-200"
                         />
                       </div>
@@ -428,7 +430,7 @@ export default function BlogsCMS() {
                         className="fixed top-24 right-10 bottom-10 w-[450px] bg-white rounded-[40px] shadow-2xl border border-slate-100 z-50 overflow-hidden flex flex-col"
                       >
                          <div className="h-14 border-b border-slate-50 flex items-center justify-between px-6 bg-slate-50/30">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Website Real-time Preview</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t("websitePreview")}</span>
                             <button onClick={() => setShowPreview(false)}><X className="w-4 h-4 text-slate-300" /></button>
                          </div>
                          <div className="flex-1 overflow-y-auto p-8 space-y-6">
@@ -451,14 +453,14 @@ export default function BlogsCMS() {
                             <div className="flex items-center gap-3">
                                <div className="w-8 h-8 rounded-full bg-blue-600" />
                                <div className="text-[10px] font-bold uppercase tracking-wider">
-                                  <p className="text-slate-900">DSL Editor</p>
-                                  <p className="text-slate-400">Published Today</p>
+<p className="text-slate-900">DSL Editor</p>
+                                   <p className="text-slate-400">{t("publishedToday")}</p>
                                </div>
                             </div>
                             <div className="space-y-4">
                                <p className="text-sm text-slate-600 leading-relaxed font-medium">
-                                 {form.content || 'Start typing in the editor to see your content come to life here...'}
-                               </p>
+{form.content || t("startTyping")}
+                                </p>
                             </div>
                          </div>
                       </motion.div>
@@ -472,7 +474,7 @@ export default function BlogsCMS() {
                       onClick={handleDelete}
                       className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl font-bold text-sm px-6"
                     >
-                      <Trash2 className="w-4 h-4 mr-2" /> Discard Narrative
+                      <Trash2 className="w-4 h-4 mr-2" /> {t("discardNarrative")}
                     </Button>
                     <Button 
                       onClick={handleSave}
@@ -480,7 +482,7 @@ export default function BlogsCMS() {
                       className="rounded-[24px] bg-blue-600 hover:bg-blue-700 text-white font-black italic text-lg px-10 h-16 shadow-2xl shadow-blue-200 transition-all hover:scale-105 active:scale-95 disabled:opacity-50 disabled:pointer-events-none"
                     >
                       {isSaving ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : null}
-                      Publish to Live <Rocket className="w-5 h-5 ml-3" />
+                      {t("publishLive")} <Rocket className="w-5 h-5 ml-3" />
                     </Button>
                   </div>
                 </div>
