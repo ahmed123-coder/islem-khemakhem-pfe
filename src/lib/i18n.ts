@@ -31,7 +31,9 @@ export default getRequestConfig(async ({ requestLocale: locale }) => {
   };
 });
 
-export async function getMessages() {
-  const locale = requestLocale || defaultLocale;
-  return (await import(`../../messages/${locale}.json`)).default;
+export async function getMessages(locale?: string) {
+  const validatedLocale = locale && locales.includes(locale as Locale)
+    ? (locale as Locale)
+    : defaultLocale;
+  return (await import(`../../messages/${validatedLocale}.json`)).default;
 }

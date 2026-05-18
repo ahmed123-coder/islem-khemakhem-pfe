@@ -1,22 +1,15 @@
 import type { Metadata } from 'next'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages } from '@/lib/i18n'
-import { locales, defaultLocale } from '@/i18n/request'
 import './globals.css'
 import LayoutWrapper from '@/components/LayoutWrapper'
 import NotificationProvider from '@/components/notifications/notification-provider'
 import { prisma } from '@/lib/prisma'
-import { notFound } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
-export async function generateStaticParams() {
-  return locales.map((locale) => ({ locale }))
-}
-
 export async function generateMetadata({ params }: { params: { locale: string } }): Promise<Metadata> {
-  const locale = params.locale as typeof locales[number]
-  if (!locales.includes(locale)) notFound()
+  const locale = params.locale === 'fr' ? 'fr' : 'en'
 
   const logoContent = await prisma.siteContent.findUnique({
     where: { key: 'logo' },
@@ -37,48 +30,15 @@ export async function generateMetadata({ params }: { params: { locale: string } 
 
   return {
     title: {
-      default: titles[locale] || titles.en,
+      default: titles[locale as keyof typeof titles],
       template: '%s | DSL Conseil'
     },
-    description: descriptions[locale] || descriptions.en,
-    keywords: ['business consulting', 'management consulting', 'HR solutions', 'quality management', 'performance optimization', 'strategic planning'],
-    authors: [{ name: 'DSL Conseil' }],
-    creator: 'DSL Conseil',
-    publisher: 'DSL Conseil',
+    description: descriptions[locale as keyof typeof descriptions],
     alternates: {
-      canonical: `https://dsl-conseil.com/${locale}`,
       languages: {
-        'en': 'https://dsl-conseil.com/en',
-        'fr': 'https://dsl-conseil.com/fr',
+        'en': '/en',
+        'fr': '/fr',
       },
-    },
-    icons: {
-      icon: [
-        { url: logoUrl },
-        { url: logoUrl, rel: 'apple-touch-icon' },
-      ],
-      shortcut: logoUrl,
-      apple: logoUrl,
-    },
-    openGraph: {
-      type: 'website',
-      locale: locale === 'fr' ? 'fr_FR' : 'en_US',
-      alternateLocale: locale === 'fr' ? 'en_US' : 'fr_FR',
-      url: `https://dsl-conseil.com/${locale}`,
-      siteName: 'DSL Conseil',
-      title: titles[locale] || titles.en,
-      description: descriptions[locale] || descriptions.en,
-      images: [logoUrl],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: titles[locale] || titles.en,
-      description: descriptions[locale] || descriptions.en,
-      images: [logoUrl],
-    },
-    robots: {
-      index: true,
-      follow: true,
     },
   }
 }
@@ -90,10 +50,8 @@ export default async function LocaleLayout({
   children: React.ReactNode
   params: { locale: string }
 }) {
-  const locale = params.locale as typeof locales[number]
-  if (!locales.includes(locale)) notFound()
-
-  const messages = await getMessages()
+  const locale = params.locale === 'fr' ? 'fr' : 'en'
+  const messages = await getMessages(locale)
 
   return (
     <html lang={locale}>
