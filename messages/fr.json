@@ -430,5 +430,250 @@
       "openCalendar": "Ouvrir le calendrier",
       "updateAvailability": "Mettre à jour la disponibilité"
     }
+  },
+  "adminPage": {
+    "users": {
+      "title": "Commande Clients",
+      "description": "Gérer tous les clients et utilisateurs inscrits",
+      "search": "Rechercher par nom, email, entreprise...",
+      "registerNew": "Ajouter Nouveau Client",
+      "noUsers": "Aucun utilisateur trouvé",
+      "columns": {
+        "client": "Client",
+        "company": "Entreprise",
+        "contact": "Contact",
+        "status": "Statut",
+        "registered": "Inscrit",
+        "orders": "Commandes",
+        "reservations": "Réservations",
+        "actions": "Actions"
+      }
+    },
+    "consultants": {
+      "title": "Moteur Consultants",
+      "description": "Gérer les consultants experts et leurs profils",
+      "description_plural": "Superviser votre réseau de {count} conseillers professionnels d'élite.",
+      "search": "Rechercher par nom, spécialité, email...",
+      "registerNew": "Ajouter Nouveau Consultant",
+      "noConsultants": "Aucun consultant trouvé",
+      "breadcrumbs": {
+        "system": "Système",
+        "consultants": "Consultants"
+      },
+      "columns": {
+        "expert": "Expert",
+        "specialty": "Spécialité",
+        "contact": "Contact",
+        "status": "Statut",
+        "missions": "Missions",
+        "sessions": "Sessions",
+        "engagements": "Engagements",
+        "library": "Bibliothèque",
+        "actions": "Actions"
+      },
+      "actions": {
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "activate": "Activer",
+        "deactivate": "Désactiver",
+        "viewProfile": "Voir le profil"
+      },
+      "status": {
+        "active": "Actif",
+        "inactive": "Inactif"
+      },
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce consultant ?"
+    },
+    "contacts": {
+      "title": "Centre de Communication",
+      "description": "Gérer les demandes de contact et les demandes de support.",
+      "search": "Rechercher des conversations...",
+      "noContacts": "Aucun message de contact trouvé",
+      "breadcrumbs": {
+        "system": "Système",
+        "contacts": "Contacts"
+      },
+      "columns": {
+        "from": "De",
+        "subject": "Sujet",
+        "status": "Statut",
+        "date": "Date",
+        "actions": "Actions"
+      },
+      "status": {
+        "new": "Nouveau",
+        "read": "Lu",
+        "replied": "Répondu",
+        "processed": "Traité"
+      },
+      "actions": {
+        "reply": "Répondre",
+        "markRead": "Marquer comme lu",
+        "markReplied": "Marquer comme répondu",
+        "delete": "Supprimer"
+      },
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce message ?"
+    },
+    "services": {
+      "title": "Moteur Services",
+      "description": "Gérer les services et les niveaux de prix",
+      "search": "Rechercher des services...",
+      "addNew": "Ajouter Nouveau Service",
+      "noServices": "Aucun service trouvé"
+    },
+    "blogs": {
+      "title": "Moteur de Contenu",
+      "description": "Gérer les articles de blog et le contenu",
+      "search": "Rechercher des articles...",
+      "addNew": "Créer Nouvel Article",
+      "noPosts": "Aucun article de blog trouvé"
+    },
+    "reviews": {
+      "title": "Modération des Avis",
+      "description": "Gérer et modérer les avis des clients",
+      "noReviews": "Aucun avis trouvé",
+      "columns": {
+        "client": "Client",
+        "type": "Type",
+        "target": "Cible",
+        "rating": "Note",
+        "comment": "Commentaire",
+        "status": "Statut",
+        "actions": "Actions"
+      },
+      "status": {
+        "published": "Publié",
+        "hidden": "Masqué"
+      },
+      "type": {
+        "service": "Service",
+        "consultant": "Consultant"
+      },
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet avis ?"
+    },
+    "subscriptions": {
+      "title": "Abonnements",
+      "description": "Gérer les abonnements et commandes des clients",
+      "search": "Rechercher par client, ID commande...",
+      "noSubscriptions": "Aucun abonnement trouvé",
+      "allStatuses": "Tous les statuts",
+      "statusFilter": "Statut",
+      "paymentMethod": "Paiement",
+      "allPaymentMethods": "Tous les modes",
+      "paymentMethods": {
+        "card": "CARTE",
+        "transfer": "VIREMENT",
+        "onSite": "SUR PLACE"
+      },
+      "editSubscription": "Modifier l'abonnement",
+      "status": "Statut",
+      "messagesUsed": "Messages utilisés",
+      "minutesUsed": "Minutes utilisées",
+      "update": "Mettre à jour",
+      "client": "Client",
+      "payment": "Paiement",
+      "messages": "Messages",
+      "minutes": "Minutes",
+      "downloadInvoice": "Facture PDF"
+    },
+    "billing": {
+      "title": "Facturation & Factures",
+      "description": "Contrôle du flux financier expert.",
+      "search": "Rechercher par N° Facture, Client...",
+      "createNew": "Nouvelle Facture",
+      "noInvoices": "Aucune facture trouvée",
+      "allStatuses": "Tous les statuts",
+      "currency": "€",
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette facture ?",
+      "columns": {
+        "invoice": "Facture N°",
+        "client": "Client",
+        "amount": "Montant",
+        "dueDate": "Échéance",
+        "status": "Statut",
+        "actions": "Actions"
+      },
+      "status": {
+        "paid": "PAYÉ",
+        "pending": "EN ATTENTE",
+        "unpaid": "NON PAYÉ"
+      },
+      "form": {
+        "client": "Client Destinataire",
+        "selectClient": "Sélectionner un client",
+        "subtitle": "Émettre un nouveau document financier",
+        "generate": "Générer la Facture"
+      },
+      "messages": {
+        "invoiceUpdated": "Facture mise à jour",
+        "invoiceCreated": "Facture créée avec succès",
+        "updateFailed": "Échec de la mise à jour",
+        "requiredFields": "Veuillez remplir tous les champs requis"
+      }
+    },
+    "schedule": {
+      "title": "Planning des Consultants",
+      "description": "Gérer les rendez-vous et le planning",
+      "noEvents": "Aucun événement planifié",
+      "days": {
+        "7": "7 jours",
+        "14": "14 jours",
+        "30": "30 jours"
+      },
+      "columns": {
+        "hour": "Heure"
+      },
+      "status": {
+        "reserved": "Réservé",
+        "free": "Libre"
+      }
+    },
+    "faqs": {
+      "title": "FAQs",
+      "description": "Gérer les questions fréquemment posées",
+      "search": "Rechercher des questions...",
+      "addNew": "Ajouter Nouvelle Question",
+      "noFaqs": "Aucune FAQ trouvée",
+      "createNew": "Créer Nouvelle FAQ",
+      "save": "Enregistrer FAQ",
+      "breadcrumbs": {
+        "content": "Contenu",
+        "faqs": "FAQs"
+      },
+      "emptyState": {
+        "title": "Éditeur de FAQ Prêt",
+        "description": "Créez et organisez les questions fréquemment posées pour vos clients."
+      },
+      "status": {
+        "active": "Actif",
+        "hidden": "Masqué"
+      },
+      "form": {
+        "question": "Question",
+        "questionPlaceholder": "Quelle est la question ?",
+        "answer": "Réponse",
+        "answerPlaceholder": "Fournissez la réponse ici...",
+        "order": "Ordre d'affichage"
+      },
+      "validation": {
+        "required": "La question et la réponse sont requises"
+      },
+      "messages": {
+        "created": "FAQ créée avec succès",
+        "updated": "FAQ mise à jour avec succès",
+        "deleted": "FAQ supprimée avec succès",
+        "saveFailed": "Échec de l'enregistrement de la FAQ",
+        "deleteFailed": "Échec de la suppression de la FAQ"
+      },
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette FAQ ?"
+    },
+    "profile": {
+      "title": "Profil Admin",
+      "description": "Gérer votre profil admin"
+    },
+    "content": {
+      "title": "Contenu du Site",
+      "description": "Modifier le contenu et les visuels du site web"
+    }
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Search, 
@@ -39,6 +40,8 @@ interface Contact {
 }
 
 export default function ContactsCRM() {
+  const t = useTranslations('adminPage.contacts')
+  const commonT = useTranslations('common')
   const [contacts, setContacts] = React.useState<Contact[]>([])
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [searchTerm, setSearchTerm] = React.useState('')
@@ -61,7 +64,7 @@ export default function ContactsCRM() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Dismantle this communication record permanently?')) return
+    if (!confirm(commonT("delete") + "?")) return
     const res = await fetch(`/api/admin/contacts/${id}`, { method: 'DELETE' })
     if (res.ok) {
       setContacts(contacts.filter(c => c.id !== id))
@@ -104,9 +107,9 @@ export default function ContactsCRM() {
 
   return (
     <StandardPage
-      title="Communication Hub"
-      description="Manage inquiries, support requests, and professional outreach."
-      breadcrumbs={[{ label: 'System' }, { label: 'Contacts' }]}
+      title={t("title")}
+      description={t("description")}
+      breadcrumbs={[{ label: t("breadcrumbs.system") }, { label: t("breadcrumbs.contacts") }]}
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[calc(100vh-280px)]">
         {/* Left Sidebar: Inbox List */}
@@ -115,7 +118,7 @@ export default function ContactsCRM() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
             <input 
               type="text" 
-              placeholder="Search conversations..."
+              placeholder={t("search")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full h-12 pl-12 pr-4 rounded-2xl bg-white border border-slate-100 shadow-sm focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 text-sm font-medium transition-all"

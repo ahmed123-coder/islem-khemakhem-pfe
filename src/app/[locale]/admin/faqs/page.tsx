@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Plus, 
@@ -32,6 +33,8 @@ type Faq = {
 }
 
 export default function FaqsAdmin() {
+  const t = useTranslations('adminPage.faqs')
+  const commonT = useTranslations('common')
   const [faqs, setFaqs] = React.useState<Faq[]>([])
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
   const [form, setForm] = React.useState<Partial<Faq>>({ isActive: true, order: 0 })
@@ -81,7 +84,7 @@ export default function FaqsAdmin() {
 
   const handleSave = async () => {
     if (!form.question || !form.answer) {
-      toast.error('Question and answer are required')
+      toast.error(t("validation.required"))
       return;
     }
 
@@ -98,37 +101,37 @@ export default function FaqsAdmin() {
       })
 
       if (res.ok) {
-        toast.success(selectedId ? 'FAQ updated successfully' : 'FAQ created successfully')
+        toast.success(selectedId ? t("messages.updated") : t("messages.created"))
         await loadFaqs()
         setIsEditing(false)
         setSelectedId(null)
       } else {
-        toast.error('Failed to save FAQ')
+        toast.error(t("messages.saveFailed"))
       }
     } catch (error) {
-      toast.error('An error occurred')
+      toast.error(commonT("error"))
     }
   }
 
   const handleDelete = async () => {
     if (!selectedId) return
     
-    if (confirm('Are you sure you want to delete this FAQ?')) {
+    if (confirm(t("confirmDelete"))) {
       try {
         const res = await fetch(`/api/faqs/${selectedId}`, {
           method: 'DELETE'
         })
         
         if (res.ok) {
-          toast.success('FAQ deleted successfully')
+          toast.success(t("messages.deleted"))
           await loadFaqs()
           setIsEditing(false)
           setSelectedId(null)
         } else {
-          toast.error('Failed to delete FAQ')
+          toast.error(t("messages.deleteFailed"))
         }
       } catch (error) {
-        toast.error('An error occurred')
+        toast.error(commonT("error"))
       }
     }
   }
@@ -140,9 +143,9 @@ export default function FaqsAdmin() {
 
   return (
     <StandardPage
-      title="FAQ Manager"
-      description="Manage the frequently asked questions displayed on the website."
-      breadcrumbs={[{ label: 'Content' }, { label: 'FAQs' }]}
+      title={t("title")}
+      description={t("description")}
+      breadcrumbs={[{ label: t("breadcrumbs.content") }, { label: t("breadcrumbs.faqs") }]}
     >
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left Column: Feed Pane */}
@@ -151,7 +154,7 @@ export default function FaqsAdmin() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Search questions..."
+              placeholder={t("search")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full h-12 pl-12 pr-4 rounded-2xl bg-white border border-slate-100 shadow-sm focus:ring-4 focus:ring-blue-600/5 focus:border-blue-600/20 text-sm placeholder:text-slate-400 transition-all font-medium"
@@ -169,7 +172,7 @@ export default function FaqsAdmin() {
               <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
                 <Plus className="w-4 h-4" />
               </div>
-              Add New Question
+              {t("addNew")}
             </button>
 
             {filteredFaqs.map((faq, idx) => (
@@ -219,15 +222,15 @@ export default function FaqsAdmin() {
                   <div className="absolute -inset-2 bg-blue-50 rounded-[40px] -z-10 animate-pulse" />
                   <HelpCircle className="w-10 h-10 text-blue-400" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">FAQ Editor Ready</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{t("emptyState.title")}</h3>
                 <p className="text-sm text-slate-500 max-w-xs font-medium mb-8">
-                  Create and organize frequently asked questions for your clients.
+                  {t("emptyState.description")}
                 </p>
                 <Button 
                   onClick={handleCreateNew}
                   className="rounded-2xl bg-slate-900 hover:bg-black text-white px-8 h-12 font-bold shadow-xl shadow-slate-200 transition-all hover:-translate-y-1"
                 >
-                  Create New FAQ <ArrowRight className="w-4 h-4 ml-2" />
+                  {t("createNew")} <ArrowRight className="w-4 h-4 ml-2" />
                 </Button>
               </motion.div>
             ) : (
@@ -242,13 +245,13 @@ export default function FaqsAdmin() {
                 <div className="flex items-center justify-between px-6 py-4 rounded-[32px] bg-white border border-slate-100 shadow-sm">
                   <div className="flex items-center gap-6">
                     <div className="flex items-center gap-2">
-                       <Switch 
-                        checked={form.isActive} 
-                        onCheckedChange={(v) => setForm({ ...form, isActive: v })} 
-                       />
-                       <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">
-                         {form.isActive ? 'Active' : 'Hidden'}
-                       </span>
+<Switch 
+                         checked={form.isActive} 
+                         onCheckedChange={(v) => setForm({ ...form, isActive: v })} 
+                        />
+                        <span className="text-xs font-bold text-slate-600 uppercase tracking-widest">
+                          {form.isActive ? t("status.active") : t("status.hidden")}
+                        </span>
                     </div>
                   </div>
                   <Button 
@@ -272,32 +275,32 @@ export default function FaqsAdmin() {
                     <div className="relative space-y-8">
                       <div className="space-y-2">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
-                          <Type className="w-3 h-3" /> Question
+                          <Type className="w-3 h-3" /> {t("form.question")}
                         </label>
                         <Input 
                           value={form.question || ''} 
                           onChange={(e) => setForm({ ...form, question: e.target.value })}
-                          placeholder="What is the question?" 
+                          placeholder={t("form.questionPlaceholder")} 
                           className="h-16 text-2xl font-black border-none bg-transparent shadow-none px-0 focus-visible:ring-0 placeholder:text-slate-200"
                         />
                       </div>
 
                       <div className="space-y-4 pt-4 border-t border-slate-50">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
-                          <AlignLeft className="w-3 h-3" /> Answer
+                          <AlignLeft className="w-3 h-3" /> {t("form.answer")}
                         </label>
 
                         <Textarea 
                           value={form.answer || ''} 
                           onChange={(e) => setForm({ ...form, answer: e.target.value })}
-                          placeholder="Provide the answer here..." 
+                          placeholder={t("form.answerPlaceholder")} 
                           className="min-h-[200px] border-none bg-transparent shadow-none px-0 focus-visible:ring-0 text-base font-medium leading-relaxed resize-none placeholder:text-slate-200"
                         />
                       </div>
 
                       <div className="space-y-2 pt-4 border-t border-slate-50">
                         <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-1.5">
-                          <GripVertical className="w-3 h-3" /> Display Order
+                          <GripVertical className="w-3 h-3" /> {t("form.order")}
                         </label>
                         <Input 
                           type="number"
@@ -318,14 +321,14 @@ export default function FaqsAdmin() {
                         onClick={handleDelete}
                         className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-2xl font-bold text-sm px-6"
                         >
-                        <Trash2 className="w-4 h-4 mr-2" /> Delete
+                        <Trash2 className="w-4 h-4 mr-2" /> {commonT("delete")}
                         </Button>
                     ) : <div/>}
                     <Button 
                       onClick={handleSave}
                       className="rounded-[24px] bg-blue-600 hover:bg-blue-700 text-white font-black italic text-lg px-10 h-16 shadow-2xl shadow-blue-200 transition-all hover:scale-105 active:scale-95"
                     >
-                      Save FAQ <Rocket className="w-5 h-5 ml-3" />
+                      {t("save")} <Rocket className="w-5 h-5 ml-3" />
                     </Button>
                   </div>
                 </div>

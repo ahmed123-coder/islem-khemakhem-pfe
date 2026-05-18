@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useTranslations } from 'next-intl'
 import { 
   Pencil, 
   Trash2, 
@@ -85,6 +86,8 @@ interface Service {
 }
 
 export default function ConsultantsPage() {
+  const t = useTranslations('adminPage.consultants')
+  const commonT = useTranslations('common')
   const [consultants, setConsultants] = React.useState<Consultant[]>([])
   const [loading, setLoading] = React.useState(true)
   const [services, setServices] = React.useState<Service[]>([])
@@ -224,7 +227,7 @@ export default function ConsultantsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer ce consultant ?')) return
+    if (!confirm(commonT("delete") + "?")) return
     const res = await fetch(`/api/admin/consultants/${id}`, { method: 'DELETE' })
     if (res.ok) fetchConsultants()
   }
@@ -261,7 +264,7 @@ export default function ConsultantsPage() {
 
   const columns = [
     {
-      header: 'Expert',
+      header: t("columns.expert"),
       accessor: (c: Consultant) => (
         <div className="flex items-center gap-3">
            <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center font-black text-blue-600 shadow-sm border border-blue-100/50 overflow-hidden">
@@ -281,7 +284,7 @@ export default function ConsultantsPage() {
       ),
     },
     {
-      header: 'Contact',
+      header: t("columns.contact"),
       accessor: (c: Consultant) => (
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-1.5">
@@ -298,7 +301,7 @@ export default function ConsultantsPage() {
       ),
     },
     {
-      header: 'Engagements',
+      header: t("columns.engagements"),
       accessor: (c: Consultant) => (
         <div className="flex gap-4">
           <div className="flex flex-col">
@@ -313,7 +316,7 @@ export default function ConsultantsPage() {
       ),
     },
     {
-      header: 'Status',
+      header: t("columns.status"),
       accessor: (c: Consultant) => (
         <button 
           onClick={() => toggleActive(c)}
@@ -339,7 +342,7 @@ export default function ConsultantsPage() {
       ),
     },
   {
-    header: 'Library',
+    header: t("columns.library"),
     accessor: (c: Consultant) => (
       <div className="flex gap-2">
         {c.cvUrl && (
@@ -377,7 +380,7 @@ export default function ConsultantsPage() {
     ),
   },
     {
-      header: 'Actions',
+      header: t("columns.actions"),
       className: "text-right",
       accessor: (c: Consultant) => (
         <div className="flex justify-end gap-1">
@@ -445,11 +448,11 @@ export default function ConsultantsPage() {
 
   return (
     <StandardPage
-      title="Consultants Engine"
-      description={`Oversee your network of ${consultants.length} elite professional advisors.`}
-      breadcrumbs={[{ label: 'System' }, { label: 'Consultants' }]}
+      title={t("title")}
+      description={t("description", { count: consultants.length })}
+      breadcrumbs={[{ label: t("breadcrumbs.system") }, { label: t("breadcrumbs.consultants") }]}
       primaryAction={{
-        label: 'Register New Expert',
+        label: t("registerNew"),
         icon: UserPlus,
         onClick: handleOpenCreate
       }}
@@ -460,7 +463,7 @@ export default function ConsultantsPage() {
         <div className="relative max-w-xl group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
           <Input 
-            placeholder="Search by name, specialty, email, or phone..." 
+            placeholder={t("search")} 
             value={search} 
             onChange={e => setSearch(e.target.value)} 
             className="h-14 pl-12 pr-4 rounded-[20px] border-slate-100 bg-white/50 backdrop-blur-sm shadow-sm focus:ring-4 focus:ring-blue-600/5 transition-all font-medium"

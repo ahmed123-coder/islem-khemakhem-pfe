@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
+import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -21,6 +22,8 @@ interface Order {
 }
 
 export default function SubscriptionsPage() {
+  const t = useTranslations("adminPage.subscriptions")
+  const commonT = useTranslations("common")
   const router = useRouter()
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -116,7 +119,7 @@ export default function SubscriptionsPage() {
   }
 
   const deleteOrder = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this subscription?')) return
+    if (!confirm(commonT("delete") + "?")) return
     
     try {
       const res = await fetch(`/api/admin/orders/${id}`, { method: 'DELETE' })
@@ -128,35 +131,38 @@ export default function SubscriptionsPage() {
     }
   }
 
-  if (loading) return <div className="p-8">Loading...</div>
+if (loading) return <div className="p-8">{commonT("loading")}</div>
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight">Subscriptions Management</h1>
-      </div>
+        <div>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t("title")}</h1>
+          <p className="text-slate-500 font-medium italic text-sm">{t("description")}</p>
+        </div>
+        </div>
       
       {/* Filters Bar */}
       <Card className="p-6 mb-8 border-none shadow-sm rounded-3xl">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="md:col-span-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Recherche</label>
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">{t("search")}</label>
             <input 
               type="text" 
-              placeholder="Nom, email ou ID..." 
+              placeholder={t("search")} 
               className="w-full bg-slate-50 border-none rounded-2xl p-3 text-sm focus:ring-2 ring-blue-500"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
           </div>
           <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Statut</label>
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">{t("statusFilter")}</label>
             <select 
               className="w-full bg-slate-50 border-none rounded-2xl p-3 text-sm focus:ring-2 ring-blue-500"
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
             >
-              <option value="ALL">Tous les statuts</option>
+              <option value="ALL">{t("allStatuses")}</option>
               <option value="PENDING">PENDING</option>
               <option value="ACTIVE">ACTIVE</option>
               <option value="COMPLETED">COMPLETED</option>
@@ -164,16 +170,16 @@ export default function SubscriptionsPage() {
             </select>
           </div>
           <div>
-            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">Paiement</label>
+            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 block">{t("paymentMethod")}</label>
             <select 
               className="w-full bg-slate-50 border-none rounded-2xl p-3 text-sm focus:ring-2 ring-blue-500"
               value={methodFilter}
               onChange={e => setMethodFilter(e.target.value)}
             >
-              <option value="ALL">Tous les modes</option>
-              <option value="CARD">CARTE</option>
-              <option value="VIREMENT">VIREMENT</option>
-              <option value="SUR_PLACE">SUR PLACE</option>
+              <option value="ALL">{t("allPaymentMethods")}</option>
+              <option value="CARD">{t("paymentMethods.card")}</option>
+              <option value="VIREMENT">{t("paymentMethods.transfer")}</option>
+              <option value="SUR_PLACE">{t("paymentMethods.onSite")}</option>
             </select>
           </div>
         </div>
@@ -182,10 +188,10 @@ export default function SubscriptionsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {editOrder && (
           <Card className="p-6 border-none shadow-xl rounded-3xl h-fit sticky top-8">
-            <h2 className="text-xl font-bold mb-6">Edition Subscription</h2>
+            <h2 className="text-xl font-bold mb-6">{t("editSubscription")}</h2>
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Status</label>
+                <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">{t("status")}</label>
                 <select className="w-full p-3 bg-slate-50 border-none rounded-2xl text-sm" value={form.status || editOrder.status} onChange={e => setForm({ ...form, status: e.target.value })}>
                   <option value="PENDING">PENDING</option>
                   <option value="ACTIVE">ACTIVE</option>
@@ -195,17 +201,17 @@ export default function SubscriptionsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Messages Used</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">{t("messagesUsed")}</label>
                   <input type="number" className="w-full p-3 bg-slate-50 border-none rounded-2xl text-sm" value={form.messagesUsed ?? editOrder.messagesUsed} onChange={e => setForm({ ...form, messagesUsed: parseInt(e.target.value) })} />
                 </div>
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">Minutes Used</label>
+                  <label className="block text-xs font-black uppercase tracking-widest text-slate-400 mb-2">{t("minutesUsed")}</label>
                   <input type="number" className="w-full p-3 bg-slate-50 border-none rounded-2xl text-sm" value={form.callMinutesUsed ?? editOrder.callMinutesUsed} onChange={e => setForm({ ...form, callMinutesUsed: parseInt(e.target.value) })} />
                 </div>
               </div>
               <div className="flex gap-2 pt-4">
-                <Button type="submit" className="flex-1 bg-blue-600 rounded-2xl h-12">Mettre à jour</Button>
-                <Button type="button" variant="outline" className="rounded-2xl h-12" onClick={() => { setEditOrder(null); setForm({}) }}>Annuler</Button>
+                <Button type="submit" className="flex-1 bg-blue-600 rounded-2xl h-12">{t("update")}</Button>
+                <Button type="button" variant="outline" className="rounded-2xl h-12" onClick={() => { setEditOrder(null); setForm({}) }}>{commonT("cancel")}</Button>
               </div>
             </form>
           </Card>
@@ -215,7 +221,7 @@ export default function SubscriptionsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filteredOrders.length === 0 ? (
               <div className="col-span-full p-20 text-center text-slate-400 font-bold italic">
-                Aucun résultat trouvé pour vos critères.
+                {t("noSubscriptions")}
               </div>
             ) : (
               filteredOrders.map(order => (
@@ -240,19 +246,19 @@ export default function SubscriptionsPage() {
 
                   <div className="grid grid-cols-2 gap-4 text-[11px] mb-6">
                     <div>
-                      <p className="text-slate-400 font-black uppercase tracking-widest mb-1 text-[9px]">Client</p>
+                      <p className="text-slate-400 font-black uppercase tracking-widest mb-1 text-[9px]">{t("client")}</p>
                       <p className="font-bold text-slate-700 truncate">{order.client.name || order.client.email}</p>
                     </div>
                     <div>
-                      <p className="text-slate-400 font-black uppercase tracking-widest mb-1 text-[9px]">Paiement</p>
+                      <p className="text-slate-400 font-black uppercase tracking-widest mb-1 text-[9px]">{t("payment")}</p>
                       <Badge variant="secondary" className="uppercase text-[9px] font-black rounded-lg">{order.paymentMethod}</Badge>
                     </div>
                     <div>
-                      <p className="text-slate-400 font-black uppercase tracking-widest mb-1 text-[9px]">Messages</p>
+                      <p className="text-slate-400 font-black uppercase tracking-widest mb-1 text-[9px]">{t("messages")}</p>
                       <p className="font-bold text-slate-700">{order.messagesUsed} / {order.serviceTier.maxMessages || '∞'}</p>
                     </div>
                     <div>
-                      <p className="text-slate-400 font-black uppercase tracking-widest mb-1 text-[9px]">Minutes</p>
+                      <p className="text-slate-400 font-black uppercase tracking-widest mb-1 text-[9px]">{t("minutes")}</p>
                       <p className="font-bold text-slate-700">{order.callMinutesUsed} / {order.serviceTier.maxCallDuration || '∞'}</p>
                     </div>
                   </div>
@@ -264,15 +270,15 @@ export default function SubscriptionsPage() {
                         className="flex-1 rounded-xl h-10 text-[10px] font-black uppercase tracking-widest bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all"
                         onClick={() => handleDownloadInvoice(order.id)}
                      >
-                        Facture PDF
-                     </Button>
-                     <Button 
-                        size="sm" 
-                        variant="ghost" 
-                        className="rounded-xl h-10 text-[10px] font-black uppercase tracking-widest"
-                        onClick={() => router.push(`/client/solutions?serviceId=${order.serviceTier.service.id}`)}
-                     >
-                        View Public
+{t("downloadInvoice")}
+                      </Button>
+                      <Button 
+                         size="sm" 
+                         variant="ghost" 
+                         className="rounded-xl h-10 text-[10px] font-black uppercase tracking-widest"
+                         onClick={() => router.push(`/client/solutions?serviceId=${order.serviceTier.service.id}`)}
+                      >
+                         {commonT("view")}
                      </Button>
                   </div>
                 </Card>

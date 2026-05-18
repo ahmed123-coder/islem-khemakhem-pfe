@@ -524,6 +524,7 @@
     "consultants": {
       "title": "Consultants",
       "description": "Manage expert consultants and their profiles",
+      "description_plural": "Oversee your network of {count} elite professional advisors.",
       "search": "Search by name, specialty, email...",
       "registerNew": "Add New Consultant",
       "noConsultants": "No consultants found",
@@ -534,7 +535,13 @@
         "status": "Status",
         "missions": "Missions",
         "sessions": "Sessions",
+        "engagements": "Engagements",
+        "library": "Library",
         "actions": "Actions"
+      },
+      "breadcrumbs": {
+        "system": "System",
+        "consultants": "Consultants"
       },
       "form": {
         "firstName": "First Name",
@@ -569,6 +576,10 @@
       "description": "Manage contact form submissions and inquiries",
       "search": "Search conversations...",
       "noContacts": "No contact messages found",
+      "breadcrumbs": {
+        "system": "System",
+        "contacts": "Contacts"
+      },
       "columns": {
         "from": "From",
         "subject": "Subject",
@@ -697,6 +708,25 @@
       "description": "Manage client subscriptions and orders",
       "search": "Search by client, order ID...",
       "noSubscriptions": "No subscriptions found",
+      "allStatuses": "All statuses",
+      "statusFilter": "Status",
+      "paymentMethod": "Payment",
+      "allPaymentMethods": "All payment methods",
+      "paymentMethods": {
+        "card": "CARD",
+        "transfer": "TRANSFER",
+        "onSite": "ON SITE"
+      },
+      "editSubscription": "Edit Subscription",
+      "status": "Status",
+      "messagesUsed": "Messages Used",
+      "minutesUsed": "Minutes Used",
+      "update": "Update",
+      "client": "Client",
+      "payment": "Payment",
+      "messages": "Messages",
+      "minutes": "Minutes",
+      "downloadInvoice": "Download Invoice",
       "columns": {
         "client": "Client",
         "service": "Service",
@@ -729,10 +759,13 @@
     },
     "billing": {
       "title": "Billing & Invoices",
-      "description": "Manage invoices and payments",
-      "search": "Search invoices...",
-      "createNew": "Create Invoice",
+      "description": "Control the expert financial flow.",
+      "search": "Search by invoice number, client...",
+      "createNew": "New Invoice",
       "noInvoices": "No invoices found",
+      "allStatuses": "All statuses",
+      "currency": "€",
+      "confirmDelete": "Are you sure you want to delete this invoice?",
       "columns": {
         "invoice": "Invoice #",
         "client": "Client",
@@ -742,9 +775,9 @@
         "actions": "Actions"
       },
       "status": {
-        "paid": "Paid",
-        "pending": "Pending",
-        "overdue": "Overdue"
+        "paid": "PAID",
+        "pending": "PENDING",
+        "unpaid": "UNPAID"
       },
       "actions": {
         "edit": "Edit",
@@ -752,40 +785,71 @@
         "delete": "Delete"
       },
       "form": {
-        "client": "Client",
-        "amount": "Amount",
-        "dueDate": "Due Date",
-        "status": "Status",
-        "order": "Related Order",
-        "create": "Create Invoice",
-        "update": "Update Invoice"
+        "client": "Recipient Client",
+        "selectClient": "Select a client",
+        "subtitle": "Issue a new financial document",
+        "generate": "Generate Invoice"
       },
       "messages": {
-        "invoiceUpdated": "Invoice updated successfully",
+        "invoiceUpdated": "Invoice updated",
         "invoiceCreated": "Invoice created successfully",
         "updateFailed": "Failed to update invoice",
         "requiredFields": "Please fill in all required fields"
       }
     },
     "schedule": {
-      "title": "Schedule",
+      "title": "Consultants Schedule",
       "description": "Manage appointments and schedule",
-      "noEvents": "No scheduled events"
+      "noEvents": "No scheduled events",
+      "days": {
+        "7": "7 days",
+        "14": "14 days",
+        "30": "30 days"
+      },
+      "columns": {
+        "hour": "Hour"
+      },
+      "status": {
+        "reserved": "Reserved",
+        "free": "Free"
+      }
     },
     "faqs": {
       "title": "FAQs",
       "description": "Manage frequently asked questions",
-      "addNew": "Add FAQ",
+      "search": "Search questions...",
+      "addNew": "Add New Question",
       "noFaqs": "No FAQs found",
+      "createNew": "Create New FAQ",
+      "save": "Save FAQ",
+      "breadcrumbs": {
+        "content": "Content",
+        "faqs": "FAQs"
+      },
+      "emptyState": {
+        "title": "FAQ Editor Ready",
+        "description": "Create and organize frequently asked questions for your clients."
+      },
+      "status": {
+        "active": "Active",
+        "hidden": "Hidden"
+      },
       "form": {
         "question": "Question",
+        "questionPlaceholder": "What is the question?",
         "answer": "Answer",
-        "category": "Category",
-        "save": "Save FAQ"
+        "answerPlaceholder": "Provide the answer here...",
+        "order": "Display Order"
       },
-      "actions": {
-        "edit": "Edit",
-        "delete": "Delete"
+      "validation": {
+        "required": "Question and answer are required"
+      },
+      "messages": {
+        "created": "FAQ created successfully",
+        "updated": "FAQ updated successfully",
+        "deleted": "FAQ deleted successfully",
+        "saveFailed": "Failed to save FAQ",
+        "deleteFailed": "Failed to delete FAQ"
       },
       "confirmDelete": "Are you sure you want to delete this FAQ?"
     },

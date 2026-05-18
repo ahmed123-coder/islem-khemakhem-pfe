@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -8,6 +9,8 @@ import { Pencil, Trash2, Download, Search, Filter, ReceiptText } from 'lucide-re
 import { toast } from 'react-hot-toast'
 
 export default function AdminBillingPage() {
+  const t = useTranslations("adminPage.billing")
+  const commonT = useTranslations("common")
   const [invoices, setInvoices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -97,7 +100,7 @@ export default function AdminBillingPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Eliminer cette facture ?')) return
+    if (!confirm(t("confirmDelete"))) return
     try {
       const res = await fetch(`/api/admin/billing?id=${id}`, { method: 'DELETE' })
       if (res.ok) {
@@ -118,20 +121,20 @@ export default function AdminBillingPage() {
     return matchesSearch && matchesStatus
   })
 
-  if (loading) return <div className="p-8">Chargement...</div>
+  if (loading) return <div className="p-8">{commonT("loading")}</div>
 
   return (
     <div className="p-8 bg-slate-50 min-h-screen font-sans">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Gestion des Factures</h1>
-          <p className="text-slate-500 font-medium italic text-sm">Contrôle complet du flux financier expert.</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t("title")}</h1>
+          <p className="text-slate-500 font-medium italic text-sm">{t("description")}</p>
         </div>
         <Button 
           onClick={() => setShowCreateModal(true)}
           className="bg-slate-900 rounded-2xl h-12 px-8 flex items-center gap-2 hover:bg-slate-800 transition-all shadow-lg"
         >
-            <ReceiptText className="w-4 h-4" /> Nouvelle Facture
+            <ReceiptText className="w-4 h-4" /> {t("createNew")}
         </Button>
       </div>
 
@@ -140,7 +143,7 @@ export default function AdminBillingPage() {
           <Search className="w-5 h-5 text-slate-400" />
           <input 
             type="text" 
-            placeholder="Rechercher par N° Facture, Client..." 
+            placeholder={t("search")} 
             className="flex-1 bg-transparent border-none focus:ring-0 text-sm font-medium"
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -153,10 +156,10 @@ export default function AdminBillingPage() {
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
           >
-            <option value="ALL">Tous les statuts</option>
-            <option value="PAID">PAYÉ</option>
-            <option value="PENDING">EN ATTENTE</option>
-            <option value="UNPAID">NON PAYÉ</option>
+            <option value="ALL">{t("allStatuses")}</option>
+            <option value="PAID">{t("status.paid")}</option>
+            <option value="PENDING">{t("status.pending")}</option>
+            <option value="UNPAID">{t("status.unpaid")}</option>
           </select>
         </Card>
       </div>
@@ -177,12 +180,12 @@ export default function AdminBillingPage() {
 
               <div className="flex items-center gap-8">
                 <div className="text-center">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Montant</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t("columns.amount")}</p>
                   <p className="font-black text-slate-900 text-2xl">{inv.amount} €</p>
                 </div>
 
                 <div className="text-center">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Echéance</p>
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t("columns.dueDate")}</p>
                   <p className={`text-xs font-bold ${new Date(inv.dueDate) < new Date() && inv.status !== 'PAID' ? 'text-red-500' : 'text-slate-600'}`}>
                     {new Date(inv.dueDate).toLocaleDateString()}
                   </p>
@@ -261,8 +264,8 @@ export default function AdminBillingPage() {
             
             <div className="flex justify-between items-center mb-8 relative">
               <div>
-                <h2 className="text-2xl font-black text-slate-900 tracking-tight">Nouvelle Facture</h2>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Émettre un nouveau document financier</p>
+                <h2 className="text-2xl font-black text-slate-900 tracking-tight">{t("createNew")}</h2>
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">{t("form.subtitle")}</p>
               </div>
               <button 
                 onClick={() => setShowCreateModal(false)} 
@@ -274,14 +277,14 @@ export default function AdminBillingPage() {
 
             <form onSubmit={handleCreate} className="space-y-6 relative">
               <div>
-                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2 px-1">Client Destinataire</label>
+                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2 px-1">{t("form.client")}</label>
                 <select 
                   className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-500/20 transition-all"
                   value={newInvoice.clientId}
                   onChange={e => setNewInvoice({...newInvoice, clientId: e.target.value})}
                   required
                 >
-                  <option value="">Sélectionner un client</option>
+                  <option value="">{t("form.selectClient")}</option>
                   {clients.map(c => (
                     <option key={c.id} value={c.id}>{c.name || c.email} ({c.email})</option>
                   ))}
@@ -290,7 +293,7 @@ export default function AdminBillingPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase text-slate-400 block mb-2 px-1">Montant (€)</label>
+                  <label className="text-[10px] font-black uppercase text-slate-400 block mb-2 px-1">{t("columns.amount")} ({t("currency")})</label>
                   <input 
                     type="number"
                     step="0.01"
@@ -302,7 +305,7 @@ export default function AdminBillingPage() {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase text-slate-400 block mb-2 px-1">Date d'échéance</label>
+                  <label className="text-[10px] font-black uppercase text-slate-400 block mb-2 px-1">{t("columns.dueDate")}</label>
                   <input 
                     type="date"
                     className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-blue-500/20 transition-all"
@@ -340,13 +343,13 @@ export default function AdminBillingPage() {
                   className="flex-1 rounded-2xl h-14 font-bold text-slate-600 border-slate-200"
                   onClick={() => setShowCreateModal(false)}
                 >
-                  Annuler
+                  {commonT("cancel")}
                 </Button>
                 <Button 
                   type="submit" 
                   className="flex-[2] bg-blue-600 hover:bg-blue-700 rounded-2xl h-14 font-black text-white shadow-xl shadow-blue-200 transition-all active:scale-[0.98]"
                 >
-                  Générer la Facture
+                  {t("form.generate")}
                 </Button>
               </div>
             </form>
