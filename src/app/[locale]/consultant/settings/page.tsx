@@ -1,12 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { User, Mail, Briefcase } from 'lucide-react'
 
 export default function ConsultantSettingsPage() {
+  const t = useTranslations("consultantPage.settings")
   const [profile, setProfile] = useState({ name: '', email: '', specialty: '' })
   const [loading, setLoading] = useState(true)
 
@@ -23,34 +25,34 @@ export default function ConsultantSettingsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(profile)
     })
-    alert('Profile updated successfully')
+    alert(t("profileUpdated"))
   }
 
-  if (loading) return <div className="p-8">Loading...</div>
+  if (loading) return <div className="p-8">{t("loading")}</div>
 
   return (
     <div className="p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-        <p className="text-gray-600 mt-2">Manage your profile and preferences</p>
+        <h1 className="text-3xl font-bold text-gray-900">{t("title")}</h1>
+        <p className="text-gray-600 mt-2">{t("description")}</p>
       </div>
 
       <div className="max-w-2xl">
         <Card className="p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Profile Information</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">{t("profileInfo")}</h3>
           
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <div className="flex items-center gap-2">
                   <User size={16} />
-                  <span>Full Name</span>
+                  <span>{t("fullName")}</span>
                 </div>
               </label>
               <Input
                 value={profile.name}
                 onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                placeholder="Your name"
+                placeholder={t("placeholderName")}
               />
             </div>
 
@@ -58,7 +60,7 @@ export default function ConsultantSettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <div className="flex items-center gap-2">
                   <Mail size={16} />
-                  <span>Email</span>
+                  <span>{t("email")}</span>
                 </div>
               </label>
               <Input
@@ -72,18 +74,18 @@ export default function ConsultantSettingsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 <div className="flex items-center gap-2">
                   <Briefcase size={16} />
-                  <span>Specialty</span>
+                  <span>{t("specialty")}</span>
                 </div>
               </label>
               <Input
                 value={profile.specialty}
                 onChange={(e) => setProfile({ ...profile, specialty: e.target.value })}
-                placeholder="Your specialty"
+                placeholder={t("placeholderSpecialty")}
               />
             </div>
 
             <Button onClick={handleSave} className="w-full">
-              Save Changes
+              {t("saveChanges")}
             </Button>
           </div>
         </Card>

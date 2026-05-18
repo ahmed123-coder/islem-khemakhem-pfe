@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useTranslations, useLocale } from 'next-intl'
 import { 
   Calendar, 
   CalendarX, 
@@ -9,22 +10,17 @@ import {
   CheckCircle2, 
   XCircle, 
   Loader2,
-  Filter,
-  Users,
-  Briefcase,
   ChevronLeft,
   ChevronRight,
-  ShieldCheck,
   Video,
   MapPin,
   Trash2,
   Sparkles,
   LayoutGrid,
   List,
-  Search
 } from 'lucide-react'
 import { format, addDays, isSameDay } from 'date-fns'
-import { fr } from 'date-fns/locale'
+import { fr, enUS } from 'date-fns/locale'
 import { toast } from 'react-hot-toast'
 import { cn } from '@/lib/utils'
 
@@ -71,6 +67,9 @@ function getMonday(date: Date) {
 }
 
 export default function ConsultantReservations() {
+  const t = useTranslations('consultantPage.reservations')
+  const locale = useLocale()
+  const dateLocale = locale === 'fr' ? fr : enUS
   const [reservations, setReservations] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
   const [currentWeekStart, setCurrentWeekStart] = React.useState(() => getMonday(new Date()))
@@ -110,7 +109,7 @@ export default function ConsultantReservations() {
   }, [])
 
   const updateStatus = async (id: string, status: string) => {
-    const loadingToast = toast.loading(`Updating...`)
+    const loadingToast = toast.loading(t('synchronizing'))
     try {
       const res = await fetch('/api/consultant/reservations', {
         method: 'PATCH',
@@ -118,27 +117,27 @@ export default function ConsultantReservations() {
         body: JSON.stringify({ id, status })
       })
       if (!res.ok) throw new Error('Update failed')
-      toast.success(`Success`, { id: loadingToast })
+      toast.success(t('updateSuccess'), { id: loadingToast })
       fetchReservations()
       if (selectedRes?.id === id) setSelectedRes((prev: any) => ({ ...prev, status }))
     } catch {
-      toast.error('Failed', { id: loadingToast })
+      toast.error(t('updateFailed'), { id: loadingToast })
     }
   }
 
   const deleteReservation = async (id: string) => {
-    if (!confirm('Permanent delete?')) return
+    if (!confirm(t('confirmDelete'))) return
     try {
       await fetch('/api/consultant/reservations', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id })
       })
-      toast.success('Deleted')
+      toast.success(t('deleteSuccess'))
       fetchReservations()
       setSelectedRes(null)
     } catch {
-      toast.error('Failed')
+      toast.error(t('updateFailed'))
     }
   }
 
@@ -170,11 +169,11 @@ export default function ConsultantReservations() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'CONFIRMED': return <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">Confirmed</Badge>
-      case 'PENDING': return <Badge className="bg-amber-50 text-amber-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">Pending</Badge>
-      case 'CANCELLED': return <Badge className="bg-rose-50 text-rose-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">Cancelled</Badge>
-      case 'COMPLETED': return <Badge className="bg-blue-50 text-blue-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">Completed</Badge>
-      case 'NO_SHOW': return <Badge className="bg-slate-50 text-slate-500 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">No Show</Badge>
+      case 'CONFIRMED': return <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">{t('confirmed')}</Badge>
+      case 'PENDING': return <Badge className="bg-amber-50 text-amber-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">{t('pending')}</Badge>
+      case 'CANCELLED': return <Badge className="bg-rose-50 text-rose-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">{t('cancelled')}</Badge>
+      case 'COMPLETED': return <Badge className="bg-blue-50 text-blue-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">{t('completed')}</Badge>
+      case 'NO_SHOW': return <Badge className="bg-slate-50 text-slate-500 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">{t('noShow')}</Badge>
       default: return <Badge variant="outline">{status}</Badge>
     }
   }
@@ -193,7 +192,7 @@ export default function ConsultantReservations() {
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-emerald-600 animate-pulse font-black text-xs">
       <Loader2 className="w-10 h-10 animate-spin" />
-      SYNCHRONIZING HUB...
+      {t('synchronizing')}
     </div>
   )
 
@@ -204,16 +203,16 @@ export default function ConsultantReservations() {
         <div>
           <div className="flex items-center gap-2 text-emerald-600 font-black text-[10px] uppercase tracking-[0.3em] mb-4">
             <Sparkles className="w-4 h-4" />
-            Reservation Management
+            {t('subtitle')}
           </div>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none flex items-center gap-4">
-            Expert Agenda
+            {t('title')}
             <Badge className="bg-slate-900 text-white border-none font-black text-xs px-4 h-8 rounded-full shadow-lg">
-              {reservations.length} Active
+              {reservations.length} {t('active')}
             </Badge>
           </h1>
           <p className="text-slate-500 font-bold mt-2 text-sm italic">
-            Visualizing your high-impact consultations via {viewMode} view.
+            {t('visualizing', { mode: viewMode })}
           </p>
         </div>
 
@@ -225,14 +224,14 @@ export default function ConsultantReservations() {
                 onClick={() => setViewMode('calendar')}
                 className={cn("rounded-xl h-10 px-4 font-bold text-xs", viewMode === 'calendar' ? "bg-slate-900 text-white" : "text-slate-400")}
               >
-                <LayoutGrid className="w-4 h-4 mr-2" /> Calendar
+                <LayoutGrid className="w-4 h-4 mr-2" /> {t('calendar')}
               </Button>
               <Button 
                 variant={viewMode === 'list' ? 'default' : 'ghost'} 
                 onClick={() => setViewMode('list')}
                 className={cn("rounded-xl h-10 px-4 font-bold text-xs", viewMode === 'list' ? "bg-slate-900 text-white" : "text-slate-400")}
               >
-                <List className="w-4 h-4 mr-2" /> List
+                <List className="w-4 h-4 mr-2" /> {t('list')}
               </Button>
            </div>
            
@@ -252,10 +251,10 @@ export default function ConsultantReservations() {
            ) : (
               <Tabs value={statusFilter} onValueChange={setStatusFilter}>
                  <TabsList className="bg-white border border-slate-200 p-1 h-12 rounded-2xl shadow-sm">
-                   <TabsTrigger value="all" className="rounded-xl px-4 font-bold text-xs data-[state=active]:bg-slate-900 data-[state=active]:text-white">All</TabsTrigger>
-                   <TabsTrigger value="pending" className="rounded-xl px-4 font-bold text-xs data-[state=active]:bg-slate-900 data-[state=active]:text-white uppercase tracking-tighter">Pending</TabsTrigger>
-                   <TabsTrigger value="confirmed" className="rounded-xl px-4 font-bold text-xs data-[state=active]:bg-slate-900 data-[state=active]:text-white uppercase tracking-tighter">Confirmed</TabsTrigger>
-                   <TabsTrigger value="completed" className="rounded-xl px-4 font-bold text-xs data-[state=active]:bg-slate-900 data-[state=active]:text-white uppercase tracking-tighter">Finalized</TabsTrigger>
+                   <TabsTrigger value="all" className="rounded-xl px-4 font-bold text-xs data-[state=active]:bg-slate-900 data-[state=active]:text-white">{t('all')}</TabsTrigger>
+                   <TabsTrigger value="pending" className="rounded-xl px-4 font-bold text-xs data-[state=active]:bg-slate-900 data-[state=active]:text-white uppercase tracking-tighter">{t('pending')}</TabsTrigger>
+                   <TabsTrigger value="confirmed" className="rounded-xl px-4 font-bold text-xs data-[state=active]:bg-slate-900 data-[state=active]:text-white uppercase tracking-tighter">{t('confirmed')}</TabsTrigger>
+                   <TabsTrigger value="completed" className="rounded-xl px-4 font-bold text-xs data-[state=active]:bg-slate-900 data-[state=active]:text-white uppercase tracking-tighter">{t('finalized')}</TabsTrigger>
                  </TabsList>
               </Tabs>
            )}
@@ -269,7 +268,7 @@ export default function ConsultantReservations() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="py-6 px-8 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 border-r border-slate-100 w-44">Timeline / Day</th>
+                  <th className="py-6 px-8 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 border-r border-slate-100 w-44">{t('timelineDay')}</th>
                   {SLOTS.map(s => {
                     const isHour = s % 1 === 0
                     return (
@@ -287,8 +286,8 @@ export default function ConsultantReservations() {
                 {DAYS.map((day, dayIdx) => (
                   <tr key={dayIdx} className="border-b border-slate-50 last:border-b-0 group">
                     <td className="py-6 px-8 border-r border-slate-100 bg-slate-50/20 group-hover:bg-emerald-50/30 transition-colors">
-                       <p className="text-sm font-black text-slate-900 uppercase mb-1 leading-none">{format(day, 'EEEE', { locale: fr })}</p>
-                       <p className="text-[10px] font-bold text-slate-400 uppercase italic tracking-tighter">{format(day, 'dd MMMM', { locale: fr })}</p>
+                       <p className="text-sm font-black text-slate-900 uppercase mb-1 leading-none">{format(day, 'EEEE', { locale: dateLocale })}</p>
+                       <p className="text-[10px] font-bold text-slate-400 uppercase italic tracking-tighter">{format(day, 'dd MMMM', { locale: dateLocale })}</p>
                     </td>
                     {(() => {
                       const cells = []
@@ -352,11 +351,11 @@ export default function ConsultantReservations() {
             <Table>
               <TableHeader className="bg-slate-50">
                 <TableRow>
-                  <TableHead className="py-6 px-10 text-[10px] font-black uppercase tracking-widest text-slate-400">Expert's Client</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Schedule</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Assigned Service</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">State</TableHead>
-                  <TableHead className="text-right pr-10 text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</TableHead>
+                  <TableHead className="py-6 px-10 text-[10px] font-black uppercase tracking-widest text-slate-400">{t('expertClient')}</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('schedule')}</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('assignedService')}</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('state')}</TableHead>
+                  <TableHead className="text-right pr-10 text-[10px] font-black uppercase tracking-widest text-slate-400">{t('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -380,7 +379,7 @@ export default function ConsultantReservations() {
                          <div className="space-y-1">
                             <div className="flex items-center gap-2 text-xs font-black text-slate-700">
                                <Calendar className="w-4 h-4 text-emerald-600" />
-                               {format(new Date(res.startTime), 'EEEE dd MMM', { locale: fr })}
+                               {format(new Date(res.startTime), 'EEEE dd MMM', { locale: dateLocale })}
                             </div>
                             <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400">
                                <Clock className="w-3.5 h-3.5" />
@@ -405,13 +404,13 @@ export default function ConsultantReservations() {
                                </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl shadow-2xl border-slate-50">
-                               <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Hub Controls</DropdownMenuLabel>
+                               <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('hubControls')}</DropdownMenuLabel>
                                <DropdownMenuItem onClick={() => setSelectedRes(res)} className="rounded-xl px-3 py-2 cursor-pointer transition-colors focus:bg-emerald-50 focus:text-emerald-500">
-                                  <ChevronRight className="w-4 h-4 mr-2" /> View Detailed Card
+                                  <ChevronRight className="w-4 h-4 mr-2" /> {t('viewCard')}
                                </DropdownMenuItem>
                                <DropdownMenuSeparator className="my-1 bg-slate-50" />
                                <DropdownMenuItem onClick={() => deleteReservation(res.id)} className="rounded-xl px-3 py-2 cursor-pointer text-rose-500 focus:bg-rose-50">
-                                  <Trash2 className="w-4 h-4 mr-2" /> Delete Permanentely
+                                  <Trash2 className="w-4 h-4 mr-2" /> {t('deletePermanently')}
                                </DropdownMenuItem>
                             </DropdownMenuContent>
                          </DropdownMenu>
@@ -426,8 +425,8 @@ export default function ConsultantReservations() {
                              <CalendarX className="w-10 h-10 text-slate-200" />
                           </div>
                           <div>
-                            <h3 className="text-xl font-black text-slate-900 mb-1">Agenda is clear</h3>
-                            <p className="text-xs text-slate-400 font-bold italic tracking-tight">No reservations found in this category.</p>
+                            <h3 className="text-xl font-black text-slate-900 mb-1">{t('agendaClear')}</h3>
+                            <p className="text-xs text-slate-400 font-bold italic tracking-tight">{t('noReservations')}</p>
                           </div>
                        </div>
                     </TableCell>
@@ -455,7 +454,7 @@ export default function ConsultantReservations() {
                      <Badge className="bg-white/20 text-white border-none font-black text-[10px] uppercase tracking-widest px-4 py-1.5 rounded-full">
                         {selectedRes?.status}
                      </Badge>
-                     <Button variant="ghost" className="text-white/60 hover:text-white rounded-full h-8" onClick={() => setSelectedRes(null)}>Close</Button>
+                     <Button variant="ghost" className="text-white/60 hover:text-white rounded-full h-8" onClick={() => setSelectedRes(null)}>{t('close')}</Button>
                   </div>
                   <h2 className="text-5xl font-black tracking-tight leading-none mb-6">
                      {selectedRes?.serviceTier?.service?.name}
@@ -463,7 +462,7 @@ export default function ConsultantReservations() {
                   <div className="flex flex-wrap items-center gap-8">
                      <div className="flex items-center gap-3 text-sm font-black italic">
                         <Calendar className="w-5 h-5 opacity-60" />
-                        {selectedRes && format(new Date(selectedRes.startTime), 'dd MMMM yyyy', { locale: fr })}
+                        {selectedRes && format(new Date(selectedRes.startTime), 'dd MMMM yyyy', { locale: dateLocale })}
                      </div>
                      <div className="flex items-center gap-3 text-sm font-black italic">
                         <Clock className="w-5 h-5 opacity-60" />
@@ -477,7 +476,7 @@ export default function ConsultantReservations() {
             <div className="p-10 space-y-10 bg-white">
                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4">
-                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Consulting Partner</p>
+                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{t('consultingPartner')}</p>
                      <div className="flex items-center gap-5 bg-slate-50 p-5 rounded-[32px] border border-slate-100/60">
                         <Avatar className="w-14 h-14 border-4 border-white shadow-xl ring-2 ring-emerald-50">
                            <AvatarFallback className="bg-emerald-600 text-white font-black text-lg">
@@ -491,14 +490,14 @@ export default function ConsultantReservations() {
                      </div>
                   </div>
                   <div className="space-y-4">
-                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Session Logistics</p>
+                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{t('sessionLogistics')}</p>
                      <div className="flex items-center gap-5 bg-slate-50 p-5 rounded-[32px] border border-slate-100/60">
                         <div className="w-14 h-14 rounded-[24px] bg-white border border-slate-100/60 flex items-center justify-center text-emerald-600 shadow-sm ring-2 ring-emerald-50">
                            {selectedRes?.meetingType === 'SUR_PLACE' ? <MapPin className="w-7 h-7" /> : <Video className="w-7 h-7" />}
                         </div>
                         <div>
                            <p className="text-base font-black text-slate-900 leading-tight mb-1">
-                              {selectedRes?.meetingType === 'SUR_PLACE' ? 'Face-to-Face' : 'Virtual Session'}
+                              {selectedRes?.meetingType === 'SUR_PLACE' ? t('faceToFace') : t('virtualSession')}
                            </p>
                            <p className="text-[10px] text-emerald-600 font-black uppercase tracking-[0.2em]">
                               {selectedRes?.serviceTier?.tierType} Mode
@@ -518,19 +517,19 @@ export default function ConsultantReservations() {
                               <Video className="w-6 h-6 animate-pulse" />
                            </div>
                            <div>
-                              <h4 className="text-xl font-black italic leading-none mb-1">Secured Video Bridge</h4>
-                              <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Encrypted Zoom Channel Ready</p>
+                              <h4 className="text-xl font-black italic leading-none mb-1">{t('securedBridge')}</h4>
+                              <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">{t('encryptedZoom')}</p>
                            </div>
                         </div>
                         {selectedRes.zoomJoinUrl ? (
                           <div className="w-full flex flex-col md:flex-row items-center gap-4">
                              <JoinZoomButton joinUrl={selectedRes.zoomJoinUrl} className="w-full md:w-auto rounded-2xl bg-emerald-600 hover:bg-emerald-700 font-black italic h-14 px-10 shadow-[0_10px_40px_rgba(16,185,129,0.3)] transition-all hover:-translate-y-1" />
-                             <Button variant="ghost" className="text-xs font-black text-slate-500 hover:text-white transition-colors" onClick={() => { navigator.clipboard.writeText(selectedRes.zoomJoinUrl); toast.success('Link Copied') }}>
-                                Copy Session ID
+                             <Button variant="ghost" className="text-xs font-black text-slate-500 hover:text-white transition-colors" onClick={() => { navigator.clipboard.writeText(selectedRes.zoomJoinUrl); toast.success(t('copySessionId')) }}>
+                                {t('copySessionId')}
                              </Button>
                           </div>
                         ) : (
-                          <Badge variant="outline" className="text-slate-500 border-slate-700 py-2 px-6 rounded-full font-black text-[10px] uppercase">Awaiting Activation...</Badge>
+                          <Badge variant="outline" className="text-slate-500 border-slate-700 py-2 px-6 rounded-full font-black text-[10px] uppercase">{t('awaitingActivation')}</Badge>
                         )}
                      </div>
                   </div>
@@ -547,30 +546,30 @@ export default function ConsultantReservations() {
                        </DropdownMenuTrigger>
                        <DropdownMenuContent align="start" className="p-2 rounded-2xl border-slate-100 shadow-xl">
                           <DropdownMenuItem onClick={() => deleteReservation(selectedRes.id)} className="rounded-xl px-4 py-2 text-rose-500 font-bold focus:bg-rose-50 cursor-pointer">
-                             Destroy Reservation
+                             {t('destroyReservation')}
                           </DropdownMenuItem>
                        </DropdownMenuContent>
                     </DropdownMenu>
-                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">System Access Only</p>
+                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest italic">{t('systemAccessOnly')}</p>
                   </div>
 
                   <Button variant="ghost" className="rounded-2xl font-black text-slate-400 hover:text-slate-600 h-14 px-8" onClick={() => setSelectedRes(null)}>
-                     Dismiss
+                     {t('dismiss')}
                   </Button>
 
                   {selectedRes?.status === 'PENDING' && (
                     <>
                       <Button onClick={() => updateStatus(selectedRes.id, 'CONFIRMED')} className="rounded-2xl bg-emerald-600 text-white hover:bg-emerald-700 font-black px-10 h-14 shadow-xl shadow-emerald-100 hover:-translate-y-1 transition-all">
-                         Accept Request
+                         {t('acceptRequest')}
                       </Button>
                       <Button onClick={() => updateStatus(selectedRes.id, 'CANCELLED')} className="rounded-2xl bg-rose-50 text-rose-600 hover:bg-rose-100 font-black px-8 h-14 transition-all">
-                         Reject
+                         {t('reject')}
                       </Button>
                     </>
                   )}
                   {selectedRes?.status === 'CONFIRMED' && (
                     <Button onClick={() => updateStatus(selectedRes.id, 'COMPLETED')} className="rounded-2xl bg-blue-600 text-white hover:bg-blue-700 font-black px-10 h-14 shadow-xl shadow-blue-100 hover:-translate-y-1 transition-all">
-                       Finalize Session
+                       {t('finalizeSession')}
                     </Button>
                   )}
                </div>

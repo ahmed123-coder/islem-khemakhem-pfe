@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useTranslations } from 'next-intl'
 import { motion } from 'framer-motion'
 import { Star, MessageSquare, Calendar, User, ArrowLeft } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
@@ -10,6 +11,7 @@ import { Rating } from '@/components/ui/rating'
 import Link from 'next/link'
 
 export default function ConsultantReviewsPage() {
+  const t = useTranslations("consultantPage.reviews")
   const [reviews, setReviews] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
 
@@ -34,13 +36,13 @@ export default function ConsultantReviewsPage() {
       <div className="flex items-center justify-between">
         <div className="space-y-1">
           <Link href="/consultant" className="flex items-center gap-2 text-slate-400 hover:text-emerald-600 font-bold text-xs uppercase tracking-widest transition-colors mb-4">
-            <ArrowLeft className="w-4 h-4" /> Back to Dashboard
+            <ArrowLeft className="w-4 h-4" /> {t("backToDashboard")}
           </Link>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">
-            Client <span className="text-emerald-600 font-serif italic font-normal">Feedback</span>.
+            {t("title").split(' ')[0]} <span className="text-emerald-600 font-serif italic font-normal">{t("title").split(' ').slice(1).join(' ')}</span>.
           </h1>
           <p className="text-slate-500 font-bold text-sm">
-            What your clients are saying about your expertise.
+            {t("description")}
           </p>
         </div>
       </div>
@@ -68,7 +70,7 @@ export default function ConsultantReviewsPage() {
                               {review.client.firstName} {review.client.name}
                             </p>
                             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
-                              Client Verified
+                              {t("clientVerified")}
                             </p>
                           </div>
                         </div>
@@ -76,9 +78,9 @@ export default function ConsultantReviewsPage() {
                       </div>
 
                       <div className="relative">
-                        <div className="absolute -left-4 top-0 text-slate-100 text-6xl font-serif leading-none">“</div>
+                        <div className="absolute -left-4 top-0 text-slate-100 text-6xl font-serif leading-none">"</div>
                         <p className="text-slate-600 font-medium leading-relaxed relative z-10 pl-2 italic">
-                          {review.comment || "Aucun commentaire laissé."}
+                          {review.comment || t("noComment")}
                         </p>
                       </div>
 
@@ -92,7 +94,7 @@ export default function ConsultantReviewsPage() {
                         <div className="flex items-center gap-2 text-emerald-600">
                           <Star className="w-4 h-4" />
                           <span className="text-[10px] font-black uppercase tracking-widest">
-                            Rating: {review.rating}/5
+                            {t("rating")}: {review.rating}/5
                           </span>
                         </div>
                       </div>
@@ -100,7 +102,7 @@ export default function ConsultantReviewsPage() {
 
                     <div className="md:w-64 space-y-4">
                       <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 space-y-3">
-                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">Related Service</p>
+                        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">{t("relatedService")}</p>
                         <p className="text-xs font-black text-slate-900 leading-tight">
                           {review.order?.serviceTier?.service?.name || "Service tiers"}
                         </p>
@@ -120,8 +122,8 @@ export default function ConsultantReviewsPage() {
               <MessageSquare className="w-8 h-8 text-slate-200" />
             </div>
             <div className="space-y-2">
-              <p className="text-slate-900 font-black text-xl">No feedback yet.</p>
-              <p className="text-slate-400 font-bold text-sm">Once you complete sessions, client reviews will appear here.</p>
+              <p className="text-slate-900 font-black text-xl">{t("noFeedback")}</p>
+              <p className="text-slate-400 font-bold text-sm">{t("noFeedbackDesc")}</p>
             </div>
           </div>
         )}
