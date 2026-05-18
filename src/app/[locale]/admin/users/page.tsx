@@ -1,6 +1,7 @@
 'use client'
 
 import * as React from 'react'
+import { useTranslations } from 'next-intl'
 import { 
   Pencil, 
   Trash2, 
@@ -104,6 +105,8 @@ const STATUS_COLORS: Record<string, string> = {
 const COMPLETED_ORDER_THRESHOLD = 3
 
 export default function UsersPage() {
+  const t = useTranslations('admin.users')
+  const commonT = useTranslations('common')
   const [users, setUsers] = React.useState<User[]>([])
   const [loading, setLoading] = React.useState(true)
   const [search, setSearch] = React.useState('')
@@ -180,7 +183,7 @@ export default function UsersPage() {
   }
 
   const deleteUser = async (id: string) => {
-    if (!confirm('Supprimer ce client ?')) return
+    if (!confirm(t('deleteConfirm'))) return
     const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' })
     if (res.ok) fetchUsers()
   }
@@ -241,7 +244,7 @@ export default function UsersPage() {
 
   const columns = [
     {
-      header: 'Client Portfolio',
+      header: t('columns.clientPortfolio'),
       accessor: (user: User) => (
         <div className="flex items-center gap-3">
            <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center font-black text-blue-600 shadow-sm border border-blue-100/50">
@@ -252,7 +255,7 @@ export default function UsersPage() {
               <span className="font-bold text-slate-900 leading-tight">{[user.firstName, user.name].filter(Boolean).join(' ') || 'Anonymous'}</span>
               {isHighValue(user) && (
                 <Badge className="bg-orange-50 text-orange-600 border-none font-black text-[8px] uppercase tracking-tighter shadow-sm">
-                  VIP • {completedCount(user)} Done
+                  {t('status.vip')} • {completedCount(user)} {t('status.done')}
                 </Badge>
               )}
             </div>
@@ -264,7 +267,7 @@ export default function UsersPage() {
       ),
     },
     {
-      header: 'Company / Sector',
+      header: t('columns.companySector'),
       accessor: (user: User) => (
         <div className="flex flex-col gap-0.5">
           {user.company ? (
@@ -273,7 +276,7 @@ export default function UsersPage() {
               <span className="text-sm font-bold text-slate-800">{user.company}</span>
             </div>
           ) : (
-            <span className="text-[10px] font-bold text-slate-200 uppercase">No Company</span>
+            <span className="text-[10px] font-bold text-slate-200 uppercase">{t('noCompany')}</span>
           )}
           {user.sector && (
             <div className="flex items-center gap-1.5">
@@ -285,22 +288,22 @@ export default function UsersPage() {
       ),
     },
     {
-      header: 'Engagement Metrics',
+      header: t('columns.engagementMetrics'),
       accessor: (user: User) => (
         <div className="flex gap-4">
           <div className="flex flex-col">
             <span className="text-lg font-black text-slate-900 leading-none">{user._count.orders}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Orders</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t('metrics.totalOrders')}</span>
           </div>
           <div className="flex flex-col border-l border-slate-100 pl-4">
             <span className="text-lg font-black text-slate-900 leading-none">{user._count.reservations}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Reservations</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t('metrics.reservations')}</span>
           </div>
         </div>
       ),
     },
     {
-      header: 'Account Vitality',
+      header: t('columns.accountVitality'),
       accessor: (user: User) => (
         <button 
           onClick={() => toggleActive(user)}
@@ -314,19 +317,19 @@ export default function UsersPage() {
           {user.isActive ? (
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="w-3 h-3" />
-              Pulse Active
+              {t('status.pulseActive')}
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
               <ShieldAlert className="w-3 h-3" />
-              Locked
+              {t('status.locked')}
             </div>
           )}
         </button>
       ),
     },
     {
-      header: 'Registration',
+      header: t('columns.registration'),
       accessor: (user: User) => (
         <div className="flex items-center gap-2 text-slate-500 font-medium">
           <Calendar className="w-3.5 h-3.5 text-slate-300" />
@@ -335,7 +338,7 @@ export default function UsersPage() {
       ),
     },
     {
-      header: 'Actions',
+      header: commonT('actions'),
       className: "text-right",
       accessor: (user: User) => (
         <div className="flex justify-end gap-1">
@@ -349,20 +352,20 @@ export default function UsersPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 p-2 rounded-[24px] shadow-2xl border-slate-100 backdrop-blur-xl bg-white/90">
-              <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Protocol Override</DropdownMenuLabel>
+              <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('protocol')}</DropdownMenuLabel>
               <DropdownMenuItem 
                onClick={() => openOrderModal(user)}
                className="rounded-xl px-3 py-2.5 cursor-pointer transition-colors focus:bg-blue-50 focus:text-blue-600 font-bold text-sm"
               >
                 <ShoppingCart className="w-4 h-4 mr-3" />
-                Initialize Order
+                {t('actions.initializeOrder')}
               </DropdownMenuItem>
               <DropdownMenuItem 
                onClick={() => handleOpenEdit(user)}
                className="rounded-xl px-3 py-2.5 cursor-pointer transition-colors focus:bg-blue-50 focus:text-blue-600 font-bold text-sm"
               >
                 <Pencil className="w-4 h-4 mr-3" />
-                Modify Account
+                {t('actions.modifyAccount')}
               </DropdownMenuItem>
               <DropdownMenuSeparator className="my-1 bg-slate-50" />
               <DropdownMenuItem 
@@ -372,12 +375,12 @@ export default function UsersPage() {
                 {user.isActive ? (
                   <>
                     <UserX className="w-4 h-4 mr-3 text-red-500" />
-                    Suspend Access
+                    {t('actions.suspendAccess')}
                   </>
                 ) : (
                   <>
                     <UserCheck className="w-4 h-4 mr-3 text-emerald-500" />
-                    Restore Pulse
+                    {t('actions.restorePulse')}
                   </>
                 )}
               </DropdownMenuItem>
@@ -386,7 +389,7 @@ export default function UsersPage() {
                 className="rounded-xl px-3 py-2.5 cursor-pointer transition-colors focus:bg-red-50 focus:text-red-500 font-bold text-sm text-red-400"
               >
                 <Trash2 className="w-4 h-4 mr-3" />
-                Terminate Record
+                {t('actions.terminateRecord')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -410,11 +413,11 @@ export default function UsersPage() {
 
   return (
     <StandardPage
-      title="Client Command"
-      description={`Oversee your mission engagement with ${users.length} registered strategic partners.`}
-      breadcrumbs={[{ label: 'System' }, { label: 'Users' }]}
+      title={t('title')}
+      description={t('description', { count: users.length })}
+      breadcrumbs={[{ label: t('breadcrumbs.system') }, { label: t('breadcrumbs.users') }]}
       primaryAction={{
-        label: 'Register New Client',
+        label: t('registerNew'),
         icon: UserPlus,
         onClick: handleOpenCreate
       }}
@@ -423,7 +426,7 @@ export default function UsersPage() {
         <div className="relative max-w-xl group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-blue-600 transition-colors" />
           <Input 
-            placeholder="Search by name, email, company, sector..." 
+            placeholder={t('search')} 
             value={search} 
             onChange={e => setSearch(e.target.value)} 
             className="h-14 pl-12 pr-4 rounded-[20px] border-slate-100 bg-white/50 backdrop-blur-sm shadow-sm focus:ring-4 focus:ring-blue-600/5 transition-all font-medium"
@@ -450,7 +453,7 @@ export default function UsersPage() {
                   {[detailUser?.firstName, detailUser?.name].filter(Boolean).join(' ') || 'Anonymous'}
                 </DialogTitle>
                 <DialogDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400">
-                  Client Profile • {detailUser?.isActive ? '🟢 Active' : '🔴 Inactive'}
+                  {t('profileActions', { status: detailUser?.isActive ? t('detail.active') : t('detail.inactive') })}
                 </DialogDescription>
               </div>
             </div>
@@ -458,21 +461,21 @@ export default function UsersPage() {
           
           <ScrollArea className="max-h-[60vh]">
             <div className="p-8 pt-4 space-y-1">
-              <DetailRow icon={Mail} label="Email" value={detailUser?.email} />
-              <DetailRow icon={UserPlus} label="First Name" value={detailUser?.firstName} />
-              <DetailRow icon={UserPlus} label="Last Name" value={detailUser?.name} />
-              <DetailRow icon={Phone} label="Phone" value={detailUser?.phone} />
-              <DetailRow icon={Building2} label="Company" value={detailUser?.company} />
-              <DetailRow icon={Briefcase} label="Sector" value={detailUser?.sector} />
-              <DetailRow icon={MapPin} label="Address" value={detailUser?.address} />
-              <DetailRow icon={FileText} label="Needs" value={detailUser?.needs} />
-              <DetailRow icon={Calendar} label="Registered" value={detailUser ? format(new Date(detailUser.createdAt), 'PPP') : null} />
-              <DetailRow icon={Calendar} label="Last Updated" value={detailUser ? format(new Date(detailUser.updatedAt), 'PPP') : null} />
+              <DetailRow icon={Mail} label={t('detail.email')} value={detailUser?.email} />
+              <DetailRow icon={UserPlus} label={t('detail.firstName')} value={detailUser?.firstName} />
+              <DetailRow icon={UserPlus} label={t('detail.lastName')} value={detailUser?.name} />
+              <DetailRow icon={Phone} label={t('detail.phone')} value={detailUser?.phone} />
+              <DetailRow icon={Building2} label={t('detail.company')} value={detailUser?.company} />
+              <DetailRow icon={Briefcase} label={t('detail.sector')} value={detailUser?.sector} />
+              <DetailRow icon={MapPin} label={t('detail.address')} value={detailUser?.address} />
+              <DetailRow icon={FileText} label={t('detail.needs')} value={detailUser?.needs} />
+              <DetailRow icon={Calendar} label={t('detail.registered')} value={detailUser ? format(new Date(detailUser.createdAt), 'PPP') : null} />
+              <DetailRow icon={Calendar} label={t('detail.lastUpdated')} value={detailUser ? format(new Date(detailUser.updatedAt), 'PPP') : null} />
 
               {/* Orders summary */}
               {detailUser && detailUser.orders && detailUser.orders.length > 0 && (
                 <div className="pt-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 block mb-3">Order History</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 block mb-3">{t('detail.orderHistory')}</span>
                   <div className="space-y-2">
                     {detailUser.orders.map(o => (
                       <div key={o.id} className="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80">

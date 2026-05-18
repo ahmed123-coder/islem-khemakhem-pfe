@@ -392,5 +392,43 @@
     "title": "DSL Conseil - Conseil en Entreprise et Solutions de Gestion",
     "description": "Cabinet de conseil leader en management stratégique, solutions RH, assurance qualité et optimisation de la performance.",
     "keywords": "conseil en entreprise, conseil en gestion, solutions RH, gestion de la qualité, optimisation de la performance"
+  },
+  "admin": {
+    "users": {
+      "title": "Commande Clients",
+      "registerNew": "Enregistrer nouveau client"
+    },
+    "consultants": {
+      "title": "Moteur Consultants",
+      "registerNew": "Enregistrer nouvel expert"
+    },
+    "contacts": {
+      "title": "Centre de Communication"
+    },
+    "services": {
+      "title": "Moteur Services"
+    },
+    "blogs": {
+      "title": "Moteur de Contenu"
+    },
+    "reviews": {
+      "title": "Modération des Avis"
+    }
+  },
+  "client": {
+    "dashboard": {
+      "securingConnection": "Sécurisation de la connexion...",
+      "currentService": "Service actuel"
+    }
+  },
+  "consultant": {
+    "dashboard": {
+      "controlCenter": "Centre de contrôle",
+      "goodMorning": "Bonjour",
+      "goodAfternoon": "Bon après-midi",
+      "goodEvening": "Bonsoir",
+      "openCalendar": "Ouvrir le calendrier",
+      "updateAvailability": "Mettre à jour la disponibilité"
+    }
   }
 }

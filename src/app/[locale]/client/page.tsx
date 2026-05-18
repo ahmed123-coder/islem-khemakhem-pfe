@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Plus, 
@@ -33,6 +34,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
 export default function ClientDashboard() {
+  const t = useTranslations('client.dashboard')
+  const commonT = useTranslations('common')
   const [orders, setOrders] = useState<any[]>([])
   const [reservations, setReservations] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -84,7 +87,7 @@ export default function ClientDashboard() {
       <div className="flex h-full items-center justify-center bg-[#F8FAFC]">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-          <p className="text-sm font-black text-slate-400 font-sans uppercase tracking-widest">Securing Connection...</p>
+          <p className="text-sm font-black text-slate-400 font-sans uppercase tracking-widest">{t('securingConnection')}</p>
         </div>
       </div>
     )
@@ -94,19 +97,19 @@ export default function ClientDashboard() {
     <div className="min-h-full bg-[#F8FAFC] p-6 lg:p-12 font-sans overflow-x-hidden">
       <div className="max-w-7xl mx-auto flex flex-col gap-10">
         
-        {/* Active Subscription Featured Card */}
+{/* Active Subscription Featured Card */}
         <section>
           <div className="flex items-center justify-between mb-8">
              <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
-               Current Service
+               {t('currentService')}
              </h3>
              <Link href="/client/solutions">
                <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-black text-[10px] uppercase tracking-widest gap-2">
-                 Explore Tiers <ArrowRight className="w-3 h-3" />
+                 {t('exploreTiers')} <ArrowRight className="w-3 h-3" />
                </Button>
              </Link>
-          </div>
+           </div>
 
           {activeOrder ? (
             <Card className="border-none shadow-2xl shadow-blue-100/40 rounded-[2.5rem] overflow-hidden bg-white group transition-all duration-500 hover:shadow-blue-200/50 relative">

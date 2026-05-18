@@ -392,5 +392,437 @@
     "title": "DSL Consulting - Business Consulting & Management Solutions",
     "description": "Leading business consulting firm specializing in strategic management, HR solutions, quality assurance, and performance optimization.",
     "keywords": "business consulting, management consulting, HR solutions, quality management, performance optimization"
+  },
+  "admin": {
+    "users": {
+      "title": "Client Command",
+      "registerNew": "Register New Client"
+    },
+    "consultants": {
+      "title": "Consultants Engine",
+      "registerNew": "Register New Expert"
+    },
+    "contacts": {
+      "title": "Communication Hub"
+    },
+    "services": {
+      "title": "Services Engine"
+    },
+    "blogs": {
+      "title": "Content Engine"
+    },
+    "reviews": {
+      "title": "Review Moderation"
+    }
+  },
+  "client": {
+    "dashboard": {
+      "securingConnection": "Securing Connection...",
+      "currentService": "Current Service"
+    }
+  },
+  "consultant": {
+    "dashboard": {
+      "controlCenter": "Control Center",
+      "goodMorning": "Good Morning",
+      "goodAfternoon": "Good Afternoon",
+      "goodEvening": "Good Evening",
+      "openCalendar": "Open Calendar",
+      "updateAvailability": "Update Availability",
+      "appointmentsToday": "You have {count} appointments scheduled for today.",
+      "upcomingSession": "Upcoming Session",
+      "scheduled": "Scheduled",
+      "noneToday": "None Today",
+      "sessionWith": "Session with {name}",
+      "noSessions": "No sessions remaining",
+      "videoCall": "Video Call",
+      "monthlyGoal": "Monthly Goal",
+      "hours": "Hours",
+      "portfolioInfluence": "Portfolio Influence",
+      "activeClients": "Active Clients",
+      "newClients": "New",
+      "todayMissions": "Today's Missions",
+      "fullAgenda": "Full Agenda",
+      "consultationSession": "Consultation Session",
+      "clientLabel": "Client",
+      "noMissions": "No missions for today",
+      "reputation": "Reputation",
+      "basedOn": "Based on {count} reviews",
+      "viewFeedback": "View All Feedback",
+      "gettingStarted": {
+        "title": "You're just getting started, Expert.",
+        "description": "Your workspace is active but you haven't finalized your profile yet. Complete these high-impact tasks to start attracting clients.",
+        "steps": {
+          "certifications": "Upload your professional certifications",
+          "pricing": "Define your service tiers & pricing",
+          "calendar": "Sync your Google/Outlook calendar",
+          "portfolio": "Add 3 case studies to your portfolio"
+        },
+        "boost": "Boost My Visibility Now"
+      }
+    }
+  },
+  "adminPage": {
+    "users": {
+      "title": "Users & Clients",
+      "description": "Manage all registered clients and users",
+      "search": "Search by name, email, company...",
+      "registerNew": "Add New Client",
+      "noUsers": "No users found",
+      "columns": {
+        "client": "Client",
+        "company": "Company",
+        "contact": "Contact",
+        "status": "Status",
+        "registered": "Registered",
+        "orders": "Orders",
+        "reservations": "Reservations",
+        "actions": "Actions"
+      },
+      "form": {
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "email": "Email",
+        "phone": "Phone",
+        "company": "Company",
+        "sector": "Sector",
+        "address": "Address",
+        "needs": "Needs",
+        "password": "Password",
+        "create": "Create Client",
+        "update": "Update Client",
+        "cancel": "Cancel"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "viewDetails": "View Details",
+        "createOrder": "Create Order"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "dialogs": {
+        "editUser": "Edit User",
+        "createUser": "Create New User",
+        "userDetails": "User Details",
+        "orderHistory": "Order History",
+        "close": "Close",
+        "save": "Save Changes"
+      },
+      "order": {
+        "title": "Create New Order",
+        "selectService": "Select Service",
+        "selectTier": "Select Tier",
+        "create": "Create Order"
+      },
+      "confirmDelete": "Are you sure you want to delete this user?"
+    },
+    "consultants": {
+      "title": "Consultants",
+      "description": "Manage expert consultants and their profiles",
+      "search": "Search by name, specialty, email...",
+      "registerNew": "Add New Consultant",
+      "noConsultants": "No consultants found",
+      "columns": {
+        "expert": "Expert",
+        "specialty": "Specialty",
+        "contact": "Contact",
+        "status": "Status",
+        "missions": "Missions",
+        "sessions": "Sessions",
+        "actions": "Actions"
+      },
+      "form": {
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "email": "Email",
+        "phone": "Phone",
+        "specialty": "Specialty",
+        "hourlyRate": "Hourly Rate",
+        "bio": "Biography",
+        "imageUrl": "Profile Image URL",
+        "services": "Assigned Services",
+        "certifications": "Certifications",
+        "password": "Password",
+        "create": "Create Consultant",
+        "update": "Update Consultant"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "viewProfile": "View Profile"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "confirmDelete": "Are you sure you want to delete this consultant?"
+    },
+    "contacts": {
+      "title": "Contact Messages",
+      "description": "Manage contact form submissions and inquiries",
+      "search": "Search conversations...",
+      "noContacts": "No contact messages found",
+      "columns": {
+        "from": "From",
+        "subject": "Subject",
+        "status": "Status",
+        "date": "Date",
+        "actions": "Actions"
+      },
+      "status": {
+        "new": "New",
+        "read": "Read",
+        "replied": "Replied",
+        "processed": "Processed"
+      },
+      "actions": {
+        "reply": "Reply",
+        "markRead": "Mark as Read",
+        "markReplied": "Mark as Replied",
+        "delete": "Delete"
+      },
+      "detail": {
+        "from": "From",
+        "email": "Email",
+        "date": "Date",
+        "message": "Message",
+        "status": "Status"
+      },
+      "confirmDelete": "Are you sure you want to delete this message?"
+    },
+    "services": {
+      "title": "Services",
+      "description": "Manage services and pricing tiers",
+      "search": "Search services...",
+      "addNew": "Add New Service",
+      "noServices": "No services found",
+      "form": {
+        "name": "Service Name",
+        "description": "Description",
+        "category": "Category",
+        "icon": "Icon URL",
+        "image": "Image URL",
+        "save": "Save Service",
+        "cancel": "Cancel"
+      },
+      "tiers": {
+        "title": "Pricing Tiers",
+        "add": "Add Tier",
+        "type": "Tier Type",
+        "price": "Price",
+        "maxMessages": "Max Messages",
+        "maxCalls": "Max Call Minutes",
+        "canSelectConsultant": "Allow Consultant Selection",
+        "description": "Tier Description",
+        "save": "Save Tier"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete",
+        "activate": "Activate",
+        "deactivate": "Deactivate"
+      },
+      "confirmDelete": "Are you sure you want to delete this service?"
+    },
+    "blogs": {
+      "title": "Blog Posts",
+      "description": "Manage blog articles and content",
+      "search": "Search posts...",
+      "addNew": "Create New Post",
+      "noPosts": "No blog posts found",
+      "form": {
+        "title": "Title",
+        "content": "Content",
+        "excerpt": "Excerpt",
+        "image": "Featured Image",
+        "icon": "Icon",
+        "published": "Published",
+        "save": "Save Post",
+        "cancel": "Cancel"
+      },
+      "status": {
+        "published": "Published",
+        "draft": "Draft"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete",
+        "publish": "Publish",
+        "unpublish": "Unpublish",
+        "preview": "Preview"
+      },
+      "confirmDelete": "Are you sure you want to delete this post?"
+    },
+    "reviews": {
+      "title": "Reviews",
+      "description": "Manage and moderate client reviews",
+      "noReviews": "No reviews found",
+      "columns": {
+        "client": "Client",
+        "type": "Type",
+        "target": "Target",
+        "rating": "Rating",
+        "comment": "Comment",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "published": "Published",
+        "hidden": "Hidden"
+      },
+      "type": {
+        "service": "Service",
+        "consultant": "Consultant"
+      },
+      "actions": {
+        "publish": "Publish",
+        "hide": "Hide",
+        "delete": "Delete"
+      },
+      "confirmDelete": "Are you sure you want to delete this review?"
+    },
+    "subscriptions": {
+      "title": "Subscriptions",
+      "description": "Manage client subscriptions and orders",
+      "search": "Search by client, order ID...",
+      "noSubscriptions": "No subscriptions found",
+      "columns": {
+        "client": "Client",
+        "service": "Service",
+        "tier": "Tier",
+        "status": "Status",
+        "created": "Created",
+        "amount": "Amount",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "completed": "Completed",
+        "cancelled": "Cancelled",
+        "pending": "Pending"
+      },
+      "actions": {
+        "edit": "Edit",
+        "viewInvoice": "View Invoice",
+        "delete": "Cancel Subscription"
+      },
+      "form": {
+        "status": "Status",
+        "messagesUsed": "Messages Used",
+        "callsUsed": "Call Minutes Used",
+        "save": "Save Changes"
+      },
+      "invoice": {
+        "noInvoice": "No invoice found for this order"
+      }
+    },
+    "billing": {
+      "title": "Billing & Invoices",
+      "description": "Manage invoices and payments",
+      "search": "Search invoices...",
+      "createNew": "Create Invoice",
+      "noInvoices": "No invoices found",
+      "columns": {
+        "invoice": "Invoice #",
+        "client": "Client",
+        "amount": "Amount",
+        "dueDate": "Due Date",
+        "status": "Status",
+        "actions": "Actions"
+      },
+      "status": {
+        "paid": "Paid",
+        "pending": "Pending",
+        "overdue": "Overdue"
+      },
+      "actions": {
+        "edit": "Edit",
+        "download": "Download PDF",
+        "delete": "Delete"
+      },
+      "form": {
+        "client": "Client",
+        "amount": "Amount",
+        "dueDate": "Due Date",
+        "status": "Status",
+        "order": "Related Order",
+        "create": "Create Invoice",
+        "update": "Update Invoice"
+      },
+      "messages": {
+        "invoiceUpdated": "Invoice updated successfully",
+        "invoiceCreated": "Invoice created successfully",
+        "updateFailed": "Failed to update invoice",
+        "requiredFields": "Please fill in all required fields"
+      }
+    },
+    "schedule": {
+      "title": "Schedule",
+      "description": "Manage appointments and schedule",
+      "noEvents": "No scheduled events"
+    },
+    "faqs": {
+      "title": "FAQs",
+      "description": "Manage frequently asked questions",
+      "addNew": "Add FAQ",
+      "noFaqs": "No FAQs found",
+      "form": {
+        "question": "Question",
+        "answer": "Answer",
+        "category": "Category",
+        "save": "Save FAQ"
+      },
+      "actions": {
+        "edit": "Edit",
+        "delete": "Delete"
+      },
+      "confirmDelete": "Are you sure you want to delete this FAQ?"
+    },
+    "profile": {
+      "title": "Admin Profile",
+      "description": "Manage your admin profile",
+      "form": {
+        "firstName": "First Name",
+        "lastName": "Last Name",
+        "email": "Email",
+        "phone": "Phone",
+        "save": "Save Changes"
+      }
+    },
+    "content": {
+      "title": "Site Content",
+      "description": "Edit website content and visuals",
+      "sections": {
+        "hero": "Hero Section",
+        "solutions": "Solutions Hero",
+        "approches": "Approaches Hero",
+        "contact": "Contact Hero",
+        "logo": "Logo",
+        "footer": "Footer"
+      },
+      "form": {
+        "title": "Title",
+        "subtitle": "Subtitle",
+        "ctaText": "Button Text",
+        "ctaLink": "Button Link",
+        "image": "Background Image",
+        "save": "Save Changes"
+      },
+      "actions": {
+        "preview": "Preview",
+        "deploy": "Deploy Changes"
+      }
+    }
   }
 }
