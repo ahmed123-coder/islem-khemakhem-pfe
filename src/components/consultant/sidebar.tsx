@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { 
   LayoutDashboard, 
   Users, 
@@ -17,6 +18,8 @@ export function ConsultantSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const locale = pathname.split('/')[1] || 'en'
+  const t = useTranslations('dashboard.consultant')
+  const commonT = useTranslations('common')
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -27,17 +30,17 @@ export function ConsultantSidebar() {
     {
       title: 'Productivity',
       items: [
-        { href: `/${locale}/consultant`, label: 'Workspace', icon: LayoutDashboard },
-        { href: `/${locale}/consultant/reservations`, label: 'Reservations', icon: Calendar },
-        { href: `/${locale}/consultant/clients`, label: 'Clients', icon: Users },
-        { href: `/${locale}/consultant/reviews`, label: 'Reviews', icon: MessageSquare },
-        { href: `/${locale}/consultant/portfolio`, label: 'Portfolio', icon: Award },
+        { href: `/${locale}/consultant`, label: t('workspace'), icon: LayoutDashboard },
+        { href: `/${locale}/consultant/reservations`, label: t('reservations'), icon: Calendar },
+        { href: `/${locale}/consultant/clients`, label: t('clients'), icon: Users },
+        { href: `/${locale}/consultant/reviews`, label: t('reviewsLink'), icon: MessageSquare },
+        { href: `/${locale}/consultant/portfolio`, label: t('portfolio'), icon: Award },
       ]
     },
     {
       title: 'Account',
       items: [
-        { href: `/${locale}/consultant/settings`, label: 'Settings', icon: Settings2 },
+        { href: `/${locale}/consultant/settings`, label: t('settings'), icon: Settings2 },
       ]
     }
   ]
@@ -47,15 +50,15 @@ export function ConsultantSidebar() {
       <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/20 rounded-full blur-2xl transition-transform group-hover:scale-150" />
       <div className="flex items-center gap-2 mb-2">
          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-         <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Online Now</span>
+         <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">{commonT('onlineNow')}</span>
       </div>
-      <p className="text-xs font-bold text-slate-300 mb-4 leading-relaxed">Ready for high-impact consulting.</p>
+      <p className="text-xs font-bold text-slate-300 mb-4 leading-relaxed">{commonT('readyForHighImpact')}</p>
       <button 
         onClick={handleLogout}
         className="flex items-center gap-2 text-xs font-black text-white hover:text-emerald-400 transition-colors"
       >
         <LogOut className="w-4 h-4" />
-        Sign Out
+        {commonT('signOut')}
       </button>
     </div>
   )
@@ -64,7 +67,7 @@ export function ConsultantSidebar() {
     <DashboardSidebar
       theme="consultant"
       brandName="DSL Hub"
-      brandSubtitle="Expert Space"
+      brandSubtitle={t('expertSpace')}
       brandGradient="from-emerald-600 to-teal-500"
       groups={groups}
       footer={footer}

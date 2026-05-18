@@ -2,12 +2,15 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { Home, Settings, LogOut, Users, Calendar, Briefcase } from 'lucide-react'
 
 export default function ConsultantSidebar() {
   const pathname = usePathname()
   const router = useRouter()
   const locale = pathname.split('/')[1] || 'en'
+  const t = useTranslations('dashboard.consultant')
+  const commonT = useTranslations('common')
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
@@ -15,17 +18,17 @@ export default function ConsultantSidebar() {
   }
 
   const links = [
-    { href: `/${locale}/consultant`, label: 'Dashboard', icon: Home },
-    { href: `/${locale}/consultant/clients`, label: 'Clients', icon: Users },
-    { href: `/${locale}/consultant/reservations`, label: 'Reservations', icon: Calendar },
-    { href: `/${locale}/consultant/portfolio`, label: 'Portfolio', icon: Briefcase },
-    { href: `/${locale}/consultant/settings`, label: 'Settings', icon: Settings },
+    { href: `/${locale}/consultant`, label: t('workspace'), icon: Home },
+    { href: `/${locale}/consultant/clients`, label: t('clients'), icon: Users },
+    { href: `/${locale}/consultant/reservations`, label: t('reservations'), icon: Calendar },
+    { href: `/${locale}/consultant/portfolio`, label: t('portfolio'), icon: Briefcase },
+    { href: `/${locale}/consultant/settings`, label: t('settings'), icon: Settings },
   ]
 
   return (
     <aside className="w-[90px] md:w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col shadow-xl transition-all duration-300">
       <div className="p-4 md:p-6 border-b border-gray-700/50 flex items-center justify-center md:justify-start">
-        <h1 className="hidden md:block text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">Consultant Portal</h1>
+        <h1 className="hidden md:block text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">{t('title')}</h1>
         <span className="md:hidden text-green-400 font-bold text-xs text-center">CP</span>
       </div>
 
@@ -50,17 +53,17 @@ export default function ConsultantSidebar() {
       </nav>
 
       <div className="p-2 md:p-4 border-t border-gray-700/50 space-y-1">
-        <Link href={`/${locale}/`} title="Back to Site" className="flex items-center justify-center md:justify-start gap-2 px-2 md:px-4 py-2 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group md:hover:translate-x-1">
+        <Link href={`/${locale}/`} title={commonT('backToSite')} className="flex items-center justify-center md:justify-start gap-2 px-2 md:px-4 py-2 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group md:hover:translate-x-1">
           <Home size={16} className="group-hover:scale-110 transition-transform" />
-          <span className="hidden md:block text-sm">Back to Site</span>
+          <span className="hidden md:block text-sm">{commonT('backToSite')}</span>
         </Link>
         <button
           onClick={handleLogout}
-          title="Logout"
+          title={commonT('signOut')}
           className="flex items-center justify-center md:justify-start gap-2 px-2 md:px-4 py-2 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-200 w-full text-left group md:hover:translate-x-1"
         >
           <LogOut size={16} className="group-hover:scale-110 transition-transform" />
-          <span className="hidden md:block text-sm">Logout</span>
+          <span className="hidden md:block text-sm">{commonT('signOut')}</span>
         </button>
       </div>
     </aside>

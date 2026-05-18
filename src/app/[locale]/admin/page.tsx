@@ -25,12 +25,13 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from 'recharts'
+import { useTranslations } from 'next-intl'
+import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
-// Mock Data for the chart
 const chartData = [
   { name: 'Mon', value: 400 },
   { name: 'Tue', value: 300 },
@@ -42,6 +43,12 @@ const chartData = [
 ]
 
 export default function AdminDashboard() {
+  const t = useTranslations('dashboard')
+  const adminT = useTranslations('dashboard.admin')
+  const commonT = useTranslations('common')
+  const pathname = usePathname()
+  const locale = pathname.split('/')[1] || 'en'
+
   const [stats, setStats] = React.useState({ 
     blogs: 0, 
     services: 0, 
@@ -81,10 +88,10 @@ export default function AdminDashboard() {
   const handleDownloadReport = () => {
     const htmlContent = `
       <!DOCTYPE html>
-      <html lang="en">
+      <html lang="${locale}">
       <head>
         <meta charset="UTF-8">
-        <title>DSL Consulting - Analytics Report</title>
+        <title>DSL Consulting - ${adminT('analyticsReport')}</title>
         <style>
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
           body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #0f172a; padding: 40px; margin: 0; }
@@ -107,41 +114,41 @@ export default function AdminDashboard() {
         <div class="container">
           <div class="header">
             <h1>DSL Consulting</h1>
-            <p>Performance Report — ${new Date().toLocaleDateString()}</p>
+            <p>${adminT('performanceReport')} — ${new Date().toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US')}</p>
           </div>
           <div class="grid">
             <div class="card">
-              <p class="label">Total Clients</p>
+              <p class="label">${adminT('totalClients')}</p>
               <h3>${stats.clients}</h3>
               <div class="tag-row">
-                <span class="tag tag-green">${stats.activeClients} Active</span>
-                <span class="tag tag-orange">${stats.inactiveClients} Inactive</span>
+                <span class="tag tag-green">${stats.activeClients} ${adminT('active')}</span>
+                <span class="tag tag-orange">${stats.inactiveClients} ${adminT('inactive')}</span>
               </div>
             </div>
             <div class="card">
-              <p class="label">Consultants Staff</p>
+              <p class="label">${adminT('consultantsStaff')}</p>
               <h3>${stats.consultants}</h3>
               <div class="tag-row">
-                <span class="tag tag-green">${stats.activeConsultants} Active</span>
+                <span class="tag tag-green">${stats.activeConsultants} ${adminT('active')}</span>
               </div>
             </div>
             <div class="card">
-              <p class="label">Client Growth (30 days)</p>
+              <p class="label">${adminT('clientGrowth30Days')}</p>
               <h3 style="color: #2563eb">+${stats.growth}%</h3>
             </div>
             <div class="card">
-              <p class="label">Inquiries & Contacts</p>
+              <p class="label">${adminT('inquiriesAndContacts')}</p>
               <h3>${stats.contacts}</h3>
               <div class="tag-row">
-                 <span class="tag tag-orange">${stats.pendingContacts} Pending</span>
+                 <span class="tag tag-orange">${stats.pendingContacts} ${adminT('pending')}</span>
               </div>
             </div>
             <div class="card">
-              <p class="label">Active Services</p>
+              <p class="label">${adminT('activeServices')}</p>
               <h3>${stats.services}</h3>
             </div>
             <div class="card">
-              <p class="label">Published Approches</p>
+              <p class="label">${adminT('publishedApproches')}</p>
               <h3>${stats.blogs}</h3>
             </div>
           </div>
@@ -177,41 +184,37 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-10">
-      {/* Breadcrumb Navigation */}
       <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-        <Link href="/admin" className="hover:text-blue-600 transition-colors">Root</Link>
+        <Link href={`/${locale}/admin`} className="hover:text-blue-600 transition-colors">{t('common.root')}</Link>
         <ChevronRight className="w-3 h-3 text-slate-300" />
-        <span className="text-blue-600">Dashboard</span>
+        <span className="text-blue-600">{t('common.dashboard')}</span>
       </nav>
 
-      {/* Header Section */}
       <section className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-blue-600 font-bold text-xs uppercase tracking-widest mb-2">
             <LayoutDashboard className="w-3 h-3" />
-            Control Center
+            {t('common.controlCenter')}
           </div>
-          <h1 className="text-3xl font-black text-slate-900 tracking-tight">Dashboard Overview</h1>
-          <p className="text-slate-500 font-medium">Welcome back, here's what's happening with DSL Consulting today.</p>
+          <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t('common.dashboardOverview')}</h1>
+          <p className="text-slate-500 font-medium">{t('common.welcomeBackMessage')}</p>
         </div>
         <div className="flex items-center gap-3">
           <Button 
             onClick={handleDownloadReport}
             className="rounded-2xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 font-bold text-xs px-5"
           >
-            Download Report
+            {adminT('downloadReport')}
           </Button>
         </div>
       </section>
 
-      {/* Bento Grid Stats */}
       <motion.section 
         variants={container}
         initial="hidden"
         animate="show"
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
-        {/* Large Card: Clients */}
         <motion.div variants={item} className="md:col-span-2 lg:col-span-2">
           <Card className="relative overflow-hidden h-64 rounded-[32px] border-none bg-white shadow-[0_20px_50px_rgba(0,0,0,0.04)] group">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-[80px] -mr-32 -mt-32 transition-transform duration-700 group-hover:scale-125" />
@@ -222,16 +225,16 @@ export default function AdminDashboard() {
                 </div>
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider">
                   <TrendingUp className="w-3 h-3" />
-                  +{stats.growth}% Grow
+                  +{stats.growth}% {adminT('grow')}
                 </div>
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em]">Total Clients</p>
+                  <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em]">{adminT('totalClients')}</p>
                   <div className="flex gap-2 text-xs font-bold bg-slate-50 px-2 py-1 rounded-lg">
-                    <span className="text-emerald-500">{stats.activeClients} Active</span>
+                    <span className="text-emerald-500">{stats.activeClients} {adminT('active')}</span>
                     <span className="text-slate-300">|</span>
-                    <span className="text-amber-500">{stats.inactiveClients} Inactive</span>
+                    <span className="text-amber-500">{stats.inactiveClients} {adminT('inactive')}</span>
                   </div>
                 </div>
                 <div className="flex items-baseline gap-4">
@@ -262,52 +265,49 @@ export default function AdminDashboard() {
           </Card>
         </motion.div>
 
-        {/* Small Card: Consultants */}
         <motion.div variants={item}>
           <Card className="h-64 rounded-[32px] border-none bg-white shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 flex flex-col group">
             <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center mb-6 transition-transform group-hover:rotate-12">
               <UserSquare2 className="w-6 h-6 text-emerald-600" />
             </div>
-            <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em] mb-2">Team Size</p>
+            <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em] mb-2">{adminT('teamSize')}</p>
             <div className="flex items-end gap-3 mb-auto">
               <h3 className="text-4xl font-black text-slate-900 italic leading-none">{stats.consultants}</h3>
-              <span className="text-xs font-bold text-emerald-500 mb-1">{stats.activeConsultants} Active</span>
+              <span className="text-xs font-bold text-emerald-500 mb-1">{stats.activeConsultants} {adminT('active')}</span>
             </div>
-            <Link href="/admin/consultants" className="flex items-center gap-2 text-xs font-bold text-blue-600 hover:gap-3 transition-all">
-              Manage Experts <ArrowUpRight className="w-3 h-3" />
+            <Link href={`/${locale}/admin/consultants`} className="flex items-center gap-2 text-xs font-bold text-blue-600 hover:gap-3 transition-all">
+              {adminT('manageExperts')} <ArrowUpRight className="w-3 h-3" />
             </Link>
           </Card>
         </motion.div>
 
-        {/* Small Card: Services */}
         <motion.div variants={item}>
           <Card className="h-64 rounded-[32px] border-none bg-slate-900 text-white shadow-2xl p-8 flex flex-col group relative overflow-hidden">
             <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl" />
             <div className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center mb-6 transition-transform group-hover:scale-110">
               <Briefcase className="w-6 h-6 text-blue-400" />
             </div>
-            <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.2em] mb-2">Offerings</p>
+            <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.2em] mb-2">{adminT('offerings')}</p>
             <h3 className="text-4xl font-black italic mb-auto">{stats.services}</h3>
-            <Link href="/admin/solution" className="flex items-center gap-2 text-xs font-bold text-blue-400 hover:gap-3 transition-all relative z-10">
-              Active Services <ArrowUpRight className="w-3 h-3" />
+            <Link href={`/${locale}/admin/solution`} className="flex items-center gap-2 text-xs font-bold text-blue-400 hover:gap-3 transition-all relative z-10">
+              {adminT('activeServicesLink')} <ArrowUpRight className="w-3 h-3" />
             </Link>
           </Card>
         </motion.div>
 
-        {/* Medium Card: Contacts Chart */}
         <motion.div variants={item} className="md:col-span-2">
           <Card className="rounded-[32px] border-none bg-white shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 group">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em]">Inquiries Received</p>
+                  <p className="text-slate-500 font-bold text-xs uppercase tracking-[0.2em]">{adminT('inquiriesReceived')}</p>
                   <div className="flex gap-2 text-xs font-bold bg-slate-50 px-2 py-1 rounded-lg">
-                    <span className="text-blue-500">{stats.contacts - stats.pendingContacts} Replied</span>
+                    <span className="text-blue-500">{stats.contacts - stats.pendingContacts} {adminT('replied')}</span>
                     <span className="text-slate-300">|</span>
-                    <span className="text-orange-500">{stats.pendingContacts} Pending</span>
+                    <span className="text-orange-500">{stats.pendingContacts} {adminT('pending')}</span>
                   </div>
                 </div>
-                <h3 className="text-3xl font-black text-slate-900">{stats.contacts} Total</h3>
+                <h3 className="text-3xl font-black text-slate-900">{stats.contacts} {adminT('total')}</h3>
               </div>
               <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
                 <Mail className="w-5 h-5 text-orange-600" />
@@ -330,35 +330,34 @@ export default function AdminDashboard() {
           </Card>
         </motion.div>
 
-        {/* Interactive Quick Actions */}
         <motion.div variants={item} className="md:col-span-2">
           <div className="grid grid-cols-2 gap-4 h-full">
-            <Link href="/admin/approches" className="group">
+            <Link href={`/${locale}/admin/approches`} className="group">
               <div className="h-full rounded-[32px] bg-white border border-slate-100 p-6 flex items-center gap-4 transition-all hover:bg-slate-50 hover:shadow-lg active:scale-95">
                 <div className="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <FileEdit className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 text-sm">Write Blog</h4>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Content Engine</p>
+                  <h4 className="font-bold text-slate-900 text-sm">{adminT('writeBlog')}</h4>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{adminT('contentEngine')}</p>
                 </div>
               </div>
             </Link>
-            <Link href="/admin/content" className="group">
+            <Link href={`/${locale}/admin/content`} className="group">
               <div className="h-full rounded-[32px] bg-white border border-slate-100 p-6 flex items-center gap-4 transition-all hover:bg-slate-50 hover:shadow-lg active:scale-95">
                 <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Globe className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 text-sm">Edit Site</h4>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Live Visuals</p>
+                  <h4 className="font-bold text-slate-900 text-sm">{adminT('editSite')}</h4>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{adminT('liveVisuals')}</p>
                 </div>
               </div>
             </Link>
             <div className="col-span-2">
               <Button className="w-full h-16 rounded-[24px] bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-100 text-white font-black italic tracking-tight gap-3 text-lg transition-all hover:-translate-y-1">
                 <Zap className="w-6 h-6 fill-white" />
-                System Boost Now <Plus className="w-4 h-4 ml-auto" />
+                {t('common.systemBoostNow')} <Plus className="w-4 h-4 ml-auto" />
               </Button>
             </div>
           </div>
