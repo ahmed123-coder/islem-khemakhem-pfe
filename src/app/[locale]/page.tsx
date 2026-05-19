@@ -1,47 +1,48 @@
-import type { Metadata } from 'next'
+'use client'
+
+import { useTranslations } from 'next-intl'
 import Hero from '@/components/Hero'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { CheckCircle2, Briefcase, Users, Shield, BarChart3, Quote } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 
-export const metadata: Metadata = {
-  title: 'DSL Consulting - Cabinet de Conseil & Accompagnement',
-  description: 'Transformez votre entreprise avec l\'excellence. Conseil en management, RH, qualité et performance.',
-}
-
 export default function Home() {
+  const t = useTranslations('home')
+
+  const values = [
+    { letter: 'D', title: t('values.determination.title'), desc: t('values.determination.description') },
+    { letter: 'S', title: t('values.success.title'),       desc: t('values.success.description') },
+    { letter: 'L', title: t('values.loyalty.title'),       desc: t('values.loyalty.description') },
+  ]
+
+  const approaches = [
+    { icon: '👥', title: t('approaches.coaching') },
+    { icon: '🔄', title: t('approaches.change') },
+    { icon: '📚', title: t('approaches.training') },
+  ]
+
+  const solutions = [
+    { icon: '🎯', title: t('solutions.performance') },
+    { icon: '📊', title: t('solutions.gpec') },
+    { icon: '⭐', title: t('solutions.employerBrand') },
+  ]
+
+  const benefits = t.raw('whyChoose.benefits') as string[]
+
   return (
     <>
       <Hero />
-      
+
       {/* DSL Values Section */}
       <section className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <span className="text-3xl">🥇</span>
-            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">Nos valeurs — Le sens de DSL</h2>
+            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">{t('values.title')}</h2>
             <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full"></div>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                letter: 'D',
-                title: 'Détermination',
-                desc: 'Nous avançons avec rigueur et engagement vers l\'atteinte des objectifs de nos clients. Chaque projet est porté par une volonté de réussir, ensemble.'
-              },
-              {
-                letter: 'S',
-                title: 'Succès',
-                desc: 'Le succès n\'est pas individuel : il naît de notre collaboration étroite avec nos clients. Il est le fruit d\'une détermination partagée et d\'actions concrètes orientées résultats.'
-              },
-              {
-                letter: 'L',
-                title: 'Loyauté',
-                desc: 'Nous plaçons la confiance et la fidélité au cœur de nos relations. Nous sommes dévoués à nos clients et nous construisons des partenariats durables basés sur le respect et l\'intégrité.'
-              }
-            ].map((val) => (
+            {values.map((val) => (
               <div key={val.letter} className="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow text-center">
                 <div className="w-16 h-16 rounded-full bg-[#1B3F7A] flex items-center justify-center mx-auto mb-5">
                   <span className="text-3xl font-bold text-white">{val.letter}</span>
@@ -60,24 +61,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <span className="text-3xl">🎯</span>
-            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">Nos approches</h2>
+            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">{t('approaches.title')}</h2>
             <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full mb-6"></div>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: '👥',
-                title: 'Coaching professionnel'
-              },
-              {
-                icon: '🔄',
-                title: 'Conduite du changement'
-              },
-              {
-                icon: '📚',
-                title: 'Formation & Sensibilisation'
-              }
-            ].map((approach, i) => (
+            {approaches.map((approach, i) => (
               <div key={i} className="bg-white rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
                 <div className="text-4xl mb-5">{approach.icon}</div>
                 <div className="w-10 h-1 bg-[#7AB648] mb-4 rounded-full"></div>
@@ -98,24 +86,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
             <span className="text-3xl">💡</span>
-            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">Nos solutions</h2>
+            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">{t('solutions.title')}</h2>
             <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full mb-6"></div>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            {[
-              {
-                icon: '🎯',
-                title: 'Management de la performance cachée'
-              },
-              {
-                icon: '📊',
-                title: 'Gestion prévisionnelle des emplois et des compétences'
-              },
-              {
-                icon: '⭐',
-                title: 'Marque employeur'
-              }
-            ].map((solution, i) => (
+            {solutions.map((solution, i) => (
               <div key={i} className="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
                 <div className="text-4xl mb-5">{solution.icon}</div>
                 <div className="w-10 h-1 bg-[#7AB648] mb-4 rounded-full"></div>
@@ -137,19 +112,12 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
               <div className="mb-10">
-                <h2 className="text-3xl font-serif font-bold text-[#1B3F7A] mb-3">🏆 Pourquoi choisir DSL</h2>
+                <h2 className="text-3xl font-serif font-bold text-[#1B3F7A] mb-3">🏆 {t('whyChoose.title')}</h2>
                 <div className="w-16 h-1 bg-[#7AB648] rounded-full"></div>
               </div>
-              <p className="text-gray-700 leading-relaxed mb-8">
-                La différence entre une organisation qui évolue et celle qui stagne ne réside pas uniquement dans ses ressources, mais dans sa capacité à mobiliser les bonnes expertises au bon moment. C'est pour répondre à cette exigence que notre plateforme a été conçue, ça vous sera utile pour :
-              </p>
+              <p className="text-gray-700 leading-relaxed mb-8">{t('whyChoose.description')}</p>
               <div className="space-y-3 max-w-2xl">
-                {[
-                  'Piloter votre performance avec plus de clarté et d\'efficacité',
-                  'Optimiser vos ressources et maîtriser vos défis et vos goulots',
-                  'Bénéficier de solutions concrètes, bien adaptées à vos enjeux',
-                  'Accéder rapidement à des experts rigoureusement sélectionnés'
-                ].map((item, i) => (
+                {benefits.map((item, i) => (
                   <div key={i} className="flex items-center gap-3">
                     <span className="text-[#7AB648] text-sm">✔️</span>
                     <p className="text-gray-700 text-sm">{item}</p>
@@ -158,12 +126,11 @@ export default function Home() {
               </div>
             </div>
             <div className="relative h-80 lg:h-96 rounded-2xl overflow-hidden shadow-lg">
-              <Image src="/pourquoi nous choisir.png" alt="Pourquoi choisir DSL" fill className="object-cover" />
+              <Image src="/pourquoi nous choisir.png" alt={t('whyChoose.title')} fill className="object-cover" />
             </div>
           </div>
         </div>
       </section>
-
 
       {/* CTA Section */}
       <section className="relative py-24 overflow-hidden" style={{background: 'linear-gradient(135deg, #1B3F7A 0%, #1a6b6b 100%)'}}>
@@ -181,33 +148,29 @@ export default function Home() {
           <span className="text-white font-bold" style={{fontSize: '20rem', letterSpacing: '-0.05em'}}>DSL</span>
         </div>
         <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl lg:text-4xl font-serif font-bold text-white mb-6 whitespace-nowrap">
-            Accédez directement à nos approches spécialisés.
+          <h2 className="text-3xl lg:text-4xl font-serif font-bold text-white mb-6">
+            {t('cta.title')}
           </h2>
           <p className="text-lg text-white/80 mb-10 max-w-2xl mx-auto">
-            Choisissez la solution adaptée à vos besoins uniques ou connectez-vous pour un accompagnement sur mesure.
+            {t('cta.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link href="/register">
               <Button className="bg-white hover:bg-gray-100 text-[#1B3F7A] rounded-full px-8 py-6 text-base font-bold">
-                Créer un Compte
+                {t('cta.createAccount')}
               </Button>
             </Link>
             <Link href="/services">
               <Button className="bg-[#7AB648] hover:bg-[#639a3a] text-white rounded-full px-8 py-6 text-base font-bold">
-                Consulter nos domaines →
+                {t('cta.viewServices')} →
               </Button>
             </Link>
-            
             <Link href="/contact" className="text-white/70 hover:text-white underline underline-offset-4 text-base font-medium transition-colors">
-              Nous contacter →
+              {t('cta.contactUs')} →
             </Link>
           </div>
         </div>
-
       </section>
-
-
     </>
   )
 }

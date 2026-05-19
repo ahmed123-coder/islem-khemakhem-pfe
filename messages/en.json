@@ -112,6 +112,20 @@
       "createAccount": "Create Account",
       "viewServices": "View Services",
       "contactUs": "Contact Us"
+    },
+    "hero": {
+      "badge": "Business Consulting & Support",
+      "subtitle": "Access a network of committed and inspiring business experts to foster the sustainability of your company.",
+      "defaultTitle": "Transform your challenges into opportunities for lasting performance!",
+      "discoverApproaches": "Discover our approaches"
+    },
+    "vision": {
+      "label": "Vision",
+      "text": "To position ourselves as the catalyst for your performance, for an ambitious and sustainable future."
+    },
+    "mission": {
+      "label": "Mission",
+      "text": "To support companies in building more efficient, more human and more agile organizations, by transforming managerial challenges into levers of growth and performance."
     }
   },
   "auth": {
@@ -417,7 +431,17 @@
   },
   "client": {
     "dashboard": {
-      "securingConnection": "Securing Connection...",
+      "welcomeBack": "Welcome back, {name}!",
+      "welcomeBackGuest": "Welcome back!",
+      "happeningDesc": "Here is what's happening with your consulting.",
+      "notifications": "Notifications",
+      "unreadAlerts": "You have {count} unread alerts",
+      "markAllRead": "Mark all read",
+      "stayUpdated": "Stay updated",
+      "activityUpdates": "Activity updates will appear here.",
+      "markAsRead": "Mark as read",
+      "standardMember": "Standard Member",
+      "myPortal": "My Portal",
       "currentService": "Current Service",
       "exploreTiers": "Explore Tiers",
       "active": "Active",

@@ -112,6 +112,20 @@
       "createAccount": "Créer un compte",
       "viewServices": "Voir les services",
       "contactUs": "Nous contacter"
+    },
+    "hero": {
+      "badge": "Cabinet de Conseil & Accompagnement",
+      "subtitle": "Accédez à un réseau d'experts métier engagés et inspirants afin de favoriser la pérennité de votre entreprise.",
+      "defaultTitle": "Transformez vos défis en opportunités de performance durable !",
+      "discoverApproaches": "Découvrir nos approches"
+    },
+    "vision": {
+      "label": "Vision",
+      "text": "Se placer comme le catalyseur de votre performance, pour un avenir ambitieux et durable."
+    },
+    "mission": {
+      "label": "Mission",
+      "text": "Accompagner les entreprises dans la construction d'organisations plus performantes, plus humaines et plus agiles, en transformant les défis managériaux en leviers de croissance et de performance."
     }
   },
   "auth": {
@@ -417,7 +431,17 @@
   },
   "client": {
     "dashboard": {
-      "securingConnection": "Sécurisation de la connexion...",
+      "welcomeBack": "Bon retour, {name} !",
+      "welcomeBackGuest": "Bon retour !",
+      "happeningDesc": "Voici ce qui se passe avec votre accompagnement.",
+      "notifications": "Notifications",
+      "unreadAlerts": "Vous avez {count} alertes non lues",
+      "markAllRead": "Tout marquer comme lu",
+      "stayUpdated": "Restez informé",
+      "activityUpdates": "Les mises à jour apparaîtront ici.",
+      "markAsRead": "Marquer comme lu",
+      "standardMember": "Membre standard",
+      "myPortal": "Mon portail",
       "currentService": "Service actuel",
       "exploreTiers": "Explorer les formules",
       "active": "Actif",

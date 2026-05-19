@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { SidebarToggle } from '@/components/dashboard/SidebarToggle'
+import { useTranslations } from 'next-intl'
 
 
 interface HeaderProps {
@@ -24,6 +25,7 @@ interface HeaderProps {
 }
 
 export default function Header({ title }: HeaderProps) {
+  const t = useTranslations('client.dashboard')
   const [user, setUser] = useState<any>(null)
   const [mounted, setMounted] = useState(false)
   const [notifications, setNotifications] = useState<any[]>([])
@@ -101,10 +103,10 @@ export default function Header({ title }: HeaderProps) {
         <SidebarToggle theme="client" />
         <div className="flex flex-col">
           <h2 className="text-xl font-black text-slate-900 tracking-tight">
-            {user ? `Welcome back, ${user.name || 'User'}!` : 'Welcome back!'}
+            {user ? t('welcomeBack', { name: user.name || 'User' }) : t('welcomeBackGuest')}
           </h2>
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1 hidden sm:block">
-            Here is what's happening with your consulting.
+            {t('happeningDesc')}
           </p>
         </div>
       </div>
@@ -125,8 +127,8 @@ export default function Header({ title }: HeaderProps) {
               <DropdownMenuContent align="end" className="w-80 p-0 rounded-[2rem] shadow-2xl border-slate-100 overflow-hidden bg-white/95 backdrop-blur-xl">
                  <div className="p-6 bg-slate-50/50 flex items-center justify-between border-b border-slate-100">
                     <div>
-                       <DropdownMenuLabel className="p-0 text-base font-black text-slate-900 leading-tight">Notifications</DropdownMenuLabel>
-                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">You have {unreadCount} unread alerts</p>
+                       <DropdownMenuLabel className="p-0 text-base font-black text-slate-900 leading-tight">{t('notifications')}</DropdownMenuLabel>
+                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{t('unreadAlerts', { count: unreadCount })}</p>
                     </div>
                     {unreadCount > 0 && (
                       <Button 
@@ -135,7 +137,7 @@ export default function Header({ title }: HeaderProps) {
                         onClick={markAllAsRead}
                         className="h-7 text-[9px] font-black uppercase text-blue-600 hover:bg-blue-50 rounded-lg px-2"
                       >
-                        Mark all read
+                        {t('markAllRead')}
                       </Button>
                     )}
                  </div>
@@ -146,8 +148,8 @@ export default function Header({ title }: HeaderProps) {
                             <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center mb-4 text-slate-300">
                                <Bell className="w-6 h-6" />
                             </div>
-                            <p className="text-sm font-bold text-slate-900 mb-1">Stay updated</p>
-                            <p className="text-[11px] font-medium text-slate-400">Activity updates will appear here.</p>
+                            <p className="text-sm font-bold text-slate-900 mb-1">{t('stayUpdated')}</p>
+                            <p className="text-[11px] font-medium text-slate-400">{t('activityUpdates')}</p>
                          </div>
                        ) : (
                          notifications.map((n) => (
@@ -178,7 +180,7 @@ export default function Header({ title }: HeaderProps) {
                                         onClick={(e) => markAsRead(e, n.id)}
                                         className="text-[9px] font-black uppercase text-blue-600 hover:underline"
                                       >
-                                        Mark as read
+                                        {t('markAsRead')}
                                       </button>
                                     )}
                                  </div>
@@ -204,8 +206,8 @@ export default function Header({ title }: HeaderProps) {
             </AvatarFallback>
           </Avatar>
           <div className="hidden lg:block text-left">
-            <p className="text-sm font-black text-slate-900 leading-none mb-1">{user?.name || 'My Portal'}</p>
-            <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest leading-none">Standard Member</p>
+            <p className="text-sm font-black text-slate-900 leading-none mb-1">{user?.name || t('myPortal')}</p>
+            <p className="text-[10px] font-black text-blue-500 uppercase tracking-widest leading-none">{t('standardMember')}</p>
           </div>
         </button>
       </div>
