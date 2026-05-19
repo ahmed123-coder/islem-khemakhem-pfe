@@ -127,17 +127,17 @@ export default function ClientDashboard() {
                           <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">{activeOrder.serviceTier.service.name}</h2>
                           <Badge className="bg-emerald-50 text-emerald-600 border-none px-3 py-1 text-[10px] font-black uppercase tracking-widest relative">
                             <span className="absolute -left-1 -top-1 w-2 h-2 bg-emerald-500 rounded-full animate-ping" />
-                            Active
+                            {t('active')}
                           </Badge>
                         </div>
-                        <p className="text-sm font-bold text-blue-500 uppercase tracking-widest">{activeOrder.serviceTier.tierType} Excellence Tier</p>
+                        <p className="text-sm font-bold text-blue-500 uppercase tracking-widest">{activeOrder.serviceTier.tierType} {t('excellenceTier')}</p>
                       </div>
                     </div>
                     
                     <div className="grid grid-cols-2 gap-8 mt-12">
                       <div className="space-y-4">
                         <div className="flex justify-between items-end">
-                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Messages</span>
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{t('messages')}</span>
                           <span className="text-sm font-black text-slate-900">{activeOrder.messagesUsed} <span className="text-slate-400 font-bold">/ {activeOrder.serviceTier.maxMessages || '∞'}</span></span>
                         </div>
                         <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -149,7 +149,7 @@ export default function ClientDashboard() {
                       </div>
                       <div className="space-y-4">
                         <div className="flex justify-between items-end">
-                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Consulting Minutes</span>
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{t('consultingMinutes')}</span>
                           <span className="text-sm font-black text-slate-900">{activeOrder.callMinutesUsed} <span className="text-slate-400 font-bold">/ {activeOrder.serviceTier.maxCallDuration || '∞'}</span></span>
                         </div>
                         <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -166,7 +166,7 @@ export default function ClientDashboard() {
                       <div className="mt-8 space-y-3">
                         <div className="flex items-center gap-2 mb-2">
                           <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Recent Feedback</span>
+                          <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{t('recentFeedback')}</span>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {activeOrder.reviews.map((review: any) => (
@@ -210,27 +210,27 @@ export default function ClientDashboard() {
 
                   <div className="flex items-center gap-8 mt-12 pt-8 border-t border-slate-50">
                     <div>
-                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Your Consultant</p>
-                      <p className="text-sm font-black text-slate-900">{activeOrder.consultant?.name || 'Assigned Pending'}</p>
+                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">{t('yourConsultant')}</p>
+                      <p className="text-sm font-black text-slate-900">{activeOrder.consultant?.name || t('assignedPending')}</p>
                     </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">Billing Period</p>
-                      <p className="text-sm font-black text-slate-900">Renewable Monthly</p>
+                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1">{t('billingPeriod')}</p>
+                      <p className="text-sm font-black text-slate-900">{t('renewableMonthly')}</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Right: Actions */}
                 <div className="lg:w-2/5 p-8 md:p-12 bg-slate-50/50 flex flex-col justify-center gap-4">
-                   <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-2">Quick Access</h4>
+                   <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-2">{t('quickAccess')}</h4>
                    <Link href={`/client/orders/${activeOrder.id}`} className="w-full">
                      <Button className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-[1.5rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95 group">
-                        Manage Subscriptions <ExternalLink className="w-4 h-4 ml-2 opacity-30 group-hover:opacity-100 transition-opacity" />
+                        {t('manageSubscriptions')} <ExternalLink className="w-4 h-4 ml-2 opacity-30 group-hover:opacity-100 transition-opacity" />
                      </Button>
                    </Link>
                    <Link href="/client/solutions" className="w-full">
                      <Button variant="outline" className="w-full h-14 bg-white border-slate-200 hover:bg-slate-50 text-slate-900 rounded-[1.5rem] font-black uppercase text-xs tracking-widest shadow-sm transition-all active:scale-95">
-                        Upgrade Experience
+                        {t('upgradeExperience')}
                      </Button>
                    </Link>
                 </div>
@@ -241,11 +241,11 @@ export default function ClientDashboard() {
                <div className="w-20 h-20 rounded-[2rem] bg-slate-100 flex items-center justify-center mx-auto mb-6 text-slate-300">
                   <Search className="w-8 h-8" />
                </div>
-               <h3 className="text-xl font-black text-slate-900 mb-2">No Active Membership</h3>
-               <p className="text-slate-500 font-medium max-w-sm mx-auto mb-8 leading-relaxed">You haven't initialized a consulting stream yet. Browse our premium service tiers to start.</p>
+               <h3 className="text-xl font-black text-slate-900 mb-2">{t('noActiveMembership')}</h3>
+               <p className="text-slate-500 font-medium max-w-sm mx-auto mb-8 leading-relaxed">{t('noActiveDesc')}</p>
                <Link href="/client/solutions">
                  <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-10 h-14 font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-100 active:scale-95 transition-all">
-                    Discover Services
+                    {t('discoverServices')}
                  </Button>
                </Link>
             </Card>
@@ -258,10 +258,10 @@ export default function ClientDashboard() {
             <div className="flex items-center justify-between mb-8">
                <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                  <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
-                 Missions Tracking
+                 {t('missionsTracking')}
                </h3>
                <Badge className="bg-slate-100 text-slate-500 border-none font-bold uppercase text-[9px] px-3">
-                 {activeOrder.missions.length} Registered
+                 {activeOrder.missions.length} {t('registered')}
                </Badge>
             </div>
 
@@ -288,12 +288,12 @@ export default function ClientDashboard() {
                     <CardContent className="p-6 pt-6">
                       <p className="text-xs font-semibold text-slate-500 mb-6 flex items-center gap-2">
                          <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                         {completed} of {total} Milestones achieved
+                         {t('milestonesAchieved', { completed, total })}
                       </p>
                       
                       <div className="space-y-3">
                          <div className="flex justify-between text-[10px] font-black uppercase text-slate-400 tracking-widest">
-                            <span>Status</span>
+                            <span>{t('status')}</span>
                             <span>{Math.round(progress)}%</span>
                          </div>
                          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
@@ -322,14 +322,14 @@ export default function ClientDashboard() {
               <div className="flex items-center justify-between">
                  <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                    <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
-                   Timeline
+                   {t('timeline')}
                  </h3>
                  <TabsList className="bg-slate-100 h-10 p-1 rounded-2xl gap-1 border border-slate-100">
                     <TabsTrigger value="reservations" className="rounded-xl px-6 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">
-                      Reservations ({reservations.length})
+                      {t('reservations')} ({reservations.length})
                     </TabsTrigger>
                     <TabsTrigger value="orders" className="rounded-xl px-6 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm transition-all">
-                      History ({orders.length})
+                      {t('history')} ({orders.length})
                     </TabsTrigger>
                  </TabsList>
               </div>
@@ -343,8 +343,8 @@ export default function ClientDashboard() {
                       className="bg-white rounded-[2.5rem] border border-slate-100 p-12 text-center shadow-2xl shadow-slate-200/20"
                     >
                        <Calendar className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                       <p className="text-slate-500 font-bold text-sm">No upcoming face-to-face consulting sessions.</p>
-                       <Link href="/client/solutions" className="text-blue-600 hover:underline text-xs font-black uppercase tracking-widest mt-4 inline-block">Book Now</Link>
+                       <p className="text-slate-500 font-bold text-sm">{t('noReservations')}</p>
+                       <Link href="/client/solutions" className="text-blue-600 hover:underline text-xs font-black uppercase tracking-widest mt-4 inline-block">{t('bookNow')}</Link>
                     </motion.div>
                   ) : (
                     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/20 overflow-hidden">
@@ -352,10 +352,10 @@ export default function ClientDashboard() {
                           <table className="min-w-full divide-y divide-slate-100">
                              <thead className="bg-slate-50/50">
                                 <tr>
-                                   <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Item</th>
-                                   <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Expert</th>
-                                   <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Schedule</th>
-                                   <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Engagement</th>
+                                   <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('serviceItem')}</th>
+                                   <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('expert')}</th>
+                                   <th className="px-8 py-5 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('schedule')}</th>
+                                   <th className="px-8 py-5 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('engagement')}</th>
                                 </tr>
                              </thead>
                              <tbody className="divide-y divide-slate-100">
@@ -393,7 +393,7 @@ export default function ClientDashboard() {
                                             <JoinZoomButton joinUrl={reservation.zoomJoinUrl} />
                                           ) : (
                                             <Badge variant="outline" className="text-[9px] font-black uppercase border-slate-200 text-slate-400 rounded-full px-4 py-1.5">
-                                               Locked until Start
+                                               {t('lockedUntilStart')}
                                             </Badge>
                                           )
                                        ) : (
@@ -448,7 +448,7 @@ export default function ClientDashboard() {
                                        onSuccess={fetchData}
                                        trigger={
                                          <button className="text-[9px] font-black text-blue-600 hover:underline uppercase tracking-widest">
-                                           Avis Service
+                                           {t('reviewService')}
                                          </button>
                                        }
                                      />
@@ -461,7 +461,7 @@ export default function ClientDashboard() {
                                        onSuccess={fetchData}
                                        trigger={
                                          <button className="text-[9px] font-black text-emerald-600 hover:underline uppercase tracking-widest">
-                                           Avis Expert
+                                           {t('reviewExpert')}
                                          </button>
                                        }
                                      />
@@ -470,7 +470,7 @@ export default function ClientDashboard() {
                                )}
                              </div>
                              <Link href={`/client/orders/${order.id}`}>
-                               <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-blue-600 hover:underline p-0">Detailed View</Button>
+                               <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-blue-600 hover:underline p-0">{t('detailedView')}</Button>
                              </Link>
                           </div>
 
@@ -478,7 +478,7 @@ export default function ClientDashboard() {
                           {order.reviews && order.reviews.length > 0 && (
                             <div className="mt-6 pt-6 border-t border-slate-50 space-y-3">
                               <div className="flex items-center justify-between mb-2">
-                                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Client Feedback</span>
+                                <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">{t('clientFeedback')}</span>
                                 <div className="h-px flex-1 bg-slate-50 mx-4" />
                               </div>
                               <div className="grid grid-cols-1 gap-2">
@@ -491,7 +491,7 @@ export default function ClientDashboard() {
                                           review.type === 'SERVICE' ? "bg-blue-400" : "bg-emerald-400"
                                         )} />
                                         <span className="text-[9px] font-black uppercase text-slate-500 tracking-tight">
-                                          {review.type === 'SERVICE' ? 'Service Quality' : 'Expert Expertise'}
+                                          {review.type === 'SERVICE' ? t('serviceQuality') : t('expertExpertise')}
                                         </span>
                                       </div>
                                       <div className="flex items-center gap-1.5">

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import TierSelector from '@/components/solutions/TierSelector'
@@ -11,6 +12,7 @@ import { toast } from 'react-hot-toast'
 import { Search, Zap, Package, ExternalLink, ArrowRight } from 'lucide-react'
 
 export default function ClientServicesPage() {
+  const t = useTranslations('clientPage.solutions')
   const router = useRouter()
   const searchParams = useSearchParams()
   const serviceIdParam = searchParams.get('serviceId')
@@ -87,7 +89,7 @@ export default function ClientServicesPage() {
 
   const handleTierSelect = (tier: any) => {
     if (!currentUser || currentUser.role !== 'CLIENT') {
-      toast.error('Veuillez vous connecter en tant que client pour continuer.')
+      toast.error(t('loginRequired'))
       router.push('/login?redirect=/client/solutions')
       return
     }
@@ -164,7 +166,7 @@ export default function ClientServicesPage() {
       <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-slate-500 font-black uppercase text-xs tracking-widest">Initialisation de l'Expertise...</p>
+          <p className="text-slate-500 font-black uppercase text-xs tracking-widest">{t('loading')}</p>
         </div>
       </div>
     )
@@ -178,15 +180,13 @@ export default function ClientServicesPage() {
         <div className="max-w-7xl mx-auto px-10 relative z-10">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-1.5 w-12 bg-amber-400 rounded-full"></div>
-            <span className="text-amber-400 font-black tracking-[0.3em] text-[10px] uppercase">Service Excellence</span>
+            <span className="text-amber-400 font-black tracking-[0.3em] text-[10px] uppercase">{t('tagline')}</span>
           </div>
           <h1 className="text-5xl md:text-6xl font-serif font-bold mb-6 tracking-tight">
-            {step === 1 ? 'Nos Solutions' : selectedService?.name}
+            {step === 1 ? t('ourSolutions') : selectedService?.name}
           </h1>
           <p className="text-blue-100 text-lg max-w-2xl font-medium opacity-90 leading-relaxed">
-            {step === 1 
-              ? 'Sélectionnez le domaine d\'expertise pour lequel vous souhaitez un accompagnement sur mesure.' 
-              : selectedService?.description}
+            {step === 1 ? t('selectDomain') : selectedService?.description}
           </p>
         </div>
       </div>
@@ -209,7 +209,7 @@ export default function ClientServicesPage() {
                     onClick={() => handleServiceSelect(service)}
                     className="flex items-center gap-3 bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg active:scale-95 group/btn"
                   >
-                    Explorer cette Solution
+                    {t('exploreSolution')}
                     <ArrowRight className="w-4 h-4 group-hover/btn:translate-x-2 transition-transform" />
                   </button>
                 </div>
@@ -225,11 +225,11 @@ export default function ClientServicesPage() {
                 <div className="w-10 h-10 rounded-full border border-slate-100 flex items-center justify-center group-hover:border-blue-100 group-hover:bg-blue-50">
                   <ArrowRight className="w-4 h-4 rotate-180" />
                 </div>
-                Retour aux services
+                {t('backToServices')}
               </button>
               <div className="flex items-center gap-3 bg-blue-50 text-blue-600 px-5 py-2 rounded-full text-[10px] font-black tracking-widest uppercase border border-blue-100 shadow-sm">
                 <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-[10px]">1</span>
-                SÉLECTION DE LA FORMULE
+                {t('selectFormula')}
               </div>
             </div>
             <TierSelector tiers={selectedService.tiers} onSelect={handleTierSelect} />
@@ -243,17 +243,17 @@ export default function ClientServicesPage() {
                 <div className="w-10 h-10 rounded-full border border-slate-100 flex items-center justify-center group-hover:border-blue-100 group-hover:bg-blue-50">
                   <ArrowRight className="w-4 h-4 rotate-180" />
                 </div>
-                Changer de formule
+                {t('changeFormula')}
               </button>
               <div className="flex items-center gap-3 bg-emerald-50 text-emerald-600 px-5 py-2 rounded-full text-[10px] font-black tracking-widest uppercase border border-emerald-100 shadow-sm">
                 <span className="w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center text-[10px]">2</span>
-                PRISE DE RENDEZ-VOUS
+                {t('bookAppointment')}
               </div>
             </div>
 
             <div className="text-center max-w-2xl mx-auto mb-16">
-              <h3 className="text-4xl font-serif font-black text-slate-900 mb-4 tracking-tight">Choisissez votre créneau</h3>
-              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em]">Validation de votre première session stratégique</p>
+              <h3 className="text-4xl font-serif font-black text-slate-900 mb-4 tracking-tight">{t('chooseSlot')}</h3>
+              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em]">{t('firstSessionValidation')}</p>
             </div>
 
             <AvailabilityCalendar 
@@ -274,13 +274,13 @@ export default function ClientServicesPage() {
               <div className="fixed bottom-10 left-1/2 -translate-x-1/2 w-full max-w-3xl px-10 z-40">
                 <div className="bg-[#2B5A8E] text-white p-8 rounded-[2.5rem] shadow-2xl flex items-center justify-between border border-white/10 backdrop-blur-xl">
                   <div>
-                    <div className="text-[10px] font-black text-blue-300 uppercase tracking-[0.3em] mb-2">Slot Sélectionné</div>
+                    <div className="text-[10px] font-black text-blue-300 uppercase tracking-[0.3em] mb-2">{t('selectedSlot')}</div>
                     <div className="font-bold text-xl">
                       {new Date(selection.startTime).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' })} à {new Date(selection.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
                   <button onClick={() => handlePurchase('CARD')} className="bg-white text-blue-900 px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-amber-400 transition-all shadow-xl active:scale-95">
-                    Confirmer la Réservation
+                    {t('confirmReservation')}
                   </button>
                 </div>
               </div>
@@ -291,8 +291,8 @@ export default function ClientServicesPage() {
         {step === 4 && (
           <div className="space-y-12 animate-in fade-in duration-700">
             <div className="text-center max-w-2xl mx-auto mb-16">
-              <h3 className="text-4xl font-serif font-black text-slate-900 mb-4 tracking-tight">Choisissez votre Expert</h3>
-              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em]">Votre accompagnement démarrera après validation</p>
+              <h3 className="text-4xl font-serif font-black text-slate-900 mb-4 tracking-tight">{t('chooseExpert')}</h3>
+              <p className="text-slate-400 font-bold uppercase text-[10px] tracking-[0.2em]">{t('supportStarts')}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-20">
@@ -309,7 +309,7 @@ export default function ClientServicesPage() {
                       onClick={() => handlePurchase(activePaymentMethod, c.id)}
                       className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 transition-all shadow-lg active:scale-95 shadow-slate-200"
                     >
-                      Sélectionner cet Expert
+                      {t('selectThisExpert')}
                     </button>
                   </div>
                 </div>
