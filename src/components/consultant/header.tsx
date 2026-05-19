@@ -36,6 +36,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { getSocket } from '@/lib/socket-client'
 import { SidebarToggle } from '@/components/dashboard/SidebarToggle'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 
 const navItems = [
@@ -120,6 +121,7 @@ export function ConsultantHeader({ user: propUser }: { user?: any } = {}) {
         
         {/* Actions & Notifications */}
         <div className="flex items-center gap-2 md:gap-3 pr-4 md:pr-6 border-r border-slate-200">
+          <LanguageSwitcher />
            
            {/* Notifications Dropdown */}
            <DropdownMenu>

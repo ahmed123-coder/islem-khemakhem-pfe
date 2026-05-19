@@ -18,6 +18,7 @@ import Link from 'next/link'
 import { formatDistanceToNow } from 'date-fns'
 import { SidebarToggle } from '@/components/dashboard/SidebarToggle'
 import { useTranslations } from 'next-intl'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 
 interface HeaderProps {
@@ -113,8 +114,7 @@ export default function Header({ title }: HeaderProps) {
       
       <div className="flex items-center gap-4 md:gap-6">
         <div className="flex items-center gap-2 pr-6 border-r border-slate-200">
-           
-           {/* Notifications Dropdown */}
+           <LanguageSwitcher />
            <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="relative p-2 rounded-2xl hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition-all active:scale-95 group outline-none">
