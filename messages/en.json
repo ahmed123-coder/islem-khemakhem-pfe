@@ -106,6 +106,16 @@
         "Quickly access rigorously selected experts"
       ]
     },
+    "approachesSection": {
+      "title": "Our Approaches",
+      "description": "We offer three complementary approaches tailored to your challenges: professional coaching to unlock potential, change management to guide your transformations, and training to strengthen your teams' skills.",
+      "cta": "Discover our approaches"
+    },
+    "solutionsSection": {
+      "title": "Our Solutions",
+      "description": "Our solutions are designed to meet your strategic needs: performance management to pilot your results, strategic workforce planning to anticipate your talent needs, and employer brand to attract and retain the best profiles.",
+      "cta": "View our solutions"
+    },
     "cta": {
       "title": "Access our specialized approaches directly.",
       "subtitle": "Choose the solution adapted to your unique needs or connect for personalized support.",

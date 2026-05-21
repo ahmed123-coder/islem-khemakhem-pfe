@@ -106,6 +106,16 @@
         "Accéder rapidement à des experts rigoureusement sélectionnés"
       ]
     },
+    "approachesSection": {
+      "title": "Nos Approches",
+      "description": "Nous proposons trois approches complémentaires adaptées à vos enjeux : le coaching professionnel pour libérer les potentiels, la conduite du changement pour accompagner vos transformations, et la formation pour renforcer les compétences de vos équipes.",
+      "cta": "Découvrir nos approches"
+    },
+    "solutionsSection": {
+      "title": "Nos Solutions",
+      "description": "Nos solutions sont conçues pour répondre à vos besoins stratégiques : le management de la performance pour piloter vos résultats, la GPEC pour anticiper vos besoins en talents, et la marque employeur pour attirer et fidéliser les meilleurs profils.",
+      "cta": "Voir nos solutions"
+    },
     "cta": {
       "title": "Accédez directement à nos approches spécialisées.",
       "subtitle": "Choisissez la solution adaptée à vos besoins uniques ou connectez-vous pour un accompagnement sur mesure.",
