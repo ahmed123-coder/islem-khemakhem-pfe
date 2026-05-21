@@ -29,11 +29,11 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const { name } = await request.json()
+    const { name, company, matriculeFiscale, sector, address, phone } = await request.json()
 
     await prisma.user.update({
       where: { id: authResult.user.userId },
-      data: { name }
+      data: { ...(name !== undefined && { name }), ...(company !== undefined && { company }), ...(matriculeFiscale !== undefined && { matriculeFiscale }), ...(sector !== undefined && { sector }), ...(address !== undefined && { address }), ...(phone !== undefined && { phone }) }
     })
 
     return successResponse({ success: true }, 'Profile updated successfully');

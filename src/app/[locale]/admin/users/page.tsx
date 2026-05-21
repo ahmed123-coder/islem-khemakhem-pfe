@@ -72,6 +72,7 @@ interface User {
   firstName: string | null
   phone: string | null
   company: string | null
+  matriculeFiscale: string | null
   sector: string | null
   address: string | null
   needs: string | null
@@ -236,7 +237,7 @@ export default function UsersPage() {
   }
 
   const filtered = users.filter(u =>
-    [u.name, u.firstName, u.email, u.phone, u.company, u.sector].some(v => v?.toLowerCase().includes(search.toLowerCase()))
+    [u.name, u.firstName, u.email, u.phone, u.company, u.matriculeFiscale, u.sector].some(v => v?.toLowerCase().includes(search.toLowerCase()))
   )
 
   const completedCount = (u: User) => u.orders?.filter(o => o.status === 'COMPLETED').length || 0
@@ -282,6 +283,12 @@ export default function UsersPage() {
             <div className="flex items-center gap-1.5">
               <Briefcase className="w-3 h-3 text-slate-300" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{user.sector}</span>
+            </div>
+          )}
+          {user.matriculeFiscale && (
+            <div className="flex items-center gap-1.5">
+              <FileText className="w-3 h-3 text-slate-300" />
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">MF: {user.matriculeFiscale}</span>
             </div>
           )}
         </div>
@@ -466,6 +473,7 @@ export default function UsersPage() {
               <DetailRow icon={UserPlus} label={t('detail.lastName')} value={detailUser?.name} />
               <DetailRow icon={Phone} label={t('detail.phone')} value={detailUser?.phone} />
               <DetailRow icon={Building2} label={t('detail.company')} value={detailUser?.company} />
+              <DetailRow icon={FileText} label={t('detail.matriculeFiscale')} value={detailUser?.matriculeFiscale} />
               <DetailRow icon={Briefcase} label={t('detail.sector')} value={detailUser?.sector} />
               <DetailRow icon={MapPin} label={t('detail.address')} value={detailUser?.address} />
               <DetailRow icon={FileText} label={t('detail.needs')} value={detailUser?.needs} />
@@ -557,9 +565,13 @@ export default function UsersPage() {
                   <Input value={form.company || ''} onChange={e => setForm({ ...form, company: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="Acme Inc." />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Sector</Label>
-                  <Input value={form.sector || ''} onChange={e => setForm({ ...form, sector: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="IT, Finance..." />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Matricule Fiscal</Label>
+                  <Input value={form.matriculeFiscale || ''} onChange={e => setForm({ ...form, matriculeFiscale: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="1234567X/A/000" />
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Sector</Label>
+                <Input value={form.sector || ''} onChange={e => setForm({ ...form, sector: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="IT, Finance..." />
               </div>
               <div className="space-y-2">
                 <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Address</Label>

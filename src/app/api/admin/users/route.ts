@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
         firstName: true,
         phone: true,
         company: true,
+        matriculeFiscale: true,
         sector: true,
         address: true,
         needs: true,
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { email, password, name, firstName, phone, company, sector, address, needs, role } = body
+    const { email, password, name, firstName, phone, company, matriculeFiscale, sector, address, needs, role } = body
     
     const hashedPassword = await bcrypt.hash(password, 10)
     
@@ -74,6 +75,7 @@ export async function POST(request: NextRequest) {
         firstName,
         phone,
         company,
+        matriculeFiscale,
         sector,
         address,
         needs,
@@ -96,11 +98,11 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body = await request.json()
-    const { id, email, name, firstName, phone, company, sector, address, needs, role, isActive } = body
+    const { id, email, name, firstName, phone, company, matriculeFiscale, sector, address, needs, role, isActive } = body
     
     const updatedUser = await prisma.user.update({
       where: { id },
-      data: { email, name, firstName, phone, company, sector, address, needs, role, ...(isActive !== undefined && { isActive }) },
+      data: { email, name, firstName, phone, company, matriculeFiscale, sector, address, needs, role, ...(isActive !== undefined && { isActive }) },
     })
     
     return successResponse(updatedUser, 'User updated successfully');

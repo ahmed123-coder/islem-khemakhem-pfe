@@ -48,6 +48,10 @@ async function main() {
       email: 'client@consultpro.com',
       password: hashedClientPassword,
       name: 'Client User',
+      company: 'Entreprise ABC',
+      matriculeFiscale: '1234567X/A/000',
+      sector: 'Informatique & Télécoms',
+      address: 'Tunis, Tunisie',
       role: 'CLIENT',
     },
   });
@@ -56,7 +60,11 @@ async function main() {
     data: {
       email: 'client2@consultpro.com',
       password: hashedClientPassword,
-      name: 'Client User',
+      name: 'Client User 2',
+      company: 'Société XYZ',
+      matriculeFiscale: '7654321Y/B/001',
+      sector: 'Banque & Finance',
+      address: 'Sfax, Tunisie',
       role: 'CLIENT',
     },
   });
