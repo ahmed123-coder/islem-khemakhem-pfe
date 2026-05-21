@@ -15,6 +15,7 @@ model User {
   firstName     String?
   phone         String?
   company       String?
+  matriculeFiscale String?
   sector        String?
   address       String?
   needs         String?

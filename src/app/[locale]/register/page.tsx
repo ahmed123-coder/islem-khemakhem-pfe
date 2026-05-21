@@ -36,14 +36,15 @@ export default function RegisterPage() {
     fetch('/api/content/logo')
       .then(res => res.json())
       .then(data => {
-        if (data && data.value && data.value.url) {
-          setLogoUrl(data.value.url)
+        const val = data?.data?.value || data?.value;
+        if (val && val.url) {
+          setLogoUrl(val.url)
         }
       })
       .catch(() => setLogoUrl(null))
   }, [])
 
-  const [client, setClient] = useState({ lastName: '', firstName: '', email: '', phone: '', company: '', sector: '', address: '', needs: '', password: '', confirm: '', privacy: false })
+  const [client, setClient] = useState({ lastName: '', firstName: '', email: '', phone: '', company: '', matriculeFiscale: '', sector: '', address: '', needs: '', password: '', confirm: '', privacy: false })
   const [consultant, setConsultant] = useState({ lastName: '', firstName: '', email: '', phone: '', competences: '', password: '', confirm: '', privacy: false })
   
   const [cvFile, setCvFile] = useState<File | null>(null)
@@ -79,6 +80,7 @@ export default function RegisterPage() {
           email: client.email, 
           phone: client.phone, 
           company: client.company, 
+          matriculeFiscale: client.matriculeFiscale, 
           sector: client.sector, 
           address: client.address, 
           needs: client.needs, 
@@ -276,6 +278,11 @@ export default function RegisterPage() {
                   <div>
                     <label className={labelCls}>{tr('company')} <span className="text-red-500">*</span></label>
                     <input type="text" value={client.company} onChange={e => setClient({...client, company: e.target.value})} placeholder="Mon Entreprise SARL" className={inputCls} required />
+                  </div>
+                  
+                  <div>
+                    <label className={labelCls}>{tr('matriculeFiscale')} <span className="text-red-500">*</span></label>
+                    <input type="text" value={client.matriculeFiscale} onChange={e => setClient({...client, matriculeFiscale: e.target.value})} placeholder="1234567X/A/000" className={inputCls} required />
                   </div>
                   
                   <div>

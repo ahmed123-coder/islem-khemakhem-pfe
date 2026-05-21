@@ -166,6 +166,7 @@
       "password": "Mot de passe",
       "confirmPassword": "Confirmer le mot de passe",
       "company": "Nom de l'entreprise",
+      "matriculeFiscale": "Matricule Fiscal",
       "phone": "Numéro de téléphone",
       "phonePrefix": "+216",
       "sector": "Secteur d'activité",

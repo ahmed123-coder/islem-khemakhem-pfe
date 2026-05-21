@@ -59,13 +59,17 @@ export default function Navbar() {
             )}
           </Link>
 
-          <div className="hidden md:flex items-center justify-center flex-1">
-            <div className="flex items-center space-x-10">
+          <div className="hidden lg:flex items-center justify-center flex-1">
+            <div className="flex items-center gap-8 xl:gap-10">
               {navLinks.map((link, i) => (
                 <Link
                   key={i}
                   href={link.href}
-                  className={pathname === link.href || pathname === link.href.slice(0, -1) ? 'text-[#1B3F7A] font-semibold' : 'text-[#64748B] hover:text-[#1B3F7A] transition-colors'}
+                  className={`whitespace-nowrap text-sm font-medium transition-colors ${
+                    pathname === link.href || pathname === link.href.slice(0, -1)
+                      ? 'text-[#1B3F7A] font-semibold'
+                      : 'text-[#64748B] hover:text-[#1B3F7A]'
+                  }`}
                 >
                   {link.label}
                 </Link>
@@ -73,9 +77,9 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="hidden md:flex items-center gap-4 shrink-0">
+          <div className="hidden lg:flex items-center gap-4 shrink-0">
             <LanguageSwitcher />
-            <Link href={`/${locale}/login`} className="flex items-center gap-2 text-[#1B3F7A] hover:text-[#152f5c] transition-colors font-medium">
+            <Link href={`/${locale}/login`} className="flex items-center gap-2 text-[#1B3F7A] hover:text-[#152f5c] transition-colors font-medium text-sm">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#7AB648]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
               </svg>
@@ -83,8 +87,9 @@ export default function Navbar() {
             </Link>
           </div>
 
-          <div className="md:hidden flex items-center shrink-0">
-            <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)}>
+          <div className="flex lg:hidden items-center gap-2 shrink-0">
+            <LanguageSwitcher />
+            <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)} aria-label="Menu">
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 {isOpen ? (
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -98,22 +103,43 @@ export default function Navbar() {
       </div>
 
       {isOpen && (
-        <div className="md:hidden border-t">
-          <div className="px-4 pt-4 pb-6 space-y-4 bg-white">
-            {navLinks.map((link, i) => (
-              <Link
-                key={i}
-                href={link.href}
-                className={pathname === link.href || pathname === link.href.slice(0, -1) ? 'block text-[#1B3F7A] font-semibold py-2' : 'block text-gray-700 py-2'}
-                onClick={() => setIsOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <div className="pt-2 border-t">
-              <LanguageSwitcher />
-            </div>
-            <Link href={`/${locale}/login`} className="flex items-center gap-2 text-[#1B3F7A] font-medium py-2" onClick={() => setIsOpen(false)}>
+        <div className="fixed inset-0 z-40 lg:hidden" onClick={() => setIsOpen(false)}>
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+        </div>
+      )}
+
+      <div className={`fixed top-0 right-0 z-50 h-full w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:hidden ${
+        isOpen ? 'translate-x-0' : 'translate-x-full'
+      }`}>
+        <div className="flex items-center justify-between px-4 h-16 border-b">
+          <span className="font-semibold text-[#1B3F7A]">Menu</span>
+          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} aria-label="Close menu">
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </Button>
+        </div>
+        <div className="px-4 pt-4 pb-6 space-y-1 overflow-y-auto h-[calc(100%-4rem)]">
+          {navLinks.map((link, i) => (
+            <Link
+              key={i}
+              href={link.href}
+              className={`block px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                pathname === link.href || pathname === link.href.slice(0, -1)
+                  ? 'bg-[#1B3F7A]/10 text-[#1B3F7A] font-semibold'
+                  : 'text-gray-700 hover:bg-gray-100'
+              }`}
+              onClick={() => setIsOpen(false)}
+            >
+              {link.label}
+            </Link>
+          ))}
+          <div className="pt-4 mt-4 border-t">
+            <Link
+              href={`/${locale}/login`}
+              className="flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-[#1B3F7A] hover:bg-gray-100 transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-[#7AB648]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
               </svg>
@@ -121,7 +147,7 @@ export default function Navbar() {
             </Link>
           </div>
         </div>
-      )}
+      </div>
     </nav>
   )
 }

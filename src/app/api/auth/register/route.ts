@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   try {
     const { 
       email, password, name, firstName, phone, 
-      company, sector, address, needs, 
+      company, matriculeFiscale, sector, address, needs, 
       specialty, competences, cvUrl, certificationUrls, certUrls, 
       role, type 
     } = await request.json()
@@ -58,6 +58,7 @@ export async function POST(request: Request) {
         firstName,
         phone, 
         company,
+        matriculeFiscale,
         sector,
         address,
         needs,
