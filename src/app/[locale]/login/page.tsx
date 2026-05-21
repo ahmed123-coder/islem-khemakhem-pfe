@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -15,6 +16,9 @@ function LoginContent() {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const redirect = searchParams.get('redirect')
+  const t = useTranslations('auth.login')
+  const tc = useTranslations('common')
+  const tb = useTranslations('brand')
   
   const locale = pathname.split('/')[1] || 'en'
 
@@ -61,7 +65,7 @@ function LoginContent() {
       router.refresh()
     } else {
       const data = await res.json()
-      setError(data.error || 'Login failed')
+      setError(data.error || t('failed'))
     }
   }
 
@@ -73,7 +77,7 @@ function LoginContent() {
       <div className="absolute inset-0 bg-[#1B3F7A]/70 backdrop-blur-sm" />
 
       <button onClick={() => router.back()} className="absolute top-6 left-6 z-20 flex items-center gap-2 text-white/80 hover:text-white text-sm transition-colors">
-        ← Retour
+        ← {tc('back')}
       </button>
 
       <div className="relative z-10 w-full max-w-md mx-4">
@@ -87,8 +91,8 @@ function LoginContent() {
               </Link>
             </div>
 
-            <h1 className="text-2xl font-bold text-[#1B3F7A] text-center mb-2">Bienvenue</h1>
-            <p className="text-gray-400 text-center text-sm mb-8">Connectez-vous à votre espace</p>
+            <h1 className="text-2xl font-bold text-[#1B3F7A] text-center mb-2">{t('title')}</h1>
+            <p className="text-gray-400 text-center text-sm mb-8">{t('subtitle')}</p>
 
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-600 p-3 rounded-xl mb-5 text-sm">
@@ -99,7 +103,7 @@ function LoginContent() {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-900 mb-2">
-                  Email
+                  {t('email')}
                 </label>
                 <input
                   type="email"
@@ -113,7 +117,7 @@ function LoginContent() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-2">Mot de passe</label>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-900 mb-2">{t('password')}</label>
                 <input
                   type="password"
                   id="password"
@@ -130,19 +134,19 @@ function LoginContent() {
                 className="w-full bg-blue-700 hover:bg-blue-800 text-white font-medium py-3 px-4 rounded-lg transition-colors"
                 disabled={loading}
               >
-                {loading ? 'Connexion...' : 'Se connecter'}
+                {loading ? t('submitting') : t('submit')}
               </button>
             </form>
 
             <p className="text-center text-gray-500 text-sm mt-6">
-              Pas encore de compte ?{' '}
-              <Link href={`/${locale}/register`} className="text-[#7AB648] hover:text-[#639a3a] font-semibold">S&apos;inscrire</Link>
+              {t('noAccount')}{' '}
+              <Link href={`/${locale}/register`} className="text-[#7AB648] hover:text-[#639a3a] font-semibold">{t('registerLink')}</Link>
             </p>
           </div>
         </div>
 
         <p className="text-center text-white/60 text-xs mt-4">
-          DSL Consulting — Cabinet de conseil et d&apos;accompagnement
+          {tb('footer')}
         </p>
       </div>
     </div>

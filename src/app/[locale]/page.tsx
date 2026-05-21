@@ -15,18 +15,6 @@ export default function Home() {
     { letter: 'L', title: t('values.loyalty.title'),       desc: t('values.loyalty.description') },
   ]
 
-  const approaches = [
-    { icon: '👥', title: t('approaches.coaching') },
-    { icon: '🔄', title: t('approaches.change') },
-    { icon: '📚', title: t('approaches.training') },
-  ]
-
-  const solutions = [
-    { icon: '🎯', title: t('solutions.performance') },
-    { icon: '📊', title: t('solutions.gpec') },
-    { icon: '⭐', title: t('solutions.employerBrand') },
-  ]
-
   const benefits = t.raw('whyChoose.benefits') as string[]
 
   return (
@@ -56,55 +44,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Approches Section */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="text-3xl">🎯</span>
-            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">{t('approaches.title')}</h2>
-            <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full mb-6"></div>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {approaches.map((approach, i) => (
-              <div key={i} className="bg-white rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
-                <div className="text-4xl mb-5">{approach.icon}</div>
-                <div className="w-10 h-1 bg-[#7AB648] mb-4 rounded-full"></div>
-                <h3 className="text-xl font-bold text-[#1B3F7A] mb-6">{approach.title}</h3>
-                <Link href="/services">
-                  <button className="text-[#7AB648] hover:text-[#639a3a] text-sm font-medium underline underline-offset-4 transition-colors">
-                    En savoir plus →
-                  </button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Nos Solutions Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14">
-            <span className="text-3xl">💡</span>
-            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">{t('solutions.title')}</h2>
-            <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full mb-6"></div>
-          </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {solutions.map((solution, i) => (
-              <div key={i} className="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
-                <div className="text-4xl mb-5">{solution.icon}</div>
-                <div className="w-10 h-1 bg-[#7AB648] mb-4 rounded-full"></div>
-                <h3 className="text-xl font-bold text-[#1B3F7A] mb-6">{solution.title}</h3>
-                <Link href="/services">
-                  <button className="text-[#7AB648] hover:text-[#639a3a] text-sm font-medium underline underline-offset-4 transition-colors">
-                    En savoir plus →
-                  </button>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Why Choose DSL */}
       <section className="py-20 bg-gray-50">
