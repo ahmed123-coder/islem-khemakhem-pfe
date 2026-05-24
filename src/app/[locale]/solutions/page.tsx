@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 
 export default function Services() {
   const router = useRouter()
+  const { locale } = useParams()
   const [services, setServices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -108,7 +109,7 @@ export default function Services() {
                       {service.description}
                     </p>
                     <button 
-                      onClick={() => router.push(`/solutions/${service.id}`)}
+                      onClick={() => router.push(`/${locale}/solutions/${service.id}`)}
                       className="inline-flex items-center gap-3 px-8 py-4 rounded-xl font-bold bg-[#2B5A8E] text-white hover:bg-[#1d3d61] shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5"
                     >
                       En savoir plus & Réserver
@@ -118,7 +119,7 @@ export default function Services() {
                     </button>
                   </div>
                   <div 
-                    onClick={() => router.push(`/solutions/${service.id}`)}
+                    onClick={() => router.push(`/${locale}/solutions/${service.id}`)}
                     className={`relative h-[300px] sm:h-[400px] w-full rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgb(0,0,0,0.1)] group-hover:shadow-[0_20px_50px_rgb(43,90,142,0.15)] transition-shadow duration-500 cursor-pointer ${index % 2 === 1 ? 'lg:order-1' : ''}`}
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>

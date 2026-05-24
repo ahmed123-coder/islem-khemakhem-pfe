@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useState, useEffect } from 'react'
 import { useTranslations } from 'next-intl'
+import { useParams } from 'next/navigation'
 import type { HeroContent } from '@/lib/content'
 
 export default function Hero() {
   const t = useTranslations('home')
+  const { locale } = useParams()
   const [content, setContent] = useState<HeroContent | null>(null)
 
   useEffect(() => {
@@ -48,7 +50,7 @@ export default function Hero() {
                   {content?.ctaText || t('cta.contactUs')}
                 </Button>
               </Link>
-              <Link href="/solutions">
+              <Link href={`/${locale}/solutions`}>
                 <Button className="bg-white text-[#7AB648] hover:bg-gray-100 rounded-lg px-6 py-6 text-base font-semibold border-2 border-white">
                   {t('hero.discoverApproaches')}
                 </Button>

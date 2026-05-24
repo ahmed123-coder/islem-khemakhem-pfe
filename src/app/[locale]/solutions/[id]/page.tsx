@@ -8,9 +8,9 @@ import MeetingTypeModal from '@/components/solutions/MeetingTypeModal'
 import PaymentModal from '@/components/solutions/PaymentModal'
 import { toast } from 'react-hot-toast'
 
-export default function SolutionDetailPage({ params }: { params: { id: string } }) {
+export default function SolutionDetailPage({ params }: { params: { locale: string; id: string } }) {
   const router = useRouter()
-  const { id: serviceId } = params
+  const { locale, id: serviceId } = params
   
   const [step, setStep] = useState(2) // 2: Tier Selection, 3: Scheduling
   const [loading, setLoading] = useState(true)
@@ -53,7 +53,7 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
         if (service) {
           setSelectedService(service)
         } else {
-          router.push('/solutions')
+          router.push(`/${locale}/solutions`)
         }
         setLoading(false)
       })
@@ -83,7 +83,7 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
   const handleTierSelect = (tier: any) => {
     if (!currentUser || currentUser.role !== 'CLIENT') {
       toast.error('Veuillez vous connecter en tant que client pour continuer.')
-      router.push(`/login?redirect=/solutions/${serviceId}`)
+      router.push(`/${locale}/login?redirect=/${locale}/solutions/${serviceId}`)
       return
     }
 
@@ -157,7 +157,7 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
           toast.success(result.message || 'Commande enregistrée, en attente de paiement.')
         }
         
-        router.push('/client')
+        router.push(`/${locale}/client`)
       } else {
         const errorData = await res.json().catch(() => ({}));
         toast.error(errorData.error || 'Une erreur est survenue.')
@@ -202,7 +202,7 @@ export default function SolutionDetailPage({ params }: { params: { id: string } 
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-700">
             <div className="flex items-center justify-between">
               <button 
-                onClick={() => router.push('/solutions')} 
+                onClick={() => router.push(`/${locale}/solutions`)} 
                 className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-bold transition-colors group"
               >
                 <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-50 transition-all">
