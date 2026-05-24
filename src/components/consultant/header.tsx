@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useParams } from 'next/navigation'
 import { 
   Bell, 
   ChevronDown, 
@@ -48,6 +48,7 @@ const navItems = [
 ]
 
 export function ConsultantHeader({ user: propUser }: { user?: any } = {}) {
+  const { locale } = useParams()
   const pathname = usePathname()
   const [user, setUser] = React.useState<any>(propUser || null)
   const [notifications, setNotifications] = React.useState<any[]>([])
@@ -200,9 +201,9 @@ export function ConsultantHeader({ user: propUser }: { user?: any } = {}) {
                     </div>
                  </ScrollArea>
                  <div className="p-4 border-t border-slate-100 bg-slate-50/30 text-center">
-                    <Link href="/consultant" className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-emerald-600 transition-colors">
-                       View Activity Center
-                    </Link>
+                     <Link href={`/${locale}/consultant`} className="text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-emerald-600 transition-colors">
+                        View Activity Center
+                     </Link>
                  </div>
               </DropdownMenuContent>
            </DropdownMenu>

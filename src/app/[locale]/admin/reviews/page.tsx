@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useTranslations } from "next-intl"
+import { useParams } from "next/navigation"
 import { toast } from "react-hot-toast"
 import { 
   Table, 
@@ -18,6 +19,7 @@ import { Trash2, ShieldAlert, CheckCircle } from "lucide-react"
 import { StandardPage } from "@/components/admin/standard-page"
 
 export default function AdminReviewsPage() {
+  const { locale } = useParams()
   const t = useTranslations("adminPage.reviews")
   const commonT = useTranslations("common")
   const [reviews, setReviews] = React.useState<any[]>([])
@@ -70,6 +72,7 @@ setLoading(false)
 
   return (
     <StandardPage
+      locale={locale}
       title={t("title")}
       description={t("description")}
       breadcrumbs={[{ label: "Dashboard" }, { label: t("title") }]}

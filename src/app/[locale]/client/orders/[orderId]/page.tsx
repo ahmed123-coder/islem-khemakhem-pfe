@@ -52,7 +52,7 @@ import { cn } from "@/lib/utils"
 export default function OrderDetails() {
   const params = useParams()
   const router = useRouter()
-  const orderId = params.orderId as string
+  const { locale, orderId } = params
 
   const [order, setOrder] = useState<any>(null)
   const [reservations, setReservations] = useState<any[]>([])
@@ -139,7 +139,7 @@ export default function OrderDetails() {
     try {
       const res = await fetch(`/api/client/orders/${orderId}`)
       if (res.status === 403) {
-        router.push('/client')
+        router.push(`/${locale}/client`)
         return
       }
       const result = await res.json()

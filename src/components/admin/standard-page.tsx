@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { PageHeader } from './page-header'
 
 interface StandardPageProps {
+  locale: string
   title: string
   description?: string
   breadcrumbs: { label: string; href?: string }[]
@@ -18,6 +19,7 @@ interface StandardPageProps {
 }
 
 export function StandardPage({
+  locale,
   title,
   description,
   breadcrumbs,
@@ -33,6 +35,7 @@ export function StandardPage({
       className="space-y-8"
     >
       <PageHeader
+        locale={locale}
         title={title}
         description={description}
         breadcrumbs={breadcrumbs}

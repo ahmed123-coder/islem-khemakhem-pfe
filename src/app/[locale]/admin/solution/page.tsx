@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
+import { useParams } from 'next/navigation'
 import { 
   Plus, 
   Trash2, 
@@ -59,6 +60,7 @@ type Tier = {
 }
 
 export default function ServicesCMS() {
+  const { locale } = useParams()
   const t = useTranslations("adminPage.solution")
   const [services, setServices] = React.useState<Service[]>([])
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
@@ -235,6 +237,7 @@ export default function ServicesCMS() {
 
   return (
     <StandardPage
+      locale={locale}
       title={t("title")}
       description={t("description")}
       breadcrumbs={[{ label: t("breadcrumbs.content") }, { label: t("breadcrumbs.services") }]}

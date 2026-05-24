@@ -11,12 +11,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { SidebarToggle } from '@/components/dashboard/SidebarToggle'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 export function AdminTopBar() {
   const router = useRouter()
+  const { locale } = useParams()
   const [mounted, setMounted] = React.useState(false)
   const [notifications, setNotifications] = React.useState<any[]>([])
   const [unreadCount, setUnreadCount] = React.useState(0)
@@ -111,7 +112,7 @@ export function AdminTopBar() {
               </div>
             </ScrollArea>
             <div className="p-4 border-t border-slate-100 bg-slate-50/30 text-center">
-              <Link href="/admin" className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">View Recent Logs</Link>
+              <Link href={`/${locale}/admin`} className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">View Recent Logs</Link>
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -135,11 +136,11 @@ export function AdminTopBar() {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl shadow-2xl border-slate-200 bg-white/95 backdrop-blur-xl">
             <DropdownMenuLabel className="px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-widest">My Account</DropdownMenuLabel>
-            <DropdownMenuItem onClick={() => router.push('/admin/profile')} className="rounded-xl px-3 py-2 cursor-pointer transition-colors focus:bg-blue-50 focus:text-blue-600">
+            <DropdownMenuItem onClick={() => router.push(`/${locale}/admin/profile`)} className="rounded-xl px-3 py-2 cursor-pointer transition-colors focus:bg-blue-50 focus:text-blue-600">
               <UserIcon className="w-4 h-4 mr-2" /> Profile
             </DropdownMenuItem>
             <DropdownMenuSeparator className="my-1 bg-slate-100" />
-            <DropdownMenuItem onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); router.push('/login'); router.refresh() }} className="rounded-xl px-3 py-2 cursor-pointer transition-colors focus:bg-red-50 focus:text-red-600">
+            <DropdownMenuItem onClick={async () => { await fetch('/api/auth/logout', { method: 'POST' }); router.push(`/${locale}/login`); router.refresh() }} className="rounded-xl px-3 py-2 cursor-pointer transition-colors focus:bg-red-50 focus:text-red-600">
               <LogOut className="w-4 h-4 mr-2" /> Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

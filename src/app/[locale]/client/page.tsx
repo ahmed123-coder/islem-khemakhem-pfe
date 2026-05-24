@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -34,6 +35,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
 export default function ClientDashboard() {
+  const { locale } = useParams()
   const t = useTranslations('client.dashboard')
   const commonT = useTranslations('common')
   const [orders, setOrders] = useState<any[]>([])
@@ -104,11 +106,11 @@ export default function ClientDashboard() {
                <div className="w-1.5 h-6 bg-blue-600 rounded-full" />
                {t('currentService')}
              </h3>
-             <Link href="/client/solutions">
-               <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-black text-[10px] uppercase tracking-widest gap-2">
-                 {t('exploreTiers')} <ArrowRight className="w-3 h-3" />
-               </Button>
-             </Link>
+             <Link href={`/${locale}/client/solutions`}>
+                <Button variant="ghost" className="text-blue-600 hover:bg-blue-50 font-black text-[10px] uppercase tracking-widest gap-2">
+                  {t('exploreTiers')} <ArrowRight className="w-3 h-3" />
+                </Button>
+              </Link>
            </div>
 
           {activeOrder ? (
@@ -223,16 +225,16 @@ export default function ClientDashboard() {
                 {/* Right: Actions */}
                 <div className="lg:w-2/5 p-8 md:p-12 bg-slate-50/50 flex flex-col justify-center gap-4">
                    <h4 className="text-sm font-black text-slate-900 uppercase tracking-widest mb-2">{t('quickAccess')}</h4>
-                   <Link href={`/client/orders/${activeOrder.id}`} className="w-full">
+                   <Link href={`/${locale}/client/orders/${activeOrder.id}`} className="w-full">
                      <Button className="w-full h-14 bg-slate-900 hover:bg-slate-800 text-white rounded-[1.5rem] font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-95 group">
                         {t('manageSubscriptions')} <ExternalLink className="w-4 h-4 ml-2 opacity-30 group-hover:opacity-100 transition-opacity" />
                      </Button>
                    </Link>
-                   <Link href="/client/solutions" className="w-full">
-                     <Button variant="outline" className="w-full h-14 bg-white border-slate-200 hover:bg-slate-50 text-slate-900 rounded-[1.5rem] font-black uppercase text-xs tracking-widest shadow-sm transition-all active:scale-95">
-                        {t('upgradeExperience')}
-                     </Button>
-                   </Link>
+                   <Link href={`/${locale}/client/solutions`} className="w-full">
+                      <Button variant="outline" className="w-full h-14 bg-white border-slate-200 hover:bg-slate-50 text-slate-900 rounded-[1.5rem] font-black uppercase text-xs tracking-widest shadow-sm transition-all active:scale-95">
+                         {t('upgradeExperience')}
+                      </Button>
+                    </Link>
                 </div>
               </CardContent>
             </Card>
@@ -243,11 +245,11 @@ export default function ClientDashboard() {
                </div>
                <h3 className="text-xl font-black text-slate-900 mb-2">{t('noActiveMembership')}</h3>
                <p className="text-slate-500 font-medium max-w-sm mx-auto mb-8 leading-relaxed">{t('noActiveDesc')}</p>
-               <Link href="/client/solutions">
-                 <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-10 h-14 font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-100 active:scale-95 transition-all">
-                    {t('discoverServices')}
-                 </Button>
-               </Link>
+               <Link href={`/${locale}/client/solutions`}>
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-2xl px-10 h-14 font-black uppercase text-xs tracking-widest shadow-xl shadow-blue-100 active:scale-95 transition-all">
+                     {t('discoverServices')}
+                  </Button>
+                </Link>
             </Card>
           )}
         </section>
@@ -344,7 +346,7 @@ export default function ClientDashboard() {
                     >
                        <Calendar className="w-12 h-12 text-slate-200 mx-auto mb-4" />
                        <p className="text-slate-500 font-bold text-sm">{t('noReservations')}</p>
-                       <Link href="/client/solutions" className="text-blue-600 hover:underline text-xs font-black uppercase tracking-widest mt-4 inline-block">{t('bookNow')}</Link>
+                       <Link href={`/${locale}/client/solutions`} className="text-blue-600 hover:underline text-xs font-black uppercase tracking-widest mt-4 inline-block">{t('bookNow')}</Link>
                     </motion.div>
                   ) : (
                     <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-2xl shadow-slate-200/20 overflow-hidden">
@@ -469,7 +471,7 @@ export default function ClientDashboard() {
                                  </div>
                                )}
                              </div>
-                             <Link href={`/client/orders/${order.id}`}>
+                              <Link href={`/${locale}/client/orders/${order.id}`}>
                                <Button variant="ghost" size="sm" className="h-8 text-[10px] font-black uppercase text-blue-600 hover:underline p-0">{t('detailedView')}</Button>
                              </Link>
                           </div>

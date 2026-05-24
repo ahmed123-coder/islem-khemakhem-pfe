@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { useTranslations } from 'next-intl'
+import { useParams } from 'next/navigation'
 import { 
   Pencil, 
   Trash2, 
@@ -106,6 +107,7 @@ const STATUS_COLORS: Record<string, string> = {
 const COMPLETED_ORDER_THRESHOLD = 3
 
 export default function UsersPage() {
+  const { locale } = useParams()
   const t = useTranslations('admin.users')
   const commonT = useTranslations('common')
   const [users, setUsers] = React.useState<User[]>([])
@@ -420,6 +422,7 @@ export default function UsersPage() {
 
   return (
     <StandardPage
+      locale={locale}
       title={t('title')}
       description={t('description', { count: users.length })}
       breadcrumbs={[{ label: t('breadcrumbs.system') }, { label: t('breadcrumbs.users') }]}

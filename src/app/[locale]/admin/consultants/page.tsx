@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { useTranslations } from 'next-intl'
+import { useParams } from 'next/navigation'
 import { 
   Pencil, 
   Trash2, 
@@ -86,6 +87,7 @@ interface Service {
 }
 
 export default function ConsultantsPage() {
+  const { locale } = useParams()
   const t = useTranslations('adminPage.consultants')
   const commonT = useTranslations('common')
   const [consultants, setConsultants] = React.useState<Consultant[]>([])
@@ -448,6 +450,7 @@ export default function ConsultantsPage() {
 
   return (
     <StandardPage
+      locale={locale}
       title={t("title")}
       description={t("description", { count: consultants.length })}
       breadcrumbs={[{ label: t("breadcrumbs.system") }, { label: t("breadcrumbs.consultants") }]}

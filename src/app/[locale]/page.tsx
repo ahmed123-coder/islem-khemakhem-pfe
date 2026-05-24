@@ -134,17 +134,17 @@ export default function Home() {
             {t('cta.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Link href="/register">
+            <Link href={`/${locale}/register`}>
               <Button className="bg-white hover:bg-gray-100 text-[#1B3F7A] rounded-full px-8 py-6 text-base font-bold">
                 {t('cta.createAccount')}
               </Button>
             </Link>
-            <Link href="/services">
+            <Link href={`/${locale}/solutions`}>
               <Button className="bg-[#7AB648] hover:bg-[#639a3a] text-white rounded-full px-8 py-6 text-base font-bold">
                 {t('cta.viewServices')} →
               </Button>
             </Link>
-            <Link href="/contact" className="text-white/70 hover:text-white underline underline-offset-4 text-base font-medium transition-colors">
+            <Link href={`/${locale}/contact`} className="text-white/70 hover:text-white underline underline-offset-4 text-base font-medium transition-colors">
               {t('cta.contactUs')} →
             </Link>
           </div>

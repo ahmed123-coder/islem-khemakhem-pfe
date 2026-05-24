@@ -14,8 +14,8 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   }
 }
 
-export default async function BlogPost({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export default async function BlogPost({ params }: { params: Promise<{ locale: string; id: string }> }) {
+  const { locale, id } = await params
   const article = await prisma.blog.findUnique({ where: { id } })
 
   if (!article || !article.published) {
@@ -27,7 +27,7 @@ export default async function BlogPost({ params }: { params: Promise<{ id: strin
       {/* Hero Section */}
       <div className="w-full bg-slate-50 border-b border-gray-100">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 md:py-24">
-          <Link href="/blog" className="inline-flex items-center text-[#2B5A8E] hover:text-[#1d3d61] font-medium mb-8 transition-colors">
+          <Link href={`/${locale}/blog`} className="inline-flex items-center text-[#2B5A8E] hover:text-[#1d3d61] font-medium mb-8 transition-colors">
             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
             Retour au blog
           </Link>

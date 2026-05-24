@@ -330,8 +330,8 @@ export default function RegisterPage() {
                     <input type="checkbox" checked={client.privacy} onChange={e => setClient({...client, privacy: e.target.checked})} className="mt-1 w-4 h-4 text-[#1B3F7A] border-gray-300 rounded" required />
                     <span className="text-sm text-gray-600">
                       {tr.rich('acceptPrivacy', {
-                        privacy: (chunks) => <Link href="/privacy" className="text-[#7AB648] hover:underline">{chunks}</Link>,
-                        terms: (chunks) => <Link href="/terms" className="text-[#7AB648] hover:underline">{chunks}</Link>
+                        privacy: (chunks) => <Link href={`/${locale}/privacy`} className="text-[#7AB648] hover:underline">{chunks}</Link>,
+                        terms: (chunks) => <Link href={`/${locale}/terms`} className="text-[#7AB648] hover:underline">{chunks}</Link>
                       })}
                     </span>
                     <span className="text-red-500">*</span>
@@ -433,14 +433,14 @@ export default function RegisterPage() {
                     <input type="checkbox" checked={consultant.privacy} onChange={e => setConsultant({...consultant, privacy: e.target.checked})} className="mt-1 w-4 h-4 text-[#1B3F7A] border-gray-300 rounded" required />
                     <span className="text-sm text-gray-600">
                       {tr.rich('acceptPrivacy', {
-                        privacy: (chunks) => <Link href="/privacy" className="text-[#7AB648] hover:underline">{chunks}</Link>,
-                        terms: (chunks) => <Link href="/terms" className="text-[#7AB648] hover:underline">{chunks}</Link>
+                        privacy: (chunks) => <Link href={`/${locale}/privacy`} className="text-[#7AB648] hover:underline">{chunks}</Link>,
+                        terms: (chunks) => <Link href={`/${locale}/terms`} className="text-[#7AB648] hover:underline">{chunks}</Link>
                       })}
                     </span>
                     <span className="text-red-500">*</span>
                   </label>
 
-                  <button type="submit" disabled={loading} className="w-full bg-[#1B3F7A] hover:bg-[#152f5c] disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-all shadow-md active:scale-[0.98]">
+                  <button type="submit" disabled={loading} className="w-full bg-[#7AB648] hover:bg-[#639a3a] disabled:opacity-60 text-white font-semibold py-3 rounded-xl transition-all shadow-md active:scale-[0.98]">
                     {loading ? tr('submitting') : tr('submitConsultant')}
                   </button>
                 </form>

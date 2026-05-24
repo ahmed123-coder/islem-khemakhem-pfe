@@ -31,6 +31,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 
 // Mock Data
@@ -42,6 +43,7 @@ const clientGrowthData = [
 ]
 
 export default function ConsultantWorkspace() {
+  const { locale } = useParams()
   const t = useTranslations('consultant.dashboard')
   const [user, setUser] = React.useState<any>(null)
   const [stats, setStats] = React.useState<any>(null)
@@ -191,7 +193,7 @@ export default function ConsultantWorkspace() {
           <section className="space-y-6">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-black text-slate-900 tracking-tight">{t('todayMissions')}</h3>
-              <Link href="/consultant/reservations" className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1.5 hover:gap-3 transition-all">
+              <Link href={`/${locale}/consultant/reservations`} className="text-[10px] font-black text-emerald-600 uppercase tracking-widest flex items-center gap-1.5 hover:gap-3 transition-all">
                 {t('fullAgenda')} <ChevronRight className="w-3 h-3" />
               </Link>
             </div>
@@ -210,9 +212,9 @@ export default function ConsultantWorkspace() {
                          <h4 className="font-bold text-slate-900 truncate">Consultation Session</h4>
                          <p className="text-xs text-slate-400 font-medium truncate">Client: {mission.client.name}</p>
                       </div>
-                      <Link href="/consultant/reservations">
+                      <Link href={`/${locale}/consultant/reservations`}>
                         <Button size="icon" className="w-10 h-10 rounded-xl bg-slate-50 text-slate-400 hover:bg-emerald-600 hover:text-white transition-all">
-                           <Play className="w-4 h-4 fill-current" />
+                            <Play className="w-4 h-4 fill-current" />
                         </Button>
                       </Link>
                    </div>
@@ -246,11 +248,11 @@ export default function ConsultantWorkspace() {
                </p>
 
                <div className="space-y-3 mt-auto">
-                 <Link href="/consultant/reviews">
-                   <Button variant="ghost" className="w-full rounded-xl bg-white/50 text-blue-700 font-bold text-[10px] uppercase tracking-widest h-10 hover:bg-white transition-all">
-                     {t('viewFeedback')}
-                   </Button>
-                 </Link>
+                 <Link href={`/${locale}/consultant/reviews`}>
+                    <Button variant="ghost" className="w-full rounded-xl bg-white/50 text-blue-700 font-bold text-[10px] uppercase tracking-widest h-10 hover:bg-white transition-all">
+                      {t('viewFeedback')}
+                    </Button>
+                  </Link>
                </div>
            </Card>
         </motion.div>

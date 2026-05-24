@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { useTranslations } from 'next-intl'
+import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Plus, 
@@ -33,6 +34,7 @@ type Faq = {
 }
 
 export default function FaqsAdmin() {
+  const { locale } = useParams()
   const t = useTranslations('adminPage.faqs')
   const commonT = useTranslations('common')
   const [faqs, setFaqs] = React.useState<Faq[]>([])
@@ -143,6 +145,7 @@ export default function FaqsAdmin() {
 
   return (
     <StandardPage
+      locale={locale}
       title={t("title")}
       description={t("description")}
       breadcrumbs={[{ label: t("breadcrumbs.content") }, { label: t("breadcrumbs.faqs") }]}

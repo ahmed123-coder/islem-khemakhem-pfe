@@ -22,7 +22,8 @@ async function getBlogs() {
   }
 }
 
-export default async function Blog() {
+export default async function Blog({ params }: { params: { locale: string } }) {
+  const { locale } = params
   const articles = await getBlogs();
 
   if (!articles.length) {
@@ -86,7 +87,7 @@ export default async function Blog() {
                         {new Date(article.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </time>
                     </div>
-                    <Link href={`/blog/${article.id}`}>
+                    <Link href={`/${locale}/blog/${article.id}`}>
                       <Button variant="ghost" size="sm" className="text-[#2B5A8E] hover:text-[#1d3d61] hover:bg-blue-50/50 p-2 h-auto text-sm font-bold group/btn rounded-lg">
                         Lire la suite <span className="inline-block transition-transform group-hover/btn:translate-x-1.5 ml-1">→</span>
                       </Button>

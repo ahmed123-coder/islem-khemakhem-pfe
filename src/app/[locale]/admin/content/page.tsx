@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
+import { useParams } from 'next/navigation'
 import { 
   Monitor, 
   Smartphone, 
@@ -33,6 +34,7 @@ import { cn } from '@/lib/utils'
 type Section = 'hero' | 'logo' | 'footer' | 'hero-solutions' | 'hero-approches' | 'hero-contact'
 
 export default function SiteVisualEditor() {
+  const { locale } = useParams()
   const t = useTranslations("adminPage.content")
   const [activeTab, setActiveTab] = React.useState<Section>('hero')
   const [content, setContent] = React.useState<any>({})
@@ -106,6 +108,7 @@ export default function SiteVisualEditor() {
 
   return (
     <StandardPage
+      locale={locale}
       title={t("title")}
       description={t("description")}
       breadcrumbs={[{ label: t("breadcrumbs.content") }, { label: t("breadcrumbs.siteEditor") }]}

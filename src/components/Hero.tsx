@@ -45,7 +45,7 @@ export default function Hero() {
               {content?.subtitle || t('hero.subtitle')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link href={content?.ctaLink || '/contact'}>
+              <Link href={content?.ctaLink || `/${locale}/contact`}>
                 <Button className="bg-[#7AB648] hover:bg-[#639a3a] text-white rounded-lg px-6 py-6 text-base font-semibold">
                   {content?.ctaText || t('cta.contactUs')}
                 </Button>

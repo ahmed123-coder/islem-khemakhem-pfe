@@ -12,6 +12,7 @@ interface Breadcrumb {
 }
 
 interface PageHeaderProps {
+  locale: string
   title: string
   description?: string
   breadcrumbs: Breadcrumb[]
@@ -24,6 +25,7 @@ interface PageHeaderProps {
 }
 
 export function PageHeader({ 
+  locale,
   title, 
   description, 
   breadcrumbs, 
@@ -33,7 +35,7 @@ export function PageHeader({
     <div className="space-y-6 mb-10">
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-400">
-        <Link href="/admin" className="hover:text-blue-600 transition-colors">Root</Link>
+        <Link href={`/${locale}/admin`} className="hover:text-blue-600 transition-colors">Root</Link>
         {breadcrumbs.map((bc, index) => (
           <React.Fragment key={bc.label}>
             <ChevronRight className="w-3 h-3 text-slate-300" />

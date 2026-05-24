@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams, useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import TierSelector from '@/components/solutions/TierSelector'
 import AvailabilityCalendar from '@/components/solutions/AvailabilityCalendar'
@@ -12,6 +12,7 @@ import { toast } from 'react-hot-toast'
 import { Search, Zap, Package, ExternalLink, ArrowRight } from 'lucide-react'
 
 export default function ClientServicesPage() {
+  const { locale } = useParams()
   const t = useTranslations('clientPage.solutions')
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -90,7 +91,7 @@ export default function ClientServicesPage() {
   const handleTierSelect = (tier: any) => {
     if (!currentUser || currentUser.role !== 'CLIENT') {
       toast.error(t('loginRequired'))
-      router.push('/login?redirect=/client/solutions')
+      router.push(`/${locale}/login?redirect=/${locale}/client/solutions`)
       return
     }
 
@@ -151,7 +152,7 @@ export default function ClientServicesPage() {
         } else {
           toast.success(result.message || 'Commande enregistrée, en attente de paiement.')
         }
-        router.push('/client')
+        router.push(`/${locale}/client`)
       } else {
         const errorData = await res.json().catch(() => ({}));
         toast.error(errorData.error || 'Une erreur est survenue.')

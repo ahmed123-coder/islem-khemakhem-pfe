@@ -8,9 +8,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Rating } from '@/components/ui/rating'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 
 export default function ConsultantReviewsPage() {
+  const { locale } = useParams()
   const t = useTranslations("consultantPage.reviews")
   const [reviews, setReviews] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -35,7 +37,7 @@ export default function ConsultantReviewsPage() {
     <div className="p-8 md:p-12 max-w-5xl mx-auto space-y-12">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <Link href="/consultant" className="flex items-center gap-2 text-slate-400 hover:text-emerald-600 font-bold text-xs uppercase tracking-widest transition-colors mb-4">
+          <Link href={`/${locale}/consultant`} className="flex items-center gap-2 text-slate-400 hover:text-emerald-600 font-bold text-xs uppercase tracking-widest transition-colors mb-4">
             <ArrowLeft className="w-4 h-4" /> {t("backToDashboard")}
           </Link>
           <h1 className="text-4xl font-black text-slate-900 tracking-tight leading-none">

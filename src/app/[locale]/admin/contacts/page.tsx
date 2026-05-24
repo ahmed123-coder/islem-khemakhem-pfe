@@ -2,6 +2,7 @@
 
 import * as React from 'react'
 import { useTranslations } from 'next-intl'
+import { useParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Search, 
@@ -40,6 +41,7 @@ interface Contact {
 }
 
 export default function ContactsCRM() {
+  const { locale } = useParams()
   const t = useTranslations('adminPage.contacts')
   const commonT = useTranslations('common')
   const [contacts, setContacts] = React.useState<Contact[]>([])
@@ -107,6 +109,7 @@ export default function ContactsCRM() {
 
   return (
     <StandardPage
+      locale={locale}
       title={t("title")}
       description={t("description")}
       breadcrumbs={[{ label: t("breadcrumbs.system") }, { label: t("breadcrumbs.contacts") }]}

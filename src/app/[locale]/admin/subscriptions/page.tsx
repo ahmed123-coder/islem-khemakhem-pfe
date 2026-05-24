@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +22,7 @@ interface Order {
 }
 
 export default function SubscriptionsPage() {
+  const { locale } = useParams()
   const t = useTranslations("adminPage.subscriptions")
   const commonT = useTranslations("common")
   const router = useRouter()
@@ -276,7 +277,7 @@ if (loading) return <div className="p-8">{commonT("loading")}</div>
                          size="sm" 
                          variant="ghost" 
                          className="rounded-xl h-10 text-[10px] font-black uppercase tracking-widest"
-                         onClick={() => router.push(`/client/solutions?serviceId=${order.serviceTier.service.id}`)}
+                         onClick={() => router.push(`/${locale}/client/solutions?serviceId=${order.serviceTier.service.id}`)}
                       >
                          {commonT("view")}
                      </Button>
