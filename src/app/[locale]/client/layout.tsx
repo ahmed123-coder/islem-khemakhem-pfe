@@ -5,19 +5,20 @@ import ClientSidebar from '@/components/ClientSidebar'
 import Header from '@/components/Header'
 import { DashboardLayout } from '@/components/dashboard/DashboardLayout'
 
-export default async function ClientLayout({ children }: { children: React.ReactNode }) {
+export default async function ClientLayout({ children, params }: { children: React.ReactNode; params: { locale: string } }) {
+  const { locale } = params
   const token = await getAuthToken()
-  if (!token) redirect('/login')
+  if (!token) redirect(`/${locale}/login`)
 
   const payload = verifyToken(token)
-  if (!payload || payload.role !== 'CLIENT') redirect('/login')
+  if (!payload || payload.role !== 'CLIENT') redirect(`/${locale}/login`)
 
   const user = await prisma.user.findUnique({
     where: { id: payload.userId },
     select: { isActive: true }
   })
 
-  if (!user?.isActive) redirect('/login')
+  if (!user?.isActive) redirect(`/${locale}/login`)
 
   return (
     <DashboardLayout

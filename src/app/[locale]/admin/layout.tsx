@@ -4,12 +4,13 @@ import { getAuthToken, verifyToken } from "@/lib/auth"
 import { redirect } from "next/navigation"
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout"
 
-export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children, params }: { children: React.ReactNode; params: { locale: string } }) {
+  const { locale } = params
   const token = await getAuthToken()
-  if (!token) redirect('/login')
+  if (!token) redirect(`/${locale}/login`)
 
   const payload = verifyToken(token)
-  if (!payload || payload.role !== 'ADMIN') redirect('/')
+  if (!payload || payload.role !== 'ADMIN') redirect(`/${locale}`)
 
   return (
     <DashboardLayout

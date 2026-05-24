@@ -1,11 +1,12 @@
 import { getCurrentUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ params }: { params: { locale: string } }) {
+  const { locale } = params
   const user = await getCurrentUser()
 
   if (!user) {
-    redirect('/login')
+    redirect(`/${locale}/login`)
   }
 
   return (
