@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: { locale: string } 
   const logoContent = await prisma.siteContent.findUnique({
     where: { key: 'logo' },
   })
-  let logoUrl = '/logo-1772242356501-removebg-preview.png'
+  let logoUrl = '/logo.png'
   if (logoContent && logoContent.value && (logoContent.value as any).url) {
     logoUrl = (logoContent.value as any).url
   }

@@ -1,45 +1,87 @@
-// SECURITY: Backend Authorization - Client-only route protection
+// src/app/api/client/profile/route.ts
+
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { requireAuth } from '@/lib/auth/middleware'
-import { handleError, successResponse } from '@/lib/errors/handler'
+import { getCurrentUser } from '@/lib/auth'
 
-export async function GET(request: NextRequest) {
-  // Authenticate and authorize - CLIENT only
-  const authResult = requireAuth(request, ['CLIENT']);
-  if (!authResult.success || !authResult.user) {
-    return authResult.response;
-  }
+// GET — récupère le profil du client connecté
+export async function GET(req: NextRequest) {
+  const user = await getCurrentUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    return successResponse({ 
-      name: authResult.user.email.split('@')[0] || '', 
-      email: authResult.user.email 
-    });
+    const profile = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        firstName: true,
+        phone: true,
+        company: true,
+        matriculeFiscale: true,
+        sector: true,
+        address: true,
+        needs: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+      }
+    })
+    return NextResponse.json(profile)
   } catch (error) {
-    return handleError(error, request);
+    console.error('GET profile error:', error)
+    return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 })
   }
 }
 
-export async function PUT(request: NextRequest) {
-  // Authenticate and authorize - CLIENT only
-  const authResult = requireAuth(request, ['CLIENT']);
-  if (!authResult.success || !authResult.user) {
-    return authResult.response;
-  }
+// PUT — met à jour le profil du client
+// ✅ Émet un événement socket pour synchroniser le nom dans le dashboard
+export async function PUT(req: NextRequest) {
+  const user = await getCurrentUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const { name, company, matriculeFiscale, sector, address, phone } = await request.json()
+    const {
+      name,
+      firstName,
+      phone,
+      company,
+      matriculeFiscale,
+      sector,
+      address,
+      needs,
+    } = await req.json()
 
-    await prisma.user.update({
-      where: { id: authResult.user.userId },
-      data: { ...(name !== undefined && { name }), ...(company !== undefined && { company }), ...(matriculeFiscale !== undefined && { matriculeFiscale }), ...(sector !== undefined && { sector }), ...(address !== undefined && { address }), ...(phone !== undefined && { phone }) }
+    const updated = await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        ...(name !== undefined && { name }),
+        ...(firstName !== undefined && { firstName }),
+        ...(phone !== undefined && { phone }),
+        ...(company !== undefined && { company }),
+        ...(matriculeFiscale !== undefined && { matriculeFiscale }),
+        ...(sector !== undefined && { sector }),
+        ...(address !== undefined && { address }),
+        ...(needs !== undefined && { needs }),
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        firstName: true,
+        phone: true,
+        company: true,
+        matriculeFiscale: true,
+        sector: true,
+        address: true,
+        needs: true,
+      }
     })
 
-    return successResponse({ success: true }, 'Profile updated successfully');
+    return NextResponse.json({ success: true, data: updated })
   } catch (error) {
-    return handleError(error, request);
+    console.error('PUT profile error:', error)
+    return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 })
   }
 }
-// END SECURITY: Backend Authorization - Client route protection complete
-

@@ -181,7 +181,7 @@ export default function AdminBillingPage() {
               <div className="flex items-center gap-8">
                 <div className="text-center">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t("columns.amount")}</p>
-                  <p className="font-black text-slate-900 text-2xl">{inv.amount} €</p>
+                  <p className="font-black text-slate-900 text-2xl">{inv.amount} DT</p>
                 </div>
 
                 <div className="text-center">

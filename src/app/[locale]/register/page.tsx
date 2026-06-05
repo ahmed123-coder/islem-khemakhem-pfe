@@ -20,11 +20,12 @@ function useCaptcha() {
 }
 
 export default function RegisterPage() {
+  const defaultLogo = '/logo.png'
   const [step, setStep] = useState<'CHOOSE' | 'CLIENT' | 'CONSULTANT'>('CHOOSE')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
-  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [logoUrl, setLogoUrl] = useState<string>(defaultLogo)
   const router = useRouter()
   const pathname = usePathname()
   const tr = useTranslations('auth.register')
@@ -41,7 +42,7 @@ export default function RegisterPage() {
           setLogoUrl(val.url)
         }
       })
-      .catch(() => setLogoUrl(null))
+      .catch(() => setLogoUrl(defaultLogo))
   }, [])
 
   const [client, setClient] = useState({ lastName: '', firstName: '', email: '', phone: '', company: '', matriculeFiscale: '', sector: '', address: '', needs: '', password: '', confirm: '', privacy: false })
@@ -205,7 +206,7 @@ export default function RegisterPage() {
           <div className="px-8 py-8 overflow-y-auto max-h-[88vh]">
             <div className="flex justify-center mb-6">
               <Link href={`/${locale}/`}>
-                <Image src={logoUrl || "/logo-1772242356501-removebg-preview.png"} alt="DSL Consulting" width={130} height={65} className="object-contain hover:opacity-80 transition-opacity" />
+                <Image src={logoUrl} alt="DSL Consulting" width={130} height={65} className="object-contain hover:opacity-80 transition-opacity" />
               </Link>
             </div>
 

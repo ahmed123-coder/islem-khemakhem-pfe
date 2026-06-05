@@ -19,39 +19,26 @@ import {
 import { 
   AreaChart, 
   Area, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+  XAxis,
+  Tooltip,
   ResponsiveContainer 
 } from 'recharts'
 import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
-import { cn } from '@/lib/utils'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
-const chartData = [
-  { name: 'Mon', value: 400 },
-  { name: 'Tue', value: 300 },
-  { name: 'Wed', value: 600 },
-  { name: 'Thu', value: 800 },
-  { name: 'Fri', value: 500 },
-  { name: 'Sat', value: 900 },
-  { name: 'Sun', value: 1100 },
-]
-
 export default function AdminDashboard() {
   const t = useTranslations('dashboard')
   const adminT = useTranslations('dashboard.admin')
-  const commonT = useTranslations('common')
   const pathname = usePathname()
   const locale = pathname.split('/')[1] || 'en'
 
+  // ── État incluant les données du graphique ────────────────────
   const [stats, setStats] = React.useState({ 
-    blogs: 0, 
-    services: 0, 
+    approches: 0, 
+    solutions: 0, 
     contacts: 0,
     clients: 0,
     activeClients: 0,
@@ -59,9 +46,12 @@ export default function AdminDashboard() {
     consultants: 0,
     activeConsultants: 0,
     pendingContacts: 0,
-    growth: "0"
+    growth: "0",
+    clientsChartData: [] as { name: string; value: number }[],   // ← AJOUT
+    contactsChartData: [] as { name: string; value: number }[],  // ← AJOUT
   })
 
+  // ── Chargement des stats depuis l'API ─────────────────────────
   React.useEffect(() => {
     fetch('/api/admin/stats')
       .then(r => r.json())
@@ -69,8 +59,8 @@ export default function AdminDashboard() {
         const data = result.data || result
         if (data) {
           setStats({ 
-            blogs: data.blogs || 0,
-            services: data.services || 0,
+            approches: data.blogs || 0,
+            solutions: data.services || 0,
             contacts: data.contacts || 0,
             clients: data.clients || 0,
             activeClients: data.activeClients || 0,
@@ -78,13 +68,16 @@ export default function AdminDashboard() {
             consultants: data.consultants || 0,
             activeConsultants: data.activeConsultants || 0,
             pendingContacts: data.pendingContacts || 0,
-            growth: data.growth || "0"
+            growth: data.growth || "0",
+            clientsChartData: data.clientsChartData || [],   // ← AJOUT
+            contactsChartData: data.contactsChartData || [], // ← AJOUT
           })
         }
       })
       .catch(() => {})
   }, [])
 
+  // ── Téléchargement du rapport ─────────────────────────────────
   const handleDownloadReport = () => {
     const htmlContent = `
       <!DOCTYPE html>
@@ -145,11 +138,11 @@ export default function AdminDashboard() {
             </div>
             <div class="card">
               <p class="label">${adminT('activeServices')}</p>
-              <h3>${stats.services}</h3>
+              <h3>${stats.solutions}</h3>
             </div>
             <div class="card">
               <p class="label">${adminT('publishedApproches')}</p>
-              <h3>${stats.blogs}</h3>
+              <h3>${stats.approches}</h3>
             </div>
           </div>
         </div>
@@ -169,12 +162,7 @@ export default function AdminDashboard() {
 
   const container = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
   }
 
   const item = {
@@ -215,6 +203,7 @@ export default function AdminDashboard() {
         animate="show"
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
       >
+        {/* ── Carte Clients avec graphique RÉEL ── */}
         <motion.div variants={item} className="md:col-span-2 lg:col-span-2">
           <Card className="relative overflow-hidden h-64 rounded-[32px] border-none bg-white shadow-[0_20px_50px_rgba(0,0,0,0.04)] group">
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-50 rounded-full blur-[80px] -mr-32 -mt-32 transition-transform duration-700 group-hover:scale-125" />
@@ -241,13 +230,19 @@ export default function AdminDashboard() {
                   <h3 className="text-5xl font-black text-slate-900 leading-none">{stats.clients}</h3>
                   <div className="h-24 flex-1">
                     <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={chartData}>
+                      {/* ← CORRECTION : utilise stats.clientsChartData au lieu de chartData statique */}
+                      <AreaChart data={stats.clientsChartData}>
                         <defs>
                           <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="#2563eb" stopOpacity={0.3}/>
                             <stop offset="95%" stopColor="#2563eb" stopOpacity={0}/>
                           </linearGradient>
                         </defs>
+                        <XAxis dataKey="name" hide />
+                        <Tooltip
+                          contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+                          formatter={(value: number) => [`${value} clients`, '']}
+                        />
                         <Area 
                           type="monotone" 
                           dataKey="value" 
@@ -265,6 +260,7 @@ export default function AdminDashboard() {
           </Card>
         </motion.div>
 
+        {/* ── Carte Consultants ── */}
         <motion.div variants={item}>
           <Card className="h-64 rounded-[32px] border-none bg-white shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 flex flex-col group">
             <div className="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center mb-6 transition-transform group-hover:rotate-12">
@@ -281,6 +277,7 @@ export default function AdminDashboard() {
           </Card>
         </motion.div>
 
+        {/* ── Carte Services ── */}
         <motion.div variants={item}>
           <Card className="h-64 rounded-[32px] border-none bg-slate-900 text-white shadow-2xl p-8 flex flex-col group relative overflow-hidden">
             <div className="absolute bottom-0 right-0 w-32 h-32 bg-blue-500/20 rounded-full blur-3xl" />
@@ -288,13 +285,14 @@ export default function AdminDashboard() {
               <Briefcase className="w-6 h-6 text-blue-400" />
             </div>
             <p className="text-slate-400 font-bold text-xs uppercase tracking-[0.2em] mb-2">{adminT('offerings')}</p>
-            <h3 className="text-4xl font-black italic mb-auto">{stats.services}</h3>
+            <h3 className="text-4xl font-black italic mb-auto">{stats.solutions}</h3>
             <Link href={`/${locale}/admin/solution`} className="flex items-center gap-2 text-xs font-bold text-blue-400 hover:gap-3 transition-all relative z-10">
               {adminT('activeServicesLink')} <ArrowUpRight className="w-3 h-3" />
             </Link>
           </Card>
         </motion.div>
 
+        {/* ── Carte Contacts avec graphique RÉEL ── */}
         <motion.div variants={item} className="md:col-span-2">
           <Card className="rounded-[32px] border-none bg-white shadow-[0_20px_50px_rgba(0,0,0,0.04)] p-8 group">
             <div className="flex items-center justify-between mb-8">
@@ -315,7 +313,13 @@ export default function AdminDashboard() {
             </div>
             <div className="h-32 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData}>
+                {/* ← CORRECTION : utilise stats.contactsChartData au lieu de chartData statique */}
+                <AreaChart data={stats.contactsChartData}>
+                  <XAxis dataKey="name" hide />
+                  <Tooltip
+                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
+                    formatter={(value: number) => [`${value} contacts`, '']}
+                  />
                   <Area 
                     type="step" 
                     dataKey="value" 
@@ -330,6 +334,7 @@ export default function AdminDashboard() {
           </Card>
         </motion.div>
 
+        {/* ── Actions rapides ── */}
         <motion.div variants={item} className="md:col-span-2">
           <div className="grid grid-cols-2 gap-4 h-full">
             <Link href={`/${locale}/admin/approches`} className="group">
@@ -338,7 +343,7 @@ export default function AdminDashboard() {
                   <FileEdit className="w-5 h-5 text-purple-600" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-slate-900 text-sm">{adminT('writeBlog')}</h4>
+                  <h4 className="font-bold text-slate-900 text-sm">{adminT('writeapproach')}</h4>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{adminT('contentEngine')}</p>
                 </div>
               </div>
@@ -354,16 +359,10 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </Link>
-            <div className="col-span-2">
-              <Button className="w-full h-16 rounded-[24px] bg-indigo-600 hover:bg-indigo-700 shadow-xl shadow-indigo-100 text-white font-black italic tracking-tight gap-3 text-lg transition-all hover:-translate-y-1">
-                <Zap className="w-6 h-6 fill-white" />
-                {t('common.systemBoostNow')} <Plus className="w-4 h-4 ml-auto" />
-              </Button>
-            </div>
           </div>
         </motion.div>
-      </motion.section>
 
+      </motion.section>
     </div>
   )
 }

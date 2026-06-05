@@ -95,8 +95,9 @@ export default function ClientServicesPage() {
       return
     }
 
+    // After selecting a tier, go to scheduling to pick a slot before payment
     setSelectedTier(tier)
-    setShowPaymentModal(true)
+    setStep(3)
   }
 
   const handleMeetingTypeConfirm = (type: 'ZOOM' | 'SUR_PLACE') => {
@@ -109,31 +110,29 @@ export default function ClientServicesPage() {
     setShowPaymentModal(false)
     setIsPaid(true)
     setActivePaymentMethod(method)
-    setSelectedMeetingType('ZOOM') 
-    
-    if (method === 'CARD') {
-      setShowMeetingModal(true)
-    } else {
-      setStep(4)
-    }
+
+    // After successful payment (or validation for bank transfer), create order + reservation
+    // handlePurchase will post selected slot + tier to the API
+    handlePurchase(method)
   }
 
   const handlePurchase = async (method: 'CARD' | 'VIREMENT' | 'SUR_PLACE' = 'CARD', consultantIdFromStep4?: string) => {
     if (!selectedTier) return
 
     try {
+      const requiresSlot = method === 'CARD' || method === 'SUR_PLACE'
       const payload = {
         serviceTierId: selectedTier.id,
-        consultantId: method === 'CARD' ? selection?.consultantId : (consultantIdFromStep4 || null),
-        startTime: method === 'CARD' ? selection?.startTime : null,
-        endTime: method === 'CARD' ? selection?.endTime : null,
-        meetingType: method === 'CARD' ? (selectedMeetingType || 'ZOOM') : 'ZOOM',
+        consultantId: requiresSlot ? selection?.consultantId : (consultantIdFromStep4 || null),
+        startTime: requiresSlot ? selection?.startTime : null,
+        endTime: requiresSlot ? selection?.endTime : null,
+        meetingType: selectedMeetingType || (method === 'SUR_PLACE' ? 'SUR_PLACE' : 'ZOOM'),
         sessionIndex: 0,
         sessionLabel: null,
         paymentMethod: method
       };
 
-      if (method === 'CARD' && (!payload.startTime || !payload.consultantId)) {
+      if (requiresSlot && (!payload.startTime || !payload.consultantId)) {
         toast.error("Veuillez sélectionner un créneau.");
         return;
       }
@@ -280,7 +279,8 @@ export default function ClientServicesPage() {
                       {new Date(selection.startTime).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'short' })} à {new Date(selection.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
-                  <button onClick={() => handlePurchase('CARD')} className="bg-white text-blue-900 px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-amber-400 transition-all shadow-xl active:scale-95">
+                  {/* Open payment modal after slot selection */}
+                  <button onClick={() => setShowPaymentModal(true)} className="bg-white text-blue-900 px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-amber-400 transition-all shadow-xl active:scale-95">
                     {t('confirmReservation')}
                   </button>
                 </div>

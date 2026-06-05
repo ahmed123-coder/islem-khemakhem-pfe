@@ -88,7 +88,8 @@ export default function SolutionDetailPage({ params }: { params: { locale: strin
     }
 
     setSelectedTier(tier)
-    setShowPaymentModal(true)
+    // Move to scheduling so user picks a slot before payment
+    setStep(3)
   }
 
   const handleMeetingTypeConfirm = (type: 'ZOOM' | 'SUR_PLACE') => {
@@ -103,14 +104,9 @@ export default function SolutionDetailPage({ params }: { params: { locale: strin
     setShowPaymentModal(false)
     setIsPaid(true)
     setActivePaymentMethod(method)
-    setSelectedMeetingType('ZOOM') // Default for non-card
-    
-    if (method === 'CARD') {
-      setShowMeetingModal(true)
-    } else {
-      // For Virement/Sur Place, let them pick a consultant first without a reservation
-      setStep(4)
-    }
+
+    // After payment success, call purchase to create order/reservation (handlePurchase handles CARD vs others)
+    handlePurchase(method)
   }
 
   const handlePurchase = async (method: 'CARD' | 'VIREMENT' | 'SUR_PLACE' = 'CARD', consultantIdFromStep4?: string) => {
@@ -119,18 +115,19 @@ export default function SolutionDetailPage({ params }: { params: { locale: strin
     try {
       console.log("Starting purchase process for method:", method);
       
+      const requiresSlot = method === 'CARD' || method === 'SUR_PLACE'
       const payload = {
         serviceTierId: selectedTier.id,
-        consultantId: method === 'CARD' ? selection?.consultantId : (consultantIdFromStep4 || null),
-        startTime: method === 'CARD' ? selection?.startTime : null,
-        endTime: method === 'CARD' ? selection?.endTime : null,
-        meetingType: method === 'CARD' ? (selectedMeetingType || 'ZOOM') : 'ZOOM',
+        consultantId: requiresSlot ? selection?.consultantId : (consultantIdFromStep4 || null),
+        startTime: requiresSlot ? selection?.startTime : null,
+        endTime: requiresSlot ? selection?.endTime : null,
+        meetingType: selectedMeetingType || (method === 'SUR_PLACE' ? 'SUR_PLACE' : 'ZOOM'),
         sessionIndex: 0,
         sessionLabel: null,
         paymentMethod: method
       };
 
-      if (method === 'CARD' && (!payload.startTime || !payload.consultantId)) {
+      if (requiresSlot && (!payload.startTime || !payload.consultantId)) {
         toast.error("Veuillez sélectionner un créneau.");
         return;
       }
@@ -205,15 +202,20 @@ export default function SolutionDetailPage({ params }: { params: { locale: strin
                 onClick={() => router.push(`/${locale}/solutions`)} 
                 className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-bold transition-colors group"
               >
-                <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-50 transition-all">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
-                </div>
-                Toutes nos solutions
+                
               </button>
               <div className="flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-xs font-bold shadow-sm">
                 <span className="w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-[10px] font-black">1</span>
-                ÉVALUATION DE VOS BESOINS
+                Découvrez nos différentes offres et choisissez celle qui correspond le mieux à vos besoins.
               </div>
+              <button 
+                onClick={() => router.push(`/${locale}/solutions`)} 
+                className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-bold transition-colors group">
+              </button>
+              <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-50 transition-all">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
+                </div>
+                Retour aux solutions
             </div>
 
             <TierSelector tiers={selectedService.tiers} onSelect={handleTierSelect} />
@@ -307,7 +309,7 @@ export default function SolutionDetailPage({ params }: { params: { locale: strin
                     </div>
                     <div className="text-[10px] opacity-60">Fin prévue à {new Date(selection.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
                   </div>
-                  <button onClick={() => handlePurchase('CARD')} className="bg-white text-blue-900 px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-amber-400 transition-colors">Confirmer la réservation</button>
+                  <button onClick={() => setShowPaymentModal(true)} className="bg-white text-blue-900 px-8 py-3 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-amber-400 transition-colors">Confirmer la réservation</button>
                 </div>
               </div>
             )}

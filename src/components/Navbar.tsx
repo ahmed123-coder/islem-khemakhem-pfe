@@ -9,8 +9,9 @@ import { useTranslations } from 'next-intl'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 export default function Navbar() {
+  const defaultLogo = '/logo.png'
   const [isOpen, setIsOpen] = useState(false)
-  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [logoUrl, setLogoUrl] = useState<string>(defaultLogo)
   const pathname = usePathname()
   const t = useTranslations('navigation')
 
@@ -25,7 +26,7 @@ export default function Navbar() {
           setLogoUrl(val.url)
         }
       })
-      .catch(() => setLogoUrl(null))
+      .catch(() => setLogoUrl(defaultLogo))
   }, [])
 
   const navLinks = [
@@ -40,23 +41,13 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 w-full">
           <Link href={`/${locale}/`} className="flex items-center shrink-0">
-            {logoUrl ? (
-              <Image
-                src={logoUrl}
-                alt="DSL Consulting"
-                width={50}
-                height={50}
-                className="object-contain"
-              />
-            ) : (
-              <Image
-                src="/logo-1772242356501-removebg-preview.png"
-                alt="DSL Consulting"
-                width={100}
-                height={50}
-                className="object-contain"
-              />
-            )}
+            <Image
+              src={logoUrl}
+              alt="DSL Consulting"
+              width={100}
+              height={100}
+              className="object-contain"
+            />
           </Link>
 
           <div className="hidden lg:flex items-center justify-center flex-1">

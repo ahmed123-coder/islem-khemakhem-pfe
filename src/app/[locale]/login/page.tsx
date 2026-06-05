@@ -7,11 +7,12 @@ import Link from 'next/link'
 import Image from 'next/image'
 
 function LoginContent() {
+  const defaultLogo = '/logo.png'
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [logoUrl, setLogoUrl] = useState<string>(defaultLogo)
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -31,7 +32,7 @@ function LoginContent() {
           setLogoUrl(val.url)
         }
       })
-      .catch(() => setLogoUrl(null))
+      .catch(() => setLogoUrl(defaultLogo))
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,7 +89,7 @@ function LoginContent() {
           <div className="px-8 py-10">
             <div className="flex justify-center mb-8">
               <Link href={`/${locale}/`}>
-                <Image src={logoUrl || "/logo-1772242356501-removebg-preview.png"} alt="DSL Consulting" width={140} height={70} className="object-contain hover:opacity-80 transition-opacity" />
+                <Image src={logoUrl} alt="DSL Consulting" width={140} height={70} className="object-contain hover:opacity-80 transition-opacity" />
               </Link>
             </div>
 
@@ -111,7 +112,7 @@ function LoginContent() {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="jean@entreprise.com"
+                  placeholder="Email"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />

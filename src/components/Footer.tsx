@@ -11,7 +11,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher'
 export default function Footer() {
   const t = useTranslations('home')
   const pathname = usePathname()
-  const locale = pathname.split('/')[1] || 'en'
+  const locale = pathname.split('/')[1] || 'fr'
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export default function Footer() {
           <div className="flex flex-col gap-4">
             <Link href={`/${locale}/`}>
               <Image
-                src={logoUrl || "/logo-1772242356501-removebg-preview.png"}
+                src={logoUrl || "/logo.png"}
                 alt="DSL Consulting"
                 width={120}
                 height={60}
@@ -46,7 +46,7 @@ export default function Footer() {
           </div>
 
           <div className="border-l-2 border-[#7AB648] pl-8">
-            <h4 className="text-xs font-bold mb-5 text-[#7AB648] uppercase tracking-widest">{t('approaches.title')}</h4>
+            <h4 className="text- font-bold mb-5 text-[#7AB648] uppercase tracking-widest">{t('approaches.title')}</h4>
             <ul className="space-y-3">
               {[
                 { icon: <Settings className="h-4 w-4 text-[#7AB648]" />, label: t('approaches.coaching') },
@@ -54,7 +54,7 @@ export default function Footer() {
                 { icon: <TrendingUp className="h-4 w-4 text-[#7AB648]" />, label: t('approaches.training') }
               ].map((item) => (
                 <li key={item.label}>
-                  <Link href={`/${locale}/solutions`} className="flex items-center gap-3 text-gray-500 hover:text-[#1B3F7A] transition-colors text-sm">
+                  <Link href={`/${locale}/approches`} className="flex items-center gap-3 text-gray-500 hover:text-[#1B3F7A] transition-colors text-sm">
                     {item.icon}
                     {item.label}
                   </Link>
@@ -64,7 +64,7 @@ export default function Footer() {
           </div>
 
           <div className="border-l-2 border-[#7AB648] pl-8">
-            <h4 className="text-xs font-bold mb-5 text-[#7AB648] uppercase tracking-widest">{t('solutions.title')}</h4>
+            <h4 className="text- font-bold mb-5 text-[#7AB648] uppercase tracking-widest">{t('solutions.title')}</h4>
             <ul className="space-y-3">
               {[
                 { icon: <TrendingUp className="h-4 w-4 text-[#7AB648]" />, label: t('solutions.performance') },
@@ -82,20 +82,20 @@ export default function Footer() {
           </div>
 
           <div className="border-l-2 border-[#7AB648] pl-8">
-            <h4 className="text-xs font-bold mb-5 text-[#7AB648] uppercase tracking-widest">{t('cta.contactUs')}</h4>
+            <h4 className="text- font-bold mb-5 text-[#7AB648] uppercase tracking-widest">{t('cta.contactUs')}</h4>
             <div className="space-y-2">
-              <div className="flex items-center gap-3 border border-gray-200 rounded-lg px-4 py-2 text-sm text-gray-500">
-                <span className="text-[#7AB648]"><Mail className="h-4 w-4" /></span>
-                dslconsulting.contact@gmail.com
+              <div className="flex items-center gap-3 border border-gray-200 rounded-lg px-4 py-2 text-m text-gray-500 break-all">
+                <span className="text-[#7AB648] flex-shrink-0"><Mail className="h-4 w-4" /></span>
+                <span className="break-all">dslconsulting.contact@gmail.com</span>
               </div>
-              <div className="flex flex-col gap-2 border border-gray-200 rounded-lg px-4 py-3 text-sm text-gray-500">
+              <div className="flex flex-col gap-2 border border-gray-200 rounded-lg px-4 py-3 text-m text-gray-500">
                 <div className="flex items-center gap-3">
                   <span className="text-[#7AB648]"><Phone className="h-4 w-4" /></span>
                   +216 25 307 534
                 </div>
                 <p className="text-xs text-gray-400">Numéro également disponible sur WhatsApp.</p>
               </div>
-              <div className="flex items-center gap-3 border border-gray-200 rounded-lg px-4 py-2 text-sm text-gray-500">
+              <div className="flex items-center gap-3 border border-gray-200 rounded-lg px-4 py-2 text-m text-gray-500">
                 <span className="text-[#7AB648]"><MapPin className="h-4 w-4" /></span>
                 Sfax, Tunisie
               </div>

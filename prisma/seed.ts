@@ -260,7 +260,7 @@ async function main() {
       {
         key: 'logo',
         value: {
-          url: '/logo-1772242356501-removebg-preview.png',
+          url: '/logo.png',
         },
       },
       {
@@ -277,7 +277,7 @@ async function main() {
         key: 'footer',
         value: {
           company: 'DSL Conseil',
-          logoUrl: '/logo-1772242356501-removebg-preview.png',
+          logoUrl: '/logo.png',
           tagline: 'Cabinet de conseil en management',
           email: 'contact@dsl-conseil.com',
           phone: '+33 1 23 45 67 89',

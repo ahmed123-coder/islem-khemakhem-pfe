@@ -21,10 +21,13 @@ export function AdminTopBar() {
   const [mounted, setMounted] = React.useState(false)
   const [notifications, setNotifications] = React.useState<any[]>([])
   const [unreadCount, setUnreadCount] = React.useState(0)
+  const [adminName, setAdminName] = React.useState('Administrator')
+  const [adminInitials, setAdminInitials] = React.useState('AD')
 
   React.useEffect(() => {
     setMounted(true)
     fetchNotifications()
+    fetchAdminProfile()
     const handleNewNotification = (e: any) => {
       const data = e.detail
       if (data) {
@@ -35,6 +38,21 @@ export function AdminTopBar() {
     window.addEventListener('notification', handleNewNotification)
     return () => window.removeEventListener('notification', handleNewNotification)
   }, [])
+
+  const fetchAdminProfile = async () => {
+    try {
+      const res = await fetch('/api/auth/me')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.user) {
+          const fullName = [data.user.firstName, data.user.name].filter(Boolean).join(' ') || 'Administrator'
+          setAdminName(fullName)
+          const initials = fullName.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase()
+          setAdminInitials(initials)
+        }
+      }
+    } catch {}
+  }
 
   const fetchNotifications = async () => {
     try {
@@ -125,10 +143,10 @@ export function AdminTopBar() {
             <button className="flex items-center gap-3 p-1 rounded-2xl hover:bg-slate-100/80 transition-all outline-none group">
               <Avatar className="w-9 h-9 border-2 border-white shadow-sm transition-transform group-active:scale-95">
                 <AvatarImage src="" />
-                <AvatarFallback className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white text-xs font-bold">AD</AvatarFallback>
+                <AvatarFallback className="bg-gradient-to-tr from-blue-600 to-indigo-500 text-white text-xs font-bold">{adminInitials}</AvatarFallback>
               </Avatar>
               <div className="hidden md:block text-left">
-                <p className="text-sm font-bold text-slate-900 leading-none mb-1">Administrator</p>
+                <p className="text-sm font-bold text-slate-900 leading-none mb-1">{adminName}</p>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Super User</p>
               </div>
               <ChevronDown className="w-4 h-4 text-slate-400 hidden md:block transition-transform group-data-[state=open]:rotate-180" />

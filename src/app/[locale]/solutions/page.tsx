@@ -83,7 +83,7 @@ export default function Services() {
                     {(service.icon || service.logo) && (
                       <div className="w-20 h-20 bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-gray-100 flex items-center justify-center mb-8 overflow-hidden group-hover:-translate-y-1 transition-transform duration-500 relative">
                         <div className="absolute inset-0 bg-blue-50/50 group-hover:bg-blue-50/0 transition-colors duration-500"></div>
-                        <img src={service.icon || service.logo} alt={service.name} className="w-12 h-12 object-contain relative z-10 group-hover:scale-110 transition-transform duration-500" />
+                        <img src={service.icon || service.logo} alt={service.name} className="w-50 h-10 object-contain relative z-10 group-hover:scale-110 transition-transform duration-500" />
                       </div>
                     )}
                     {service.category && (

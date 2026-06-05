@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
       prisma.contact.count({ where: { status: 'new' } })
     ])
 
-    // Calculate growth (clients in last 30 days vs total)
+    // ── Calcul du taux de croissance (30 derniers jours) ──────────
     const thirtyDaysAgo = new Date()
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
     
@@ -43,6 +43,49 @@ export async function GET(request: NextRequest) {
 
     const growth = clients > 0 ? ((newClients / clients) * 100).toFixed(1) : "0"
 
+    // ── Données réelles du graphique clients (7 derniers jours) ───
+    const clientsChartData = await Promise.all(
+      Array.from({ length: 7 }, (_, i) => {
+        const date = new Date()
+        date.setDate(date.getDate() - (6 - i))
+        const start = new Date(date)
+        start.setHours(0, 0, 0, 0)
+        const end = new Date(date)
+        end.setHours(23, 59, 59, 999)
+
+        return prisma.user.count({
+          where: {
+            role: 'CLIENT',
+            createdAt: { gte: start, lte: end }
+          }
+        }).then(count => ({
+          name: start.toLocaleDateString('fr-FR', { weekday: 'short' }),
+          value: count
+        }))
+      })
+    )
+
+    // ── Données réelles du graphique contacts (7 derniers jours) ──
+    const contactsChartData = await Promise.all(
+      Array.from({ length: 7 }, (_, i) => {
+        const date = new Date()
+        date.setDate(date.getDate() - (6 - i))
+        const start = new Date(date)
+        start.setHours(0, 0, 0, 0)
+        const end = new Date(date)
+        end.setHours(23, 59, 59, 999)
+
+        return prisma.contact.count({
+          where: {
+            createdAt: { gte: start, lte: end }
+          }
+        }).then(count => ({
+          name: start.toLocaleDateString('fr-FR', { weekday: 'short' }),
+          value: count
+        }))
+      })
+    )
+
     return successResponse({ 
       blogs, 
       services, 
@@ -53,7 +96,9 @@ export async function GET(request: NextRequest) {
       consultants,
       activeConsultants,
       pendingContacts,
-      growth
+      growth,
+      clientsChartData,   // ← nouvelles données graphique clients
+      contactsChartData,  // ← nouvelles données graphique contacts
     });
   } catch (error) {
     return handleError(error, request);

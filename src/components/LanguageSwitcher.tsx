@@ -1,6 +1,5 @@
 'use client';
 
-import { useLocale } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
@@ -10,17 +9,19 @@ const languages = [
 ];
 
 export default function LanguageSwitcher() {
-  const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // Extract locale from pathname instead of useLocale()
+  const locale = pathname.split('/')[1] || 'fr';
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  const currentLang = languages.find(l => l.code === locale) || languages[0];
+  const currentLang = languages.find(l => l.code === locale) || languages[1]; // Default to French
 
   const handleLanguageChange = async (newLocale: string) => {
     setIsOpen(false);
