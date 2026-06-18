@@ -246,26 +246,7 @@ export default function ConsultantsPage() {
   }
 
   const openFile = (url: string) => {
-    let fixed = url
-
-    // Cloudinary stocke parfois les fichiers en resource_type 'raw' SANS extension
-    // (ex: .../consultant-cvs/xyafhb8kar1ja0ziqphc) — sans extension, le navigateur
-    // ne sait pas quel type de fichier ouvrir → "page impossible".
-    const hasExtension = /\.[a-z0-9]{2,4}$/i.test(url)
-
-    if (url.includes('/raw/upload/')) {
-      if (!hasExtension) {
-        // Pas d'extension : on force l'affichage en PDF par défaut
-        // (cas le plus courant pour un CV) en ajoutant fl_inline + .pdf
-        fixed = url.replace('/raw/upload/', '/raw/upload/fl_inline/') + '.pdf'
-      } else {
-        fixed = url.replace('/raw/upload/', '/raw/upload/fl_inline/')
-      }
-    } else if (url.includes('/image/upload/') && url.endsWith('.pdf')) {
-      fixed = url.replace('/image/upload/', '/image/upload/fl_inline/')
-    }
-
-    window.open(fixed, '_blank')
+    window.open(url, '_blank')
   }
 
   const filtered = consultants.filter(c =>
