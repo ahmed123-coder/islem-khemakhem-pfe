@@ -7,9 +7,12 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
+import { useTranslations } from 'next-intl'
 
 export default function AdminProfilePage() {
   const router = useRouter()
+  const t = useTranslations('adminPage.profile')
+  const commonT = useTranslations('common')
   const [loading, setLoading] = React.useState(true)
   const [saving, setSaving] = React.useState(false)
   const [formData, setFormData] = React.useState({
@@ -44,11 +47,11 @@ export default function AdminProfilePage() {
     
     if (formData.newPassword) {
       if (formData.newPassword !== formData.confirmPassword) {
-        setError('New passwords do not match')
+        setError(t('passwordsDoNotMatch'))
         return
       }
       if (!formData.currentPassword) {
-        setError('Current password is required to set a new password')
+        setError(t('currentPasswordRequired'))
         return
       }
     }
@@ -71,10 +74,10 @@ export default function AdminProfilePage() {
       const data = await res.json()
 
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to update profile')
+        throw new Error(data.error || t('updateFailed'))
       }
 
-      toast.success('Profile updated successfully')
+      toast.success(t('profileUpdated'))
       
       // Clear password fields on success
       setFormData(prev => ({ ...prev, currentPassword: '', newPassword: '', confirmPassword: '' }))
@@ -100,8 +103,8 @@ export default function AdminProfilePage() {
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">My Profile</h1>
-        <p className="text-slate-500 font-medium">Manage your administrator account details and security settings.</p>
+        <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-2">{t('myProfile')}</h1>
+        <p className="text-slate-500 font-medium">{t('description')}</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -113,12 +116,12 @@ export default function AdminProfilePage() {
                  {formData.name ? formData.name.substring(0, 2).toUpperCase() : 'AD'}
                </span>
             </div>
-            <h3 className="text-xl font-black text-slate-900 mb-1">{formData.name || 'Administrator'}</h3>
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">Super User</p>
+            <h3 className="text-xl font-black text-slate-900 mb-1">{formData.name || t('administrator')}</h3>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">{t('superUser')}</p>
             <div className="w-full h-px bg-slate-100 my-2"></div>
             <p className="text-sm text-slate-500 flex items-center justify-center gap-2 mt-4">
               <Shield className="w-4 h-4 text-emerald-500" />
-              Full Access Granted
+              {t('fullAccessGranted')}
             </p>
           </Card>
         </div>
@@ -129,7 +132,7 @@ export default function AdminProfilePage() {
             <div className="p-8">
               <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
                 <User className="w-5 h-5 text-blue-600" />
-                Personal Information
+                {t('personalInformation')}
               </h3>
               
               <form onSubmit={handleSubmit} className="space-y-6">
@@ -142,7 +145,7 @@ export default function AdminProfilePage() {
                 
                 <div className="grid grid-cols-1 gap-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Full Name</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('fullName')}</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <User className="h-5 w-5 text-slate-300" />
@@ -153,13 +156,13 @@ export default function AdminProfilePage() {
                         value={formData.name}
                         onChange={handleChange}
                         className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all"
-                        placeholder="John Doe"
+                        placeholder={t('fullNamePlaceholder')}
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Email Address</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('emailAddress')}</label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <Mail className="h-5 w-5 text-slate-300" />
@@ -170,7 +173,7 @@ export default function AdminProfilePage() {
                         value={formData.email}
                         onChange={handleChange}
                         className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all"
-                        placeholder="admin@dsl.com"
+                        placeholder={t('emailPlaceholder')}
                       />
                     </div>
                   </div>
@@ -180,43 +183,43 @@ export default function AdminProfilePage() {
 
                 <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
                   <Key className="w-5 h-5 text-orange-500" />
-                  Security (Optional)
+                  {t('security')}
                 </h3>
                 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Current Password</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('currentPassword')}</label>
                     <input
                       type="password"
                       name="currentPassword"
                       value={formData.currentPassword}
                       onChange={handleChange}
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all"
-                      placeholder="Leave blank to keep current"
+                      placeholder={t('currentPasswordPlaceholder')}
                     />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">New Password</label>
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('newPassword')}</label>
                       <input
                         type="password"
                         name="newPassword"
                         value={formData.newPassword}
                         onChange={handleChange}
                         className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all"
-                        placeholder="New password"
+                        placeholder={t('newPasswordPlaceholder')}
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Confirm Password</label>
+                      <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">{t('confirmPassword')}</label>
                       <input
                         type="password"
                         name="confirmPassword"
                         value={formData.confirmPassword}
                         onChange={handleChange}
                         className="w-full px-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl text-slate-900 font-medium focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 outline-none transition-all"
-                        placeholder="Confirm new password"
+                        placeholder={t('confirmPasswordPlaceholder')}
                       />
                     </div>
                   </div>
@@ -228,9 +231,9 @@ export default function AdminProfilePage() {
                     disabled={saving}
                     className="w-full md:w-auto rounded-2xl bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-200 font-bold px-8 py-6 h-auto transition-all"
                   >
-                    {saving ? 'Saving Changes...' : (
+                    {saving ? t('saving') : (
                       <span className="flex items-center gap-2">
-                        <Save className="w-5 h-5" /> Save Profile
+                        <Save className="w-5 h-5" /> {t('saveProfile')}
                       </span>
                     )}
                   </Button>

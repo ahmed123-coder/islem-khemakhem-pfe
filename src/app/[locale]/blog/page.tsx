@@ -5,9 +5,15 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 import { Separator } from '@/components/ui/separator'
-export const metadata: Metadata = {
-  title: 'Business Consulting Blog',
-  description: 'Expert insights on business consulting, strategic management, HR solutions, quality management, and performance optimization. Stay updated with industry trends and best practices.',
+import { useTranslations } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
+
+export async function generateMetadata({ params: { locale } }: { params: { locale: string } }): Promise<Metadata> {
+  const t = await getTranslations({ locale, namespace: 'blog' })
+  return {
+    title: t('title'),
+    description: t('description'),
+  }
 }
 
 async function getBlogs() {
@@ -24,10 +30,11 @@ async function getBlogs() {
 
 export default async function Blog({ params }: { params: { locale: string } }) {
   const { locale } = params
+  const t = useTranslations('blog')
   const articles = await getBlogs();
 
   if (!articles.length) {
-    return <div className="py-20 text-center">No blogs available</div>;
+    return <div className="py-20 text-center">{t('noBlogs')}</div>;
   }
   return (
     <article className="py-20">
@@ -35,9 +42,9 @@ export default async function Blog({ params }: { params: { locale: string } }) {
         {/* Header */}
         <header className="text-center mb-20">
           <Badge variant="outline" className="mb-6 text-blue-600 border-blue-200">
-            Expert Insights
+            {t('expertInsights')}
           </Badge>
-          <h1 className="text-4xl font-bold text-foreground mb-6">Business Consulting Insights</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-6">{t('insights')}</h1>
           <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Stay informed with the latest trends, strategies, and best practices in business consulting and organizational excellence.
           </p>
@@ -54,7 +61,7 @@ export default async function Blog({ params }: { params: { locale: string } }) {
                     <img src={article.image} alt={article.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out" />
                     <div className="absolute top-4 right-4 z-20">
                       <Badge variant="secondary" className="bg-white/90 text-blue-900 hover:bg-white backdrop-blur-md shadow-sm border-none font-medium">
-                        {article.author || 'Expert Consultant'}
+                        {article.author || t('expertConsultant')}
                       </Badge>
                     </div>
                   </div>
@@ -63,7 +70,7 @@ export default async function Blog({ params }: { params: { locale: string } }) {
                   {!article.image && (
                     <div className="flex items-center justify-between mb-4">
                       <Badge variant="secondary" className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-none font-medium transition-colors">
-                        {article.author || 'Expert Consultant'}
+                        {article.author || t('expertConsultant')}
                       </Badge>
                     </div>
                   )}
@@ -89,7 +96,7 @@ export default async function Blog({ params }: { params: { locale: string } }) {
                     </div>
                     <Link href={`/${locale}/blog/${article.id}`}>
                       <Button variant="ghost" size="sm" className="text-[#2B5A8E] hover:text-[#1d3d61] hover:bg-blue-50/50 p-2 h-auto text-sm font-bold group/btn rounded-lg">
-                        Lire la suite <span className="inline-block transition-transform group-hover/btn:translate-x-1.5 ml-1">→</span>
+                        {t('readMore')} <span className="inline-block transition-transform group-hover/btn:translate-x-1.5 ml-1">→</span>
                       </Button>
                     </Link>
                   </div>
@@ -104,10 +111,10 @@ export default async function Blog({ params }: { params: { locale: string } }) {
           <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
             <CardContent className="p-10 text-center">
               <Badge variant="outline" className="mb-4 text-blue-600 border-blue-300">
-                Stay Updated
+                {t('stayUpdated')}
               </Badge>
               <h2 className="text-2xl font-bold text-foreground mb-4">
-                Expert Insights Delivered
+                {t('insightsDelivered')}
               </h2>
               <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
                 Subscribe for the latest insights, industry trends, and expert advice on business consulting.
@@ -115,12 +122,12 @@ export default async function Blog({ params }: { params: { locale: string } }) {
               <form className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
                 <Input
                   type="email"
-                  placeholder="Enter your email"
+                  placeholder={t('emailPlaceholder')}
                   className="flex-1 bg-white"
                   required
                 />
                 <Button type="button" className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
-                  Subscribe
+                  {t('subscribe')}
                 </Button>
               </form>
             </CardContent>

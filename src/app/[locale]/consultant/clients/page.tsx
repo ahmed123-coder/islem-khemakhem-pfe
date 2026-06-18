@@ -35,8 +35,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
+import { useTranslations } from 'next-intl'
 
 export default function ConsultantClients() {
+  const t = useTranslations("consultantPage.clients")
   const [activeTab, setActiveTab] = useState<'messages' | 'missions' | 'calls' | 'reservations'>('messages')
   const [clients, setClients] = useState<any[]>([])
   const [selectedClient, setSelectedClient] = useState<string | null>(null)
@@ -267,14 +269,14 @@ export default function ConsultantClients() {
         setIsStatusModalOpen(false)
         setTargetStatus(null)
         fetchClients()
-        toast.success(`Order ${status.toLowerCase()} successfully`)
+        toast.success(t('orderStatusUpdated', { status: status.toLowerCase() }))
       } else {
         const errorData = await res.json()
-        toast.error(errorData.error || 'Failed to update order status')
+        toast.error(errorData.error || t('failedToUpdateStatus'))
       }
     } catch (error) { 
       console.error('Order status update error:', error)
-      toast.error('A connection error occurred')
+      toast.error(t('connectionError'))
     }
   }
 
@@ -310,7 +312,7 @@ export default function ConsultantClients() {
       <div className="flex h-full items-center justify-center bg-[#F8FAFC]">
         <div className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-emerald-600 border-t-transparent"></div>
-          <p className="text-sm font-medium text-slate-500 font-sans">Wait a moment...</p>
+          <p className="text-sm font-medium text-slate-500 font-sans">{t('loading')}</p>
         </div>
       </div>
     )
@@ -359,7 +361,7 @@ export default function ConsultantClients() {
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
               <Layout className="h-5 w-5 text-emerald-600" />
-              Clients
+              {t('title')}
             </h1>
             <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold">
               {clients.length}
@@ -368,7 +370,7 @@ export default function ConsultantClients() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input 
-              placeholder="Search workspaces..." 
+              placeholder={t('searchPlaceholder')} 
               className="pl-10 h-10 bg-slate-50/80 border-slate-100 rounded-2xl focus-visible:ring-emerald-500 transition-all text-xs"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -451,7 +453,7 @@ export default function ConsultantClients() {
                     </AvatarFallback>
                   </Avatar>
                   <div className="min-w-0">
-                    <h2 className="text-base font-black text-slate-900 truncate leading-tight">{selectedClientData?.client.name || 'Client'}</h2>
+                    <h2 className="text-base font-black text-slate-900 truncate leading-tight">{selectedClientData?.client.name || t('client')}</h2>
                     <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">{selectedClientData?.client.email}</p>
                   </div>
                 </div>
@@ -501,16 +503,16 @@ export default function ConsultantClients() {
                 <div className="px-6 py-3 border-b border-slate-200/50 bg-white/50 overflow-x-auto no-scrollbar">
                   <TabsList className="bg-slate-100/50 h-10 p-1 rounded-2xl w-fit flex gap-1 border border-slate-100">
                     <TabsTrigger value="messages" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:shadow-sm rounded-xl py-1.5 px-4 text-[11px] font-black uppercase tracking-widest transition-all">
-                      <MessageSquare className="h-3.5 w-3.5" /> Messages
+                      <MessageSquare className="h-3.5 w-3.5" /> {t('messages')}
                     </TabsTrigger>
                     <TabsTrigger value="missions" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:shadow-sm rounded-xl py-1.5 px-4 text-[11px] font-black uppercase tracking-widest transition-all">
-                      <Briefcase className="h-3.5 w-3.5" /> Missions
+                      <Briefcase className="h-3.5 w-3.5" /> {t('missions')}
                     </TabsTrigger>
                     <TabsTrigger value="calls" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:shadow-sm rounded-xl py-1.5 px-4 text-[11px] font-black uppercase tracking-widest transition-all">
-                      <Phone className="h-3.5 w-3.5" /> Calls
+                      <Phone className="h-3.5 w-3.5" /> {t('calls')}
                     </TabsTrigger>
                     <TabsTrigger value="reservations" className="gap-2 data-[state=active]:bg-white data-[state=active]:text-emerald-600 data-[state=active]:shadow-sm rounded-xl py-1.5 px-4 text-[11px] font-black uppercase tracking-widest transition-all">
-                      <Calendar className="h-3.5 w-3.5" /> Reservations
+                      <Calendar className="h-3.5 w-3.5" /> {t('reservations')}
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -525,7 +527,7 @@ export default function ConsultantClients() {
                             {!Array.isArray(messages) || messages.length === 0 ? (
                               <div className="h-full flex flex-col items-center justify-center opacity-30 italic text-sm">
                                 <MessageSquare className="h-12 w-12 mb-3" />
-                                <p>Open a conversation with this client.</p>
+                                <p>{t('openConversation')}</p>
                               </div>
                             ) : (
                               messages.map((msg) => (
@@ -545,7 +547,7 @@ export default function ConsultantClients() {
                           </div>
                           <footer className="p-4 bg-white border-t border-slate-100 flex gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.02)]">
                             <Input 
-                              placeholder="Type something amazing..." 
+                              placeholder={t('messageInputPlaceholder')} 
                               className="flex-1 h-12 rounded-2xl border-slate-200 bg-slate-50/50 px-6 focus-visible:ring-emerald-500 font-medium"
                               value={newMessage}
                               onChange={(e) => setNewMessage(e.target.value)}
@@ -562,35 +564,35 @@ export default function ConsultantClients() {
                         <div className="flex items-center justify-between mb-8">
                           <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2">
                             <div className="w-1.5 h-6 bg-emerald-600 rounded-full" />
-                            Ongoing Missions
+                            {t('ongoingMissions')}
                           </h3>
                           <Dialog open={isMissionModalOpen} onOpenChange={setIsMissionModalOpen}>
                             <DialogTrigger asChild>
                               <Button className="bg-emerald-600 hover:bg-emerald-700 rounded-2xl px-5 font-black uppercase text-[10px] tracking-widest shadow-lg shadow-emerald-100">
-                                <Plus className="h-4 w-4 mr-2" /> New Mission
+                                <Plus className="h-4 w-4 mr-2" /> {t('newMission')}
                               </Button>
                             </DialogTrigger>
                             <DialogContent className="rounded-3xl border-none shadow-2xl p-8 bg-white max-w-md">
                               <DialogHeader>
-                                <DialogTitle className="text-2xl font-black text-slate-900">Create New Mission</DialogTitle>
+                                <DialogTitle className="text-2xl font-black text-slate-900">{t('createMission')}</DialogTitle>
                                 <DialogDescription className="text-slate-500 font-medium pt-2">
-                                  Define a new high-impact mission for your client.
+                                  {t('missionDesc')}
                                 </DialogDescription>
                               </DialogHeader>
                               <div className="space-y-6 pt-4">
                                 <div className="space-y-2">
-                                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Mission Title</label>
+                                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">{t('missionTitle')}</label>
                                   <Input 
-                                    placeholder="e.g. Q2 Performance Audit" 
+                                    placeholder={t('missionPlaceholder')} 
                                     className="h-12 rounded-2xl bg-slate-50 border-slate-100 focus-visible:ring-emerald-500"
                                     value={missionForm.title}
                                     onChange={(e) => setMissionForm({...missionForm, title: e.target.value})}
                                   />
                                 </div>
                                 <div className="space-y-2">
-                                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">Objectives & Scope</label>
+                                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-1">{t('objectivesScope')}</label>
                                   <Textarea 
-                                    placeholder="Briefly describe the mission goals..." 
+                                    placeholder={t('objectivesPlaceholder')} 
                                     className="rounded-2xl bg-slate-50 border-slate-100 focus-visible:ring-emerald-500 min-h-[100px]"
                                     value={missionForm.description}
                                     onChange={(e) => setMissionForm({...missionForm, description: e.target.value})}
@@ -602,7 +604,7 @@ export default function ConsultantClients() {
                                   onClick={handleCreateMission}
                                   className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-black uppercase tracking-widest"
                                 >
-                                  Initialize Mission
+                                  {t('initializeMission')}
                                 </Button>
                               </DialogFooter>
                             </DialogContent>
@@ -616,9 +618,9 @@ export default function ConsultantClients() {
                                 <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
                                   <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-2">
-                                      <div className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em] px-3 py-1 bg-emerald-50 w-fit rounded-full">Ref: {mission.id.slice(-6)}</div>
+                                      <div className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.3em] px-3 py-1 bg-emerald-50 w-fit rounded-full">{t('ref')}: {mission.id.slice(-6)}</div>
                                       {mission.status === 'COMPLETED' && (
-                                        <Badge className="bg-emerald-600 text-white border-none text-[9px] uppercase font-black">Success</Badge>
+                                        <Badge className="bg-emerald-600 text-white border-none text-[9px] uppercase font-black">{t('success')}</Badge>
                                       )}
                                     </div>
                                     <h4 className="text-2xl font-black text-slate-900">{mission.title}</h4>
@@ -629,9 +631,9 @@ export default function ConsultantClients() {
                                       onChange={(e) => updateMissionStatus(mission.id, e.target.value)}
                                       className="bg-white border border-slate-200 shadow-sm rounded-xl px-4 py-2 text-[10px] font-black uppercase tracking-widest text-slate-700 focus:ring-2 focus:ring-emerald-500 cursor-pointer h-10"
                                     >
-                                      <option value="PENDING">Pending</option>
-                                      <option value="IN_PROGRESS">Progress</option>
-                                      <option value="COMPLETED">Completed</option>
+  <option value="PENDING">{t('pending')}</option>
+                                        <option value="IN_PROGRESS">{t('inProgress')}</option>
+                                        <option value="COMPLETED">{t('completed')}</option>
                                     </select>
                                     <Button 
                                       variant="ghost" 
@@ -656,7 +658,7 @@ export default function ConsultantClients() {
                                   <div className="flex items-center justify-between">
                                     <h5 className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 tracking-[0.2em]">
                                       <Target className="h-4 w-4 text-emerald-500" /> 
-                                      Execution Tasks
+                                      {t('executionTasks')}
                                     </h5>
                                     <Button 
                                       variant="ghost" 
@@ -667,7 +669,7 @@ export default function ConsultantClients() {
                                         setIsMilestoneModalOpen(true)
                                       }}
                                     >
-                                      <Plus className="h-3 w-3 mr-1" /> Add Task
+                                      <Plus className="h-3 w-3 mr-1" /> {t('addTask')}
                                     </Button>
                                   </div>
 
@@ -722,16 +724,16 @@ export default function ConsultantClients() {
                                                 className="bg-slate-50 border border-slate-200 rounded-lg px-2 py-1.5 text-[9px] font-black uppercase tracking-widest text-slate-600 focus:ring-1 focus:ring-emerald-500 cursor-pointer w-full pointer-events-auto"
                                                 onClick={e => e.stopPropagation()}
                                               >
-                                                <option value="PENDING">Pending</option>
-                                                <option value="IN_PROGRESS">Progress</option>
-                                                <option value="COMPLETED">Completed</option>
+                                                <option value="PENDING">{t('pending')}</option>
+                                                <option value="IN_PROGRESS">{t('inProgress')}</option>
+                                                <option value="COMPLETED">{t('completed')}</option>
                                               </select>
                                             </div>
                                           </div>
                                         ))}
                                         {mission.milestones?.filter((m: any) => m.status === colStatus).length === 0 && (
                                           <div className="flex-1 flex items-center justify-center border-2 border-dashed border-slate-200 rounded-2xl mt-2 p-2 pointer-events-none">
-                                            <span className="text-[9px] font-bold uppercase text-slate-300 tracking-widest text-center">Drop here</span>
+                                            <span className="text-[9px] font-bold uppercase text-slate-300 tracking-widest text-center">{t('dropHere')}</span>
                                           </div>
                                         )}
                                       </div>
@@ -749,12 +751,12 @@ export default function ConsultantClients() {
                         <Dialog open={isMilestoneModalOpen} onOpenChange={setIsMilestoneModalOpen}>
                           <DialogContent className="rounded-3xl border-none shadow-2xl p-8 bg-white max-w-sm">
                             <DialogHeader>
-                              <DialogTitle className="text-xl font-black text-slate-900">Add Tactical Task</DialogTitle>
-                              <DialogDescription className="text-slate-500 font-medium">Defined for the active mission segment.</DialogDescription>
+                              <DialogTitle className="text-xl font-black text-slate-900">{t('addTacticalTask')}</DialogTitle>
+                              <DialogDescription className="text-slate-500 font-medium">{t('taskForMission')}</DialogDescription>
                             </DialogHeader>
                             <div className="space-y-4 pt-4">
                               <Input 
-                                placeholder="e.g. Initial data collection..." 
+                                placeholder={t('taskPlaceholder')} 
                                 className="h-12 rounded-2xl bg-slate-50 border-slate-100 focus-visible:ring-emerald-500 font-bold text-sm"
                                 value={milestoneForm.title}
                                 onChange={(e) => setMilestoneForm({ title: e.target.value })}
@@ -766,7 +768,7 @@ export default function ConsultantClients() {
                                 onClick={handleCreateMilestone}
                                 className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-emerald-100"
                               >
-                                Create Task
+                                {t('createTask')}
                               </Button>
                             </DialogFooter>
                           </DialogContent>
@@ -778,7 +780,7 @@ export default function ConsultantClients() {
                           {!Array.isArray(calls) || calls.length === 0 ? (
                             <div className="col-span-full py-24 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100 flex flex-col items-center justify-center text-slate-300">
                               <Phone className="h-16 w-16 mb-6 opacity-20" />
-                              <p className="font-black uppercase text-[11px] tracking-[0.3em]">No voice records yet</p>
+                              <p className="font-black uppercase text-[11px] tracking-[0.3em]">{t('noVoiceRecords')}</p>
                             </div>
                           ) : (
                             calls.map(call => (
@@ -787,10 +789,10 @@ export default function ConsultantClients() {
                                   <Phone className="h-7 w-7 text-emerald-600 group-hover:text-white transition-colors" />
                                 </div>
                                 <h4 className="font-black text-slate-900 text-lg mb-1">{new Date(call.startedAt).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</h4>
-                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-8">{call.duration} Minutes of Discussion</p>
+                                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-8">{call.duration} {t('minutesDiscussion')}</p>
                                 {call.recordingUrl && (
                                   <Button asChild className="w-full h-11 bg-slate-900 hover:bg-emerald-600 text-white rounded-2xl gap-3 font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-lg">
-                                    <a href={call.recordingUrl} target="_blank"><Play className="h-4 w-4 fill-current" /> Playback Session</a>
+                                    <a href={call.recordingUrl} target="_blank"><Play className="h-4 w-4 fill-current" /> {t('playbackSession')}</a>
                                   </Button>
                                 )}
                               </div>
@@ -802,16 +804,16 @@ export default function ConsultantClients() {
                       <TabsContent value="reservations" className="m-0 focus-visible:ring-0">
                         <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200/50">
                           <div className="p-8 border-b border-slate-100 flex items-center justify-between">
-                            <h3 className="text-xl font-black text-slate-900 tracking-tight">Appointments</h3>
-                            <Badge className="bg-emerald-50 text-emerald-700 border-none font-bold italic">{reservations.length} total</Badge>
+                            <h3 className="text-xl font-black text-slate-900 tracking-tight">{t('appointments')}</h3>
+                            <Badge className="bg-emerald-50 text-emerald-700 border-none font-bold italic">{reservations.length} {t('total')}</Badge>
                           </div>
                           <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                               <thead className="bg-slate-50/50">
                                 <tr className="border-b border-slate-100">
-                                  <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Agenda Item</th>
-                                  <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">Engagement</th>
-                                  <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Status</th>
+                                  <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">{t('agendaItem')}</th>
+                                  <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] text-center">{t('engagement')}</th>
+                                  <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">{t('status')}</th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-100">
@@ -825,7 +827,7 @@ export default function ConsultantClients() {
                                         </div>
                                         <div>
                                           <p className="text-lg font-black text-slate-950">{res.serviceTier.service.name}</p>
-                                          <p className="text-xs text-slate-400 font-bold tracking-tight">Starts @ {new Date(res.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                                          <p className="text-xs text-slate-400 font-bold tracking-tight">{t('startsAt')} {new Date(res.startTime).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
                                         </div>
                                       </div>
                                     </td>
@@ -833,10 +835,10 @@ export default function ConsultantClients() {
                                       <div className="flex justify-center">
                                         {res.status === 'CONFIRMED' && res.zoomJoinUrl ? (
                                           <Button asChild size="sm" className="bg-slate-950 hover:bg-emerald-600 rounded-2xl px-8 font-black text-[10px] uppercase transition-all shadow-lg hover:shadow-emerald-200">
-                                            <a href={res.zoomJoinUrl} target="_blank">Access Meeting</a>
+                                            <a href={res.zoomJoinUrl} target="_blank">{t('accessMeeting')}</a>
                                           </Button>
                                         ) : (
-                                          <span className="text-xs text-slate-400 font-medium italic opacity-50">No link issued</span>
+                                          <span className="text-xs text-slate-400 font-medium italic opacity-50">{t('noLinkIssued')}</span>
                                         )}
                                       </div>
                                     </td>
@@ -858,7 +860,7 @@ export default function ConsultantClients() {
                         <div className="mt-12 pt-12 border-t border-slate-200/60">
                           <h3 className="text-xl font-black text-slate-900 tracking-tight flex items-center gap-2 mb-8 uppercase">
                             <div className="w-1.5 h-6 bg-amber-400 rounded-full" />
-                            Client Feedback
+                            {t('clientFeedback')}
                           </h3>
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {selectedClientData.reviews.map((review: any) => (
@@ -869,10 +871,10 @@ export default function ConsultantClients() {
                                       "w-fit border-none px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full font-sans",
                                       review.type === 'SERVICE' ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"
                                     )}>
-                                      {review.type === 'SERVICE' ? 'Service Quality' : 'Expert Consultation'}
+                                      {review.type === 'SERVICE' ? t('serviceQuality') : t('expertConsultation')}
                                     </Badge>
                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight mt-1 font-sans">
-                                      Posted on {new Date(review.createdAt).toLocaleDateString()}
+                                      {t('postedOn')} {new Date(review.createdAt).toLocaleDateString()}
                                     </span>
                                   </div>
                                 </div>
@@ -891,7 +893,7 @@ export default function ConsultantClients() {
                                     </p>
                                   </div>
                                 ) : (
-                                  <p className="text-slate-300 italic font-medium">No written comment provided.</p>
+                                  <p className="text-slate-300 italic font-medium">{t('noComment')}</p>
                                 )}
                               </Card>
                             ))}
@@ -916,17 +918,16 @@ export default function ConsultantClients() {
                   <User className="h-16 w-16 text-emerald-600" />
                 </div>
               </div>
-              <h3 className="text-4xl font-black text-slate-900 mt-12 mb-4 tracking-tight">Workstations</h3>
+              <h3 className="text-4xl font-black text-slate-900 mt-12 mb-4 tracking-tight">{t('workstations')}</h3>
               <p className="text-slate-500 max-w-sm mx-auto leading-relaxed text-md font-medium px-4">
-                Select a client from your roster to initialize the workspace. 
-                Manage missions, voice logs, and upcoming consultations in real-time.
+                {t('selectClient')}
               </p>
               {!sidebarOpen && (
                 <Button 
                   onClick={() => setSidebarOpen(true)}
                   className="mt-12 bg-slate-950 hover:bg-emerald-600 rounded-3xl h-14 px-12 font-black uppercase text-[11px] tracking-[0.2em] shadow-2xl transition-all"
                 >
-                  Retrieve Client Roster
+                  {t('retrieveRoster')}
                 </Button>
               )}
             </motion.div>
@@ -941,9 +942,9 @@ export default function ConsultantClients() {
               <div className="h-20 w-20 rounded-3xl bg-red-50 flex items-center justify-center mx-auto mb-6">
                 <AlertTriangle className="h-10 w-10 text-red-500" />
               </div>
-              <DialogTitle className="text-2xl font-black text-slate-900 mb-2">Are you sure?</DialogTitle>
+              <DialogTitle className="text-2xl font-black text-slate-900 mb-2">{t('areYouSure')}</DialogTitle>
               <DialogDescription className="text-slate-500 font-medium leading-relaxed px-4">
-                This action is permanent and will remove this {deleteContext?.type} from the client history.
+                {t('deleteWarning', { type: deleteContext?.type })}
               </DialogDescription>
             </div>
             <div className="p-8 flex flex-col gap-3">
@@ -951,7 +952,7 @@ export default function ConsultantClients() {
                 onClick={performDelete}
                 className="w-full h-14 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-red-100 transition-all active:scale-95"
               >
-                Yes, Delete Forever
+                {t('yesDelete')}
               </Button>
               <Button 
                 variant="ghost"
@@ -961,7 +962,7 @@ export default function ConsultantClients() {
                 }}
                 className="w-full h-12 rounded-2xl font-bold text-slate-400 hover:text-slate-600 transition-all"
               >
-                Cancel Action
+                {t('cancelAction')}
               </Button>
             </div>
           </DialogContent>
@@ -988,10 +989,10 @@ export default function ConsultantClients() {
                 )}
               </div>
               <DialogTitle className="text-2xl font-black text-slate-900 mb-2">
-                Update to {targetStatus}?
+                {t('updateTo', { status: targetStatus })}
               </DialogTitle>
               <DialogDescription className="text-slate-500 font-medium leading-relaxed px-4">
-                Are you sure you want to change this order status to <span className="font-bold text-slate-900">{targetStatus}</span>? This will affect client access and notifications.
+                {t('confirmStatusChange', { status: targetStatus })}
               </DialogDescription>
             </div>
             <div className="p-8 flex flex-col gap-3">
@@ -1005,7 +1006,7 @@ export default function ConsultantClients() {
                   "bg-amber-500 hover:bg-amber-600 shadow-amber-100"
                 )}
               >
-                Yes, Update Status
+                {t('yesUpdate')}
               </Button>
               <Button 
                 variant="ghost"
@@ -1015,7 +1016,7 @@ export default function ConsultantClients() {
                 }}
                 className="w-full h-12 rounded-2xl font-bold text-slate-400 hover:text-slate-600 transition-all"
               >
-                Go Back
+                {t('goBack')}
               </Button>
             </div>
           </DialogContent>

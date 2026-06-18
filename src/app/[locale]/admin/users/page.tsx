@@ -108,7 +108,7 @@ const COMPLETED_ORDER_THRESHOLD = 3
 
 export default function UsersPage() {
   const { locale } = useParams()
-  const t = useTranslations('admin.users')
+  const t = useTranslations('adminPage.users')
   const commonT = useTranslations('common')
   const [users, setUsers] = React.useState<User[]>([])
   const [loading, setLoading] = React.useState(true)
@@ -186,7 +186,7 @@ export default function UsersPage() {
   }
 
   const deleteUser = async (id: string) => {
-    if (!confirm(t('deleteConfirm'))) return
+    if (!confirm(t('confirmDelete'))) return
     const res = await fetch(`/api/admin/users/${id}`, { method: 'DELETE' })
     if (res.ok) fetchUsers()
   }
@@ -255,7 +255,7 @@ export default function UsersPage() {
            </div>
            <div className="flex flex-col">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-slate-900 leading-tight">{[user.firstName, user.name].filter(Boolean).join(' ') || 'Anonymous'}</span>
+              <span className="font-bold text-slate-900 leading-tight">{[user.firstName, user.name].filter(Boolean).join(' ') || t('anonymous')}</span>
               {isHighValue(user) && (
                 <Badge className="bg-orange-50 text-orange-600 border-none font-black text-[8px] uppercase tracking-tighter shadow-sm">
                   {t('status.vip')} • {completedCount(user)} {t('status.done')}
@@ -460,7 +460,7 @@ export default function UsersPage() {
               </div>
               <div>
                 <DialogTitle className="text-2xl font-black text-slate-900 leading-none mb-1">
-                  {[detailUser?.firstName, detailUser?.name].filter(Boolean).join(' ') || 'Anonymous'}
+                  {[detailUser?.firstName, detailUser?.name].filter(Boolean).join(' ') || t('anonymous')}
                 </DialogTitle>
                 <DialogDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400">
                   {t('profileActions', { status: detailUser?.isActive ? t('detail.active') : t('detail.inactive') })}
@@ -510,14 +510,14 @@ export default function UsersPage() {
               onClick={() => { setDetailUser(null); if (detailUser) handleOpenEdit(detailUser); }}
               className="flex-1 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black h-12 shadow-lg shadow-blue-100 transition-all hover:scale-[1.02]"
             >
-              <Pencil className="w-4 h-4 mr-2" /> Edit Profile
+              <Pencil className="w-4 h-4 mr-2" /> {t('actions.editProfile')}
             </Button>
             <Button
               variant="outline"
               onClick={() => setDetailUser(null)}
               className="rounded-2xl h-12 font-bold border-slate-200"
             >
-              Close
+              {t('actions.close')}
             </Button>
           </div>
         </DialogContent>
@@ -533,10 +533,10 @@ export default function UsersPage() {
                </div>
                <div>
                  <DialogTitle className="text-2xl font-black text-slate-900 leading-none mb-1">
-                   {editUser ? 'Refine Account' : 'New Identity'}
+                   {editUser ? t('form.refineAccount') : t('form.newIdentity')}
                  </DialogTitle>
                  <DialogDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400">
-                    Secure Client Onboarding
+                    {t('form.secureOnboarding')}
                  </DialogDescription>
                </div>
             </div>
@@ -546,53 +546,53 @@ export default function UsersPage() {
             <form onSubmit={handleSubmit} id="user-form" className="p-8 pt-4 space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">First Name</Label>
-                  <Input value={form.firstName || ''} onChange={e => setForm({ ...form, firstName: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="John" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.firstName')}</Label>
+                  <Input value={form.firstName || ''} onChange={e => setForm({ ...form, firstName: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder={t('form.firstNamePlaceholder')} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Last Name</Label>
-                  <Input value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} required className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="Doe" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.lastName')}</Label>
+                  <Input value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} required className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder={t('form.lastNamePlaceholder')} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email Endpoint</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.email')}</Label>
                 <Input type="email" value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })} required className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Phone</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.phone')}</Label>
                 <Input value={form.phone || ''} onChange={e => setForm({ ...form, phone: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Company</Label>
-                  <Input value={form.company || ''} onChange={e => setForm({ ...form, company: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="Acme Inc." />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.company')}</Label>
+                  <Input value={form.company || ''} onChange={e => setForm({ ...form, company: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder={t('form.companyPlaceholder')} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Matricule Fiscal</Label>
-                  <Input value={form.matriculeFiscale || ''} onChange={e => setForm({ ...form, matriculeFiscale: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="1234567X/A/000" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.matriculeFiscale')}</Label>
+                  <Input value={form.matriculeFiscale || ''} onChange={e => setForm({ ...form, matriculeFiscale: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder={t('form.matriculePlaceholder')} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Sector</Label>
-                <Input value={form.sector || ''} onChange={e => setForm({ ...form, sector: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="IT, Finance..." />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.sector')}</Label>
+                <Input value={form.sector || ''} onChange={e => setForm({ ...form, sector: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder={t('form.sectorPlaceholder')} />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Address</Label>
-                <Input value={form.address || ''} onChange={e => setForm({ ...form, address: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="123 Main St, City" />
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.address')}</Label>
+                <Input value={form.address || ''} onChange={e => setForm({ ...form, address: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder={t('form.addressPlaceholder')} />
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Needs / Requirements</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.needs')}</Label>
                 <textarea 
                   value={form.needs || ''} 
                   onChange={e => setForm({ ...form, needs: e.target.value })} 
                   rows={3}
                   className="w-full rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold p-4 text-sm resize-none outline-none focus:ring-2 focus:ring-blue-600/10"
-                  placeholder="Describe client needs..."
+                  placeholder={t('form.needsPlaceholder')}
                 />
               </div>
               {!editUser && (
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Secure Protocol</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.secureProtocol')}</Label>
                   <div className="relative">
                     <Input type={showPassword ? 'text' : 'password'} value={form.password || ''} onChange={e => setForm({ ...form, password: e.target.value })} required className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold pr-12" />
                     <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors">
@@ -606,7 +606,7 @@ export default function UsersPage() {
           
           <div className="p-8 pt-0">
             <Button type="submit" form="user-form" className="w-full rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black italic h-14 shadow-xl shadow-blue-100 transition-all hover:scale-[1.02]">
-              {editUser ? 'Update Protocol' : 'Onboard Partner'} <ArrowRight className="w-5 h-5 ml-2" />
+              {editUser ? t('form.updateProtocol') : t('form.onboardPartner')} <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
           </div>
         </DialogContent>
@@ -621,8 +621,8 @@ export default function UsersPage() {
                  <ShoppingCart className="w-6 h-6" />
                </div>
                <div>
-                 <DialogTitle className="text-2xl font-black text-slate-900 leading-none mb-1"> Initialize Flow </DialogTitle>
-                 <DialogDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400"> New Acquisition for {orderTarget?.name || orderTarget?.email} </DialogDescription>
+                 <DialogTitle className="text-2xl font-black text-slate-900 leading-none mb-1">{t('order.initializeFlow')}</DialogTitle>
+                 <DialogDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400">{t('order.newAcquisition', { name: orderTarget?.name || orderTarget?.email })}</DialogDescription>
                </div>
             </div>
           </DialogHeader>
@@ -630,20 +630,20 @@ export default function UsersPage() {
           <div className="p-8 space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Select Strategic Domain</Label>
+                <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('order.selectDomain')}</Label>
                 <select
                   className="w-full h-12 px-4 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold text-sm appearance-none outline-none"
                   value={selectedService}
                   onChange={e => handleServiceChange(e.target.value)}
                 >
-                  <option value="">Choose Domain...</option>
+                  <option value="">{t('order.chooseDomain')}</option>
                   {services.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
 
               {tiers.length > 0 && (
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 font-bold">Available Service Tiers</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 font-bold">{t('order.availableTiers')}</Label>
                   <div className="space-y-2">
                     {tiers.map(t => (
                       <div 
@@ -658,7 +658,7 @@ export default function UsersPage() {
                       >
                         <div>
                           <p className={cn("text-xs font-black uppercase tracking-widest mb-0.5", selectedTier === t.id ? "text-blue-100" : "text-slate-400")}>{t.tierType}</p>
-                          <p className={cn("text-sm font-bold", selectedTier === t.id ? "text-white" : "text-slate-900")}>{t.description || 'Full Access'}</p>
+                          <p className={cn("text-sm font-bold", selectedTier === t.id ? "text-white" : "text-slate-900")}>{t.description || t('order.fullAccess')}</p>
                         </div>
                         <span className={cn("text-lg font-black italic", selectedTier === t.id ? "text-white" : "text-blue-600")}>{Number(t.price).toFixed(0)} <span className="text-[10px]">DT</span></span>
                       </div>
@@ -674,7 +674,7 @@ export default function UsersPage() {
                 disabled={!selectedTier || orderLoading} 
                 className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-black italic h-14 shadow-xl shadow-emerald-100 transition-all hover:scale-[1.02]"
               >
-                {orderLoading ? 'Synthesizing...' : 'Deploy Acquisition'} <Plus className="w-5 h-5 ml-2" />
+                {orderLoading ? t('order.synthesizing') : t('order.deployAcquisition')} <Plus className="w-5 h-5 ml-2" />
               </Button>
             </DialogFooter>
           </div>

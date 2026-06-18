@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { motion } from 'framer-motion'
 import { 
   MessageSquare, 
@@ -32,6 +33,7 @@ import AvailabilityCalendar from '@/components/solutions/AvailabilityCalendar'
 import { getNextSessionInfo, NextSessionResult } from '@/lib/sessions-config'
 
 export default function OrderDetails() {
+  const t = useTranslations("clientPage.orders")
   const params = useParams()
   const router = useRouter()
   const { locale, orderId } = params
@@ -151,7 +153,7 @@ export default function OrderDetails() {
   }
 
   const cancelReservation = async (id: string) => {
-    if (!confirm('Voulez-vous vraiment annuler cette session ?')) return
+    if (!confirm(t('confirmCancelSession'))) return
     try {
       const res = await fetch('/api/client/reservations', {
         method: 'DELETE',
@@ -159,15 +161,15 @@ export default function OrderDetails() {
         body: JSON.stringify({ id })
       })
       if (res.ok) {
-        toast.success('Réservation annulée')
+        toast.success(t('reservationCancelled'))
         fetchReservations()
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Erreur lors de l\'annulation')
+        toast.error(data.error || t('cancelError'))
       }
     } catch (error) {
       console.error(error)
-      toast.error('Une erreur est survenue')
+      toast.error(t('genericError'))
     }
   }
 
@@ -193,7 +195,7 @@ export default function OrderDetails() {
         body: JSON.stringify({ milestoneId, status })
       })
       if (!res.ok) {
-        toast.error('Failed to update status')
+        toast.error(t('updateStatusError'))
         fetchOrder() // Revert
       }
     } catch (error) { 
@@ -211,9 +213,9 @@ export default function OrderDetails() {
     return now.getTime() >= (start.getTime() - earlyAccessMs) && now.getTime() <= end.getTime()
   }
 
-  const copyToClipboard = (text: string, label: string) => {
+  const copyToClipboard = (text: string, labelKey: string) => {
     navigator.clipboard.writeText(text)
-    toast.success(`${label} copied!`)
+    toast.success(t(labelKey))
   }
 
   const getReservationStatusColor = (status: string) => {
@@ -240,12 +242,12 @@ export default function OrderDetails() {
     <div className="flex h-screen items-center justify-center bg-[#F8FAFC]">
       <div className="flex flex-col items-center gap-4">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
-        <p className="text-sm font-black text-slate-400 uppercase tracking-widest text-center">Synchronizing Workspace...</p>
+        <p className="text-sm font-black text-slate-400 uppercase tracking-widest text-center">{t('synchronizing')}</p>
       </div>
     </div>
   )
 
-  if (!order) return <div className="p-20 text-center font-bold">Subscription not found.</div>
+  if (!order) return <div className="p-20 text-center font-bold">{t('notFound')}</div>
 
   const myReservations = reservations.filter(r => r.orderId === orderId)
 
@@ -275,15 +277,15 @@ export default function OrderDetails() {
         })
       })
       if (res.ok) {
-        toast.success('Séance réservée ! En attente de confirmation du consultant.')
+        toast.success(t('sessionBooked'))
         setNextSessionSelection(null)
         fetchReservations()
       } else {
         const data = await res.json()
-        toast.error(data.error || 'Erreur lors de la réservation')
+        toast.error(data.error || t('bookingError'))
       }
     } catch (error) {
-      toast.error('Une erreur est survenue')
+        toast.error(t('genericError'))
     } finally {
       setBookingNextSession(false)
     }
@@ -297,13 +299,13 @@ export default function OrderDetails() {
         <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
           <div className="flex flex-col gap-2">
             <button onClick={() => router.back()} className="flex items-center gap-2 text-[10px] font-black uppercase text-slate-400 hover:text-blue-600 transition-colors tracking-widest mb-2 font-sans">
-              <ChevronLeft className="w-4 h-4" /> Back to orders
+              <ChevronLeft className="w-4 h-4" /> {t('backToOrders')}
             </button>
             <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight leading-none font-sans">
               {order.serviceTier?.service?.name || 'Consulting Stream'}
             </h1>
             <p className="text-sm md:text-md font-bold text-slate-400 mt-2 uppercase tracking-widest font-sans">
-              Digital Workspace & Collaboration Center
+              {t('workspaceSubtitle')}
             </p>
           </div>
           
@@ -316,12 +318,12 @@ export default function OrderDetails() {
                   </AvatarFallback>
                </Avatar>
                <div>
-                  <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1 font-sans">Expert Assigned</p>
-                  <p className="text-sm font-black text-slate-900 leading-none font-sans">{order.consultant?.name || 'Assigned Pending'}</p>
+                   <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1 font-sans">{t('expertAssigned')}</p>
+                   <p className="text-sm font-black text-slate-900 leading-none font-sans">{order.consultant?.name || t('assignedPending')}</p>
                </div>
             </div>
             <div className="flex flex-col gap-2">
-               <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1 font-sans">Status</p>
+                <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1 font-sans">{t('status')}</p>
                <div className="flex items-center gap-3">
                   <Badge className={cn(
                      "border-none px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] rounded-full font-sans",
@@ -356,7 +358,7 @@ export default function OrderDetails() {
                                }
                              />
                            </div>
-                           <span className="text-[8px] font-black uppercase text-slate-500 tracking-tighter">{review.type === 'SERVICE' ? 'Service' : 'Expert'}</span>
+                            <span className="text-[8px] font-black uppercase text-slate-500 tracking-tighter">{review.type === 'SERVICE' ? t('reviewServiceLabel') : t('reviewExpertLabel')}</span>
                            
                            {review.comment && (
                              <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 w-48 bg-slate-900 text-white text-[10px] p-3 rounded-xl opacity-0 group-hover/rev:opacity-100 transition-opacity pointer-events-none z-50 shadow-2xl font-sans font-medium leading-relaxed">
@@ -379,7 +381,7 @@ export default function OrderDetails() {
                           onSuccess={fetchOrder}
                           trigger={
                             <button className="text-[10px] font-black text-blue-600 hover:underline uppercase tracking-widest">
-                              Évaluer le service
+                              {t('reviewService')}
                             </button>
                           }
                         />
@@ -392,7 +394,7 @@ export default function OrderDetails() {
                           onSuccess={fetchOrder}
                           trigger={
                             <button className="text-[10px] font-black text-emerald-600 hover:underline uppercase tracking-widest">
-                              Évaluer l'expert
+                              {t('reviewExpert')}
                             </button>
                           }
                         />
@@ -408,27 +410,27 @@ export default function OrderDetails() {
         <Tabs value={activeTab} className="w-full space-y-8 min-h-[600px] flex flex-col" onValueChange={setActiveTab}>
           <div className="flex items-center justify-between border-b border-slate-200/60 pb-4">
              <TabsList className="bg-slate-100/50 p-1.5 rounded-[1.5rem] border border-slate-200">
-                <TabsTrigger value="reservations" className="rounded-xl lg:px-8 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all font-sans">
-                   Reservations
-                </TabsTrigger>
-                <TabsTrigger value="messages" className="rounded-xl lg:px-8 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all font-sans">
-                   Messages
-                </TabsTrigger>
-                <TabsTrigger value="missions" className="rounded-xl lg:px-8 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all font-sans">
-                   Missions
-                </TabsTrigger>
+                 <TabsTrigger value="reservations" className="rounded-xl lg:px-8 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all font-sans">
+                    {t('tabReservations')}
+                 </TabsTrigger>
+                 <TabsTrigger value="messages" className="rounded-xl lg:px-8 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all font-sans">
+                    {t('tabMessages')}
+                 </TabsTrigger>
+                 <TabsTrigger value="missions" className="rounded-xl lg:px-8 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all font-sans">
+                    {t('tabMissions')}
+                 </TabsTrigger>
                 <TabsTrigger value="reviews" className="rounded-xl lg:px-8 py-2.5 font-black uppercase text-[10px] tracking-widest data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-lg transition-all font-sans flex items-center gap-2">
-                   Feedback <Badge variant="secondary" className="px-1.5 py-0 bg-blue-50 text-blue-600 border-none text-[8px]">{order.reviews?.length || 0}</Badge>
+                                       {t('tabFeedback')} <Badge variant="secondary" className="px-1.5 py-0 bg-blue-50 text-blue-600 border-none text-[8px]">{order.reviews?.length || 0}</Badge>
                 </TabsTrigger>
              </TabsList>
              
              <div className="hidden md:flex items-center gap-4 text-xs font-black uppercase tracking-widest text-slate-400 font-sans">
                 <div className="flex items-center gap-2">
-                   <Clock className="w-4 h-4" /> Usage: {Math.round(nextSession.usedMinutes)} / {nextSession.totalMinutes ?? '∞'}m
+                    <Clock className="w-4 h-4" /> {t('usage', { used: Math.round(nextSession.usedMinutes), total: nextSession.totalMinutes ?? '∞' })}
                 </div>
                 <div className="w-1 h-1 bg-slate-300 rounded-full" />
                 <div className="flex items-center gap-2">
-                   <MessageSquare className="w-4 h-4" /> Chat: {order.messagesUsed} / {order.serviceTier?.maxMessages || '∞'}
+                    <MessageSquare className="w-4 h-4" /> {t('chat', { used: order.messagesUsed, max: order.serviceTier?.maxMessages || '∞' })}
                 </div>
              </div>
           </div>
@@ -441,20 +443,20 @@ export default function OrderDetails() {
                    {/* Table View of Personal Sessions */}
                    <div className="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
                       <div className="bg-slate-50/50 p-6 border-b border-slate-100">
-                         <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight font-sans">Mes Sessions dans cet ordre</h3>
+                          <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight font-sans">{t('mySessions')}</h3>
                       </div>
                       {myReservations.length === 0 ? (
-                        <div className="p-12 text-center text-slate-400 italic font-sans font-bold">Aucune session réservée encore pour cet ordre.</div>
+                        <div className="p-12 text-center text-slate-400 italic font-sans font-bold">{t('noSessions')}</div>
                       ) : (
                         <div className="overflow-x-auto">
                            <table className="w-full text-left">
                               <thead className="bg-slate-50/30">
                                  <tr className="border-b border-slate-100">
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Séance</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date & Heure</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Engagement</th>
+                                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('session')}</th>
+                                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('dateTime')}</th>
+                                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('type')}</th>
+                                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">{t('status')}</th>
+                                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">{t('engagement')}</th>
                                  </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-50">
@@ -462,7 +464,7 @@ export default function OrderDetails() {
                                     <tr key={reservation.id} className="hover:bg-slate-50/30 transition-colors">
                                        <td className="px-8 py-6">
                                           <div className="font-black text-slate-900 text-sm font-sans">
-                                            {reservation.sessionLabel || `Séance ${(reservation.sessionIndex ?? 0) + 1}`}
+                                             {reservation.sessionLabel || t('sessionNumber', { n: (reservation.sessionIndex ?? 0) + 1 })}
                                           </div>
                                        </td>
                                        <td className="px-8 py-6">
@@ -476,7 +478,7 @@ export default function OrderDetails() {
                                              "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border-none font-sans",
                                              reservation.meetingType === 'SUR_PLACE' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
                                           )}>
-                                             {reservation.meetingType === 'SUR_PLACE' ? '🏢 Sur Place' : '🎥 Zoom'}
+                                              {reservation.meetingType === 'SUR_PLACE' ? '🏢 ' + t('inPerson') : '🎥 ' + t('zoom')}
                                           </Badge>
                                        </td>
                                        <td className="px-8 py-6 text-center">
@@ -493,14 +495,14 @@ export default function OrderDetails() {
                                           ) : (
                                              <div className="flex flex-col items-end gap-1.5 font-sans">
                                                 <span className="text-[10px] text-slate-300 font-bold italic">
-                                                     {reservation.status === 'CONFIRMED' ? 'Disponible 24h avant' : (reservation.status === 'COMPLETED' ? 'Session terminée' : 'En attente de confirmation')}
+                                                      {reservation.status === 'CONFIRMED' ? t('available24hBefore') : (reservation.status === 'COMPLETED' ? t('sessionCompleted') : t('pendingConfirmation'))}
                                                 </span>
                                                 {reservation.status === 'PENDING' && (
                                                    <button 
                                                       onClick={() => cancelReservation(reservation.id)}
                                                       className="text-[9px] text-red-500 hover:text-red-700 font-black uppercase tracking-widest underline decoration-2 underline-offset-4"
                                                    >
-                                                      Annuler la requête
+                                                       {t('cancelRequest')}
                                                    </button>
                                                 )}
                                              </div>
@@ -532,17 +534,17 @@ export default function OrderDetails() {
                                 <Sparkles className="w-6 h-6" />
                              </div>
                              <div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-200 mb-1">
-                                   Prochaine étape disponible
-                                </p>
-                                <h3 className="text-2xl font-black tracking-tight">
-                                   Réservez votre {nextSession.label.toLowerCase()}
-                                </h3>
-                                <p className="text-blue-100 text-sm font-bold mt-1">
-                                   Durée proposée : {nextSession.duration}h
-                                   {nextSession.totalMinutes !== null
-                                     ? ` · Temps restant : ${Math.floor((nextSession.remainingMinutes || 0) / 60)}h${Math.round((nextSession.remainingMinutes || 0) % 60) > 0 ? Math.round((nextSession.remainingMinutes || 0) % 60) : ''} sur ${Math.floor(nextSession.totalMinutes / 60)}h${nextSession.totalMinutes % 60 > 0 ? nextSession.totalMinutes % 60 : ''}`
-                                     : ' · Pack personnalisé (illimité)'}
+                                 <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-200 mb-1">
+                                    {t('nextStepAvailable')}
+                                 </p>
+                                 <h3 className="text-2xl font-black tracking-tight">
+                                    {t('bookYour', { label: nextSession.label.toLowerCase() })}
+                                 </h3>
+                                 <p className="text-blue-100 text-sm font-bold mt-1">
+                                    {t('proposedDuration', { duration: nextSession.duration })}
+                                    {nextSession.totalMinutes !== null
+                                      ? ` · ${t('remainingTime')}: ${Math.floor((nextSession.remainingMinutes || 0) / 60)}h${Math.round((nextSession.remainingMinutes || 0) % 60) > 0 ? Math.round((nextSession.remainingMinutes || 0) % 60) : ''} ${t('of')} ${Math.floor(nextSession.totalMinutes / 60)}h${nextSession.totalMinutes % 60 > 0 ? nextSession.totalMinutes % 60 : ''}`
+                                      : ` · ${t('customPack')}`}
                                 </p>
                              </div>
                           </div>
@@ -568,9 +570,9 @@ export default function OrderDetails() {
                        {nextSessionSelection && (
                          <div className="bg-[#1B3F7A] rounded-2xl p-6 text-white shadow-xl shadow-blue-900/20 flex flex-wrap items-center justify-between gap-4">
                            <div>
-                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-300 mb-1">
-                               {nextSession.label} prête à confirmer
-                             </p>
+                              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-300 mb-1">
+                                {t('readyToConfirm', { label: nextSession.label })}
+                              </p>
                              <p className="font-black text-lg">
                                {new Date(nextSessionSelection.startTime).toLocaleDateString('fr-FR', {
                                  weekday: 'long', day: 'numeric', month: 'long'
@@ -581,7 +583,7 @@ export default function OrderDetails() {
                                {' → '}
                                {new Date(nextSessionSelection.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                                {' · '}
-                               {nextSessionSelection.meetingType === 'SUR_PLACE' ? '🏢 Sur place' : '🎥 Zoom'}
+                                {nextSessionSelection.meetingType === 'SUR_PLACE' ? '🏢 ' + t('inPerson') : '🎥 ' + t('zoom')}
                              </p>
                            </div>
                            <Button
@@ -589,7 +591,7 @@ export default function OrderDetails() {
                              disabled={bookingNextSession}
                              className="bg-white text-blue-900 hover:bg-amber-400 px-8 py-6 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl"
                            >
-                             {bookingNextSession ? 'Réservation...' : 'Confirmer la séance'}
+                              {bookingNextSession ? t('booking') : t('confirmSession')}
                            </Button>
                          </div>
                        )}
@@ -606,10 +608,10 @@ export default function OrderDetails() {
                            <Clock className="w-6 h-6 text-amber-600" />
                         </div>
                         <div>
-                           <p className="font-black text-amber-900 text-sm uppercase tracking-tight">Séance en cours</p>
-                           <p className="text-amber-700 text-sm font-medium mt-0.5">
-                              Vous avez déjà une séance en attente ou confirmée. La prochaine séance se débloquera une fois celle-ci terminée.
-                           </p>
+                            <p className="font-black text-amber-900 text-sm uppercase tracking-tight">{t('sessionInProgress')}</p>
+                            <p className="text-amber-700 text-sm font-medium mt-0.5">
+                               {t('sessionInProgressDesc')}
+                            </p>
                         </div>
                      </div>
                    )}
@@ -620,10 +622,10 @@ export default function OrderDetails() {
                            <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                         </div>
                         <div>
-                           <p className="font-black text-emerald-900 text-sm uppercase tracking-tight">Toutes les séances sont planifiées</p>
-                           <p className="text-emerald-700 text-sm font-medium mt-0.5">
-                              Vous avez utilisé {Math.round(nextSession.usedMinutes)} minutes sur {nextSession.totalMinutes} incluses dans ce pack. Merci de votre confiance !
-                           </p>
+                            <p className="font-black text-emerald-900 text-sm uppercase tracking-tight">{t('allSessionsPlanned')}</p>
+                            <p className="text-emerald-700 text-sm font-medium mt-0.5">
+                               {t('allSessionsPlannedDesc', { used: Math.round(nextSession.usedMinutes), total: nextSession.totalMinutes })}
+                            </p>
                         </div>
                      </div>
                    )}
@@ -634,10 +636,10 @@ export default function OrderDetails() {
                            <CheckCircle2 className="w-6 h-6 text-slate-500" />
                         </div>
                         <div>
-                           <p className="font-black text-slate-900 text-sm uppercase tracking-tight">Projet clôturé</p>
-                           <p className="text-slate-500 text-sm font-medium mt-0.5">
-                              Votre consultant a marqué ce projet comme terminé. Aucune nouvelle séance ne peut être réservée.
-                           </p>
+                            <p className="font-black text-slate-900 text-sm uppercase tracking-tight">{t('projectCompleted')}</p>
+                            <p className="text-slate-500 text-sm font-medium mt-0.5">
+                               {t('projectCompletedDesc')}
+                            </p>
                         </div>
                      </div>
                    )}
@@ -652,8 +654,8 @@ export default function OrderDetails() {
                         <div className="w-20 h-20 rounded-[2rem] bg-slate-100 flex items-center justify-center mb-6">
                            <MessageSquare className="w-8 h-8 text-slate-400" />
                         </div>
-                        <h3 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight font-sans">Aucune transmission encore</h3>
-                        <p className="text-sm font-bold text-slate-500 max-w-xs font-sans">Commencez une conversation avec votre consultant concernant vos objectifs.</p>
+                         <h3 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight font-sans">{t('noMessages')}</h3>
+                         <p className="text-sm font-bold text-slate-500 max-w-xs font-sans">{t('startConversation')}</p>
                      </div>
                    ) : (
                      messages.map((msg) => (
@@ -686,7 +688,7 @@ export default function OrderDetails() {
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
                           onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                          placeholder="Rédigez votre message..."
+                          placeholder={t('writeMessage')}
                           className="w-full h-14 bg-slate-50/50 border border-slate-100 rounded-2xl px-6 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all font-medium text-slate-900"
                           disabled={sending}
                         />
@@ -705,8 +707,8 @@ export default function OrderDetails() {
              <TabsContent value="missions" className="m-0 flex-1 p-4 md:p-12 focus-visible:ring-0 overflow-y-auto">
                 <div className="flex flex-col h-full gap-8">
                    <div>
-                      <h3 className="text-2xl font-black text-slate-900 tracking-tight font-sans">Missions Opérationnelles</h3>
-                      <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest font-sans">Suivi de la complétion des jalons et des objectifs du projet</p>
+                       <h3 className="text-2xl font-black text-slate-900 tracking-tight font-sans">{t('operationalMissions')}</h3>
+                       <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest font-sans">{t('missionsSubtitle')}</p>
                    </div>
 
                    {!order.missions || order.missions.length === 0 ? (
@@ -714,8 +716,8 @@ export default function OrderDetails() {
                         <div className="w-20 h-20 rounded-[2rem] bg-slate-100 flex items-center justify-center mb-6">
                            <Target className="w-8 h-8 text-slate-400" />
                         </div>
-                        <h3 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight font-sans">Aucune mission active</h3>
-                        <p className="text-sm font-bold text-slate-500 max-w-xs font-sans">Les objectifs spécifiques seront répertoriés ici au fur et à mesure.</p>
+                         <h3 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight font-sans">{t('noActiveMissions')}</h3>
+                         <p className="text-sm font-bold text-slate-500 max-w-xs font-sans">{t('noActiveMissionsDesc')}</p>
                      </div>
                    ) : (
                      <div className="space-y-12 pb-10">
@@ -735,12 +737,12 @@ export default function OrderDetails() {
                                            <h4 className="text-xl font-black text-slate-900 font-sans">{mission.title}</h4>
                                            <div className="flex items-center gap-3 mt-1">
                                               <Badge className="bg-slate-100 text-slate-500 border-none text-[8px] font-black uppercase px-2 py-0.5 rounded-md">{mission.status}</Badge>
-                                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{completed}/{total} Jalons Atteints</span>
+                                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('milestonesAchieved', { completed, total })}</span>
                                            </div>
                                         </div>
                                      </div>
                                      <div className="text-right">
-                                        <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">Progression de la Mission</p>
+                                         <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-1">{t('missionProgress')}</p>
                                         <p className="text-lg font-black text-blue-600 tracking-tight">{Math.round(progressValue)}%</p>
                                      </div>
                                   </div>
@@ -791,7 +793,7 @@ export default function OrderDetails() {
                                                        </p>
                                                        {m.dueDate && (
                                                           <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mt-2 flex items-center gap-1.5">
-                                                             <Clock className="w-2.5 h-2.5" /> Échéance {new Date(m.dueDate).toLocaleDateString()}
+                                                              <Clock className="w-2.5 h-2.5" /> {t('dueDate')} {new Date(m.dueDate).toLocaleDateString()}
                                                           </p>
                                                        )}
                                                     </div>
@@ -812,8 +814,8 @@ export default function OrderDetails() {
              <TabsContent value="reviews" className="m-0 flex-1 p-4 md:p-10 focus-visible:ring-0 overflow-y-auto">
                 <div className="max-w-4xl mx-auto space-y-10">
                    <div className="flex flex-col gap-2">
-                      <h3 className="text-2xl font-black text-slate-900 tracking-tight font-sans uppercase">Votre Feedback</h3>
-                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest font-sans">Consultez et modifiez les avis laissés pour cette commande</p>
+                       <h3 className="text-2xl font-black text-slate-900 tracking-tight font-sans uppercase">{t('yourFeedback')}</h3>
+                       <p className="text-sm font-bold text-slate-400 uppercase tracking-widest font-sans">{t('feedbackDescription')}</p>
                    </div>
 
                    {order.reviews && order.reviews.length > 0 ? (
@@ -826,11 +828,11 @@ export default function OrderDetails() {
                                         "w-fit border-none px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full font-sans",
                                         review.type === 'SERVICE' ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"
                                      )}>
-                                        {review.type === 'SERVICE' ? 'Qualité Service' : 'Expertise Consultant'}
+                                         {review.type === 'SERVICE' ? t('serviceQuality') : t('consultantExpertise')}
                                      </Badge>
-                                     <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight mt-1 font-sans">
-                                        Posté le {new Date(review.createdAt).toLocaleDateString()}
-                                     </span>
+                                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-tight mt-1 font-sans">
+                                         {t('postedOn', { date: new Date(review.createdAt).toLocaleDateString() })}
+                                      </span>
                                   </div>
                                   <ReviewDialog
                                     type={review.type}
@@ -862,7 +864,7 @@ export default function OrderDetails() {
                                      </p>
                                   </div>
                                ) : (
-                                  <p className="text-slate-300 italic font-medium">Aucun commentaire écrit.</p>
+                                   <p className="text-slate-300 italic font-medium">{t('noComment')}</p>
                                )}
 
                                {/* Decorative background shape */}
@@ -878,8 +880,8 @@ export default function OrderDetails() {
                          <div className="h-20 w-20 bg-white rounded-full flex items-center justify-center shadow-sm mx-auto mb-6">
                             <Star className="w-8 h-8 text-slate-200" />
                          </div>
-                         <h4 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight font-sans">Aucun avis encore</h4>
-                         <p className="text-slate-400 font-medium max-w-xs mx-auto font-sans">Une fois la commande terminée, vous pourrez évaluer notre service et votre expert.</p>
+                          <h4 className="text-xl font-black text-slate-900 mb-2 uppercase tracking-tight font-sans">{t('noReviews')}</h4>
+                          <p className="text-slate-400 font-medium max-w-xs mx-auto font-sans">{t('noReviewsDesc')}</p>
                       </Card>
                    )}
                 </div>
@@ -906,7 +908,7 @@ export default function OrderDetails() {
             )}>
               <div className="flex justify-between items-start relative z-10">
                 <div>
-                  <h2 className="text-2xl font-black uppercase tracking-tight">Détails de Session</h2>
+                  <h2 className="text-2xl font-black uppercase tracking-tight">{t('sessionDetails')}</h2>
                   <p className="text-white/80 text-xs font-black uppercase tracking-widest mt-1">{order.serviceTier.service.name}</p>
                 </div>
                 <button onClick={() => setSelectedRes(null)} className="text-white/70 hover:text-white text-3xl font-black leading-none transition-transform hover:rotate-90 active:scale-90">&times;</button>
@@ -925,7 +927,7 @@ export default function OrderDetails() {
                   "px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest border-none shadow-sm",
                   selectedRes.meetingType === 'SUR_PLACE' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
                 )}>
-                  {selectedRes.meetingType === 'SUR_PLACE' ? '🏢 Sur Place' : '🎥 Zoom'}
+                   {selectedRes.meetingType === 'SUR_PLACE' ? '🏢 ' + t('inPerson') : '🎥 ' + t('zoom')}
                 </Badge>
               </div>
 
@@ -935,7 +937,7 @@ export default function OrderDetails() {
                     <span className="text-xl font-black text-slate-900">{new Date(selectedRes.startTime).getDate()}</span>
                  </div>
                  <div className="flex-1">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Horaire prévu</p>
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('scheduledTime')}</p>
                     <p className="text-sm font-black text-slate-900 uppercase tracking-tight">
                        {new Date(selectedRes.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} \u2013 {new Date(selectedRes.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </p>
@@ -949,19 +951,19 @@ export default function OrderDetails() {
                     <div className="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
                        <Play className="w-5 h-5 fill-current" />
                     </div>
-                    <span className="text-sm font-black text-blue-700 uppercase tracking-widest">Conférence Zoom</span>
+                     <span className="text-sm font-black text-blue-700 uppercase tracking-widest">{t('zoomConference')}</span>
                   </div>
 
                   {/* Join URL */}
                   {selectedRes.zoomJoinUrl ? (
                     <div className="space-y-3">
-                      <label className="text-[9px] font-black text-blue-600 uppercase tracking-widest block opacity-70">Lien de réunion</label>
+                       <label className="text-[9px] font-black text-blue-600 uppercase tracking-widest block opacity-70">{t('meetingLink')}</label>
                       <div className="flex items-center gap-2">
                         <div className="flex-1 text-[11px] font-bold text-slate-600 bg-white p-4 rounded-xl border border-blue-200 break-all font-mono truncate shadow-inner">
                           {selectedRes.zoomJoinUrl}
                         </div>
                         <button
-                          onClick={() => copyToClipboard(selectedRes.zoomJoinUrl, 'Lien')}
+                          onClick={() => copyToClipboard(selectedRes.zoomJoinUrl, 'linkCopied')}
                           className="flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-xl text-xs font-black transition-all hover:shadow-lg active:scale-95"
                           title="Copier le lien"
                         >
@@ -970,22 +972,22 @@ export default function OrderDetails() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-xs text-slate-400 italic font-medium text-center py-2 flex items-center justify-center gap-2">
-                       <div className="w-1 h-1 bg-slate-300 rounded-full animate-bounce" />
-                       Lien en cours de génération...
-                    </div>
+                        <div className="text-xs text-slate-400 italic font-medium text-center py-2 flex items-center justify-center gap-2">
+                           <div className="w-1 h-1 bg-slate-300 rounded-full animate-bounce" />
+                           {t('generatingLink')}
+                        </div>
                   )}
 
                   {/* Password */}
                   {selectedRes.zoomPassword && (
                     <div className="space-y-3">
-                      <label className="text-[9px] font-black text-blue-600 uppercase tracking-widest block opacity-70">Code secret</label>
+                       <label className="text-[9px] font-black text-blue-600 uppercase tracking-widest block opacity-70">{t('secretCode')}</label>
                       <div className="flex items-center gap-2">
                         <code className="flex-1 text-sm text-slate-800 bg-white p-4 rounded-xl border border-blue-100 font-black tracking-[0.2em] shadow-inner text-center">
                           {selectedRes.zoomPassword}
                         </code>
                         <button
-                          onClick={() => copyToClipboard(selectedRes.zoomPassword, 'Code')}
+                          onClick={() => copyToClipboard(selectedRes.zoomPassword, 'codeCopied')}
                           className="flex-shrink-0 bg-slate-900 hover:bg-black text-white p-4 rounded-xl text-xs font-black transition-all hover:shadow-lg active:scale-95"
                         >
                           <Zap className="w-4 h-4" />
@@ -1008,8 +1010,8 @@ export default function OrderDetails() {
                      <Target className="w-10 h-10 text-emerald-600" />
                   </div>
                   <div>
-                     <p className="text-emerald-700 font-black uppercase text-sm tracking-tight">Réunion en présentiel confirmée</p>
-                     <p className="text-emerald-600 shadow-sm text-[11px] font-bold mt-2 leading-relaxed px-4">Consultez votre messagerie pour les détails du lieu de rencontre.</p>
+                      <p className="text-emerald-700 font-black uppercase text-sm tracking-tight">{t('inPersonMeetingConfirmed')}</p>
+                      <p className="text-emerald-600 shadow-sm text-[11px] font-bold mt-2 leading-relaxed px-4">{t('checkEmailForDetails')}</p>
                   </div>
                 </div>
               )}
@@ -1021,8 +1023,8 @@ export default function OrderDetails() {
                       <Clock className="w-8 h-8 text-yellow-600" />
                    </div>
                    <div>
-                     <p className="text-yellow-700 text-sm font-black uppercase tracking-tight">En attente de confirmation</p>
-                     <p className="text-yellow-600 text-[11px] font-bold mt-1">Les détails apparaîtront une fois le créneau validé par l'expert.</p>
+                      <p className="text-yellow-700 text-sm font-black uppercase tracking-tight">{t('pendingConfirmation')}</p>
+                      <p className="text-yellow-600 text-[11px] font-bold mt-1">{t('pendingConfirmationDesc')}</p>
                    </div>
                 </div>
               )}
@@ -1033,7 +1035,7 @@ export default function OrderDetails() {
                   onClick={() => { cancelReservation(selectedRes.id); setSelectedRes(null) }}
                   className="w-full bg-red-50 text-red-600 border border-red-100 hover:bg-red-500 hover:text-white py-5 rounded-[2rem] transition-all text-xs font-black uppercase tracking-[0.2em] shadow-lg shadow-red-50 active:scale-95"
                 >
-                  ✗ Annuler cette Réservation
+                  {'✗ ' + t('cancelReservation')}
                 </button>
               )}
             </div>

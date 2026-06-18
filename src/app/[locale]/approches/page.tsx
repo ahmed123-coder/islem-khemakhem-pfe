@@ -3,12 +3,17 @@ import { CheckCircle2, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { prisma } from '@/lib/prisma'
+import { useTranslations } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 
 export const dynamic = 'force-dynamic'
 
-export const metadata: Metadata = {
-  title: 'Nos Approches - DSL Conseil',
-  description: 'Découvrez nos trois approches complémentaires : Coaching professionnel, Conduite du changement, Formation & Sensibilisation.',
+export async function generateMetadata({ params: { locale } }: { params: { locale: string } }): Promise<Metadata> {
+  const t = await getTranslations({ locale, namespace: 'approaches' })
+  return {
+    title: t('title'),
+    description: t('description'),
+  }
 }
 
 async function getFaqs() {
@@ -39,6 +44,8 @@ async function getApproches() {
 }
 
 export default async function ApprochesPage() {
+  const t = useTranslations('approaches')
+  const commonT = useTranslations('common')
   const faqs = await getFaqs();
   const approches = await getApproches();
   let heroData: any = null;
@@ -64,11 +71,11 @@ export default async function ApprochesPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 z-10">
           <div className="max-w-3xl">
             <h1 className="text-5xl lg:text-6xl font-serif font-bold mb-6 leading-tight tracking-tight text-white">
-              {heroData?.title || 'Nos approches'}
+              {heroData?.title || t('title')}
               <div className="w-22 h-1 bg-[#7AB648] rounded-full mt-4"></div>
             </h1>
             <p className="text-lg text-white/90 leading-relaxed border-l-4 border-[#7AB648] pl-4 whitespace-pre-line">
-              {heroData?.subtitle || 'Depuis 2018, nous accompagnons les entreprises dans le renforcement de la réussite de leurs projets, grâce à trois approches complémentaires.'}
+              {heroData?.subtitle || t('fallbackDescription')}
             </p>
           </div>
         </div>
@@ -120,7 +127,7 @@ export default async function ApprochesPage() {
             )
           }) : (
             <div className="text-center py-10 text-gray-500">
-              Aucune approche publiée pour le moment.
+              {t('noApproaches')}
             </div>
           )}
         </div>
@@ -130,10 +137,10 @@ export default async function ApprochesPage() {
       <section className="py-20 bg-gray-50 mt-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14">
-            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">Questions fréquentes</h2>
+            <h2 className="text-4xl font-serif font-bold text-[#1B3F7A] mt-3 mb-3">{t('faq')}</h2>
             <div className="w-16 h-1 bg-[#7AB648] mx-auto rounded-full"></div>
             <p className="text-lg text-gray-600 mt-4 max-w-2xl mx-auto">
-              Trouvez rapidement les réponses à vos questions les plus courantes.
+              {t('faqDescription')}
             </p>
           </div>
 
@@ -150,7 +157,7 @@ export default async function ApprochesPage() {
                   </div>
                 </details>
               )) : (
-                <div className="text-center text-gray-500 py-8">Aucune question fréquente pour le moment.</div>
+                <div className="text-center text-gray-500 py-8">{t('noFaqs')}</div>
               )}
             </div>
           </div>

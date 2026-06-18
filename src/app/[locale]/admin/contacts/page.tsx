@@ -132,7 +132,7 @@ export default function ContactsCRM() {
             {isLoading ? (
                <div className="p-8 text-center space-y-4">
                   <Loader2 className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
-                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Syncing Inbox...</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('syncing')}</p>
                </div>
             ) : filteredContacts.map((contact) => (
               <div 
@@ -216,7 +216,7 @@ export default function ContactsCRM() {
                         onClick={() => window.open(`mailto:${selectedContact.email}`)}
                         className="rounded-[18px] border-slate-100 bg-white h-11 px-6 font-bold text-xs transition-all hover:bg-slate-50 active:scale-95 shadow-sm"
                       >
-                        <Reply className="w-4 h-4 mr-2 text-blue-600" /> Dispatch Reply
+                        <Reply className="w-4 h-4 mr-2 text-blue-600" /> {t('dispatchReply')}
                       </Button>
                       <Button 
                         disabled={isProcessing}
@@ -224,7 +224,7 @@ export default function ContactsCRM() {
                         className="rounded-[18px] bg-slate-900 hover:bg-black text-white h-11 px-6 font-bold text-xs shadow-xl shadow-slate-200 transition-all hover:-translate-y-1 active:scale-95 disabled:bg-slate-300"
                       >
                          {isProcessing ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2 text-emerald-400" />}
-                         Mark Processed
+                         {t('markProcessed')}
                       </Button>
                     </div>
                   </header>
@@ -232,31 +232,31 @@ export default function ContactsCRM() {
                   {/* Detail Body */}
                   <div className="flex-1 overflow-y-auto p-10 space-y-10 custom-scrollbar">
                     <section>
-                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600/60 mb-6 block">Inquiry Metadata</label>
+                      <label className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600/60 mb-6 block">{t('inquiryMetadata')}</label>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="p-5 rounded-[28px] bg-slate-50/50 border border-slate-100 flex flex-col justify-between h-24 group hover:bg-white hover:shadow-lg transition-all">
-                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Status</p>
+                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{t('statusLabel')}</p>
                            <Badge className={cn("rounded-lg border-none font-black text-[9px] uppercase w-fit", getStatusStyle(selectedContact.status))}>
                              {selectedContact.status}
                            </Badge>
                         </div>
                         <div className="p-5 rounded-[28px] bg-slate-50/50 border border-slate-100 flex flex-col justify-between h-24 group hover:bg-white hover:shadow-lg transition-all">
-                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Origin</p>
-                           <p className="text-xs font-black text-slate-900 uppercase">External Form</p>
+                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{t('origin')}</p>
+                           <p className="text-xs font-black text-slate-900 uppercase">{t('externalForm')}</p>
                         </div>
                         <div className="p-5 rounded-[28px] bg-slate-50/50 border border-slate-100 flex flex-col justify-between h-24 group hover:bg-white hover:shadow-lg transition-all">
-                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Node</p>
-                           <p className="text-xs font-black text-slate-900 uppercase italic">CMS Hub</p>
+                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{t('node')}</p>
+                           <p className="text-xs font-black text-slate-900 uppercase italic">{t('cmsHub')}</p>
                         </div>
                         <div className="p-5 rounded-[28px] bg-slate-50/50 border border-slate-100 flex flex-col justify-between h-24 group hover:bg-white hover:shadow-lg transition-all">
-                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">ID</p>
+                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{t('id')}</p>
                            <p className="text-xs font-black text-slate-900 uppercase tracking-tighter">#{selectedContact.id.slice(0, 8)}</p>
                         </div>
                       </div>
                     </section>
 
                     <section className="relative">
-                       <label className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600/60 mb-6 block">Communication Corpus</label>
+                       <label className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600/60 mb-6 block">{t('communicationCorpus')}</label>
                        <div className="relative p-10 rounded-[40px] bg-white border border-slate-100 shadow-sm overflow-hidden min-h-[200px] flex items-center group transition-shadow hover:shadow-xl">
                          <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full blur-[60px] -mr-16 -mt-16 opacity-50" />
                          <blockquote className="text-lg font-medium text-slate-700 leading-relaxed italic pr-12 relative z-10 flex gap-4">
@@ -281,14 +281,14 @@ export default function ContactsCRM() {
                             <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 text-[10px] font-black flex items-center justify-center text-slate-400">?</div>
                           ))}
                        </div>
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Protocol Version: 1.0.4-LTS</span>
+                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('protocolVersion')}</span>
                     </div>
                     <Button 
                       variant="ghost" 
                       onClick={() => handleDelete(selectedContact.id)}
                       className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded-[18px] font-black text-[10px] uppercase tracking-widest h-11 px-8 transition-colors active:scale-95"
                     >
-                      <Trash2 className="w-4 h-4 mr-2" /> Dismantle Inquiry
+                      <Trash2 className="w-4 h-4 mr-2" /> {t('dismantleInquiry')}
                     </Button>
                   </footer>
                 </Card>
@@ -299,9 +299,9 @@ export default function ContactsCRM() {
                    <div className="absolute -inset-4 bg-white/50 rounded-full blur-2xl animate-pulse" />
                    <Inbox className="w-12 h-12 text-slate-200 group-hover:text-blue-200 transition-colors relative z-10" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2 tracking-tight">Stream Standby</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-2 tracking-tight">{t('streamStandby')}</h3>
                 <p className="text-sm text-slate-400 max-w-xs font-medium leading-relaxed italic">
-                  Connect to a communication node from the left pane to initialize inquiry audit.
+                   {t('streamStandbyDesc')}
                 </p>
               </div>
             )}

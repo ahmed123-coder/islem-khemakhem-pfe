@@ -126,7 +126,7 @@ export default function ConsultantsPage() {
       const result = await res.json()
       const data = result.data || result
       if (!Array.isArray(data)) {
-        setError(result.error || result.message || 'Erreur de chargement')
+        setError(result.error || result.message || t('loadingError'))
         setConsultants([])
       } else {
         setConsultants(data)
@@ -219,7 +219,7 @@ export default function ConsultantsPage() {
         fetchConsultants()
       } else {
         const d = await res.json()
-        setError(d.details ? `${d.error}: ${d.details}` : (d.error || 'Operation failed'))
+        setError(d.details ? `${d.error}: ${d.details}` : (d.error || t('operationFailed')))
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred')
@@ -231,7 +231,7 @@ export default function ConsultantsPage() {
   const handleDelete = async (id: string) => {
     // Note : cette action désactive le consultant (soft delete) plutôt que de le
     // supprimer définitivement, pour préserver l'historique des commandes/missions.
-    if (!confirm("Désactiver ce consultant ? Son historique sera conservé, mais il ne sera plus visible côté clients.")) return
+    if (!confirm(t('confirmDelete'))) return
     const res = await fetch(`/api/admin/consultants/${id}`, { method: 'DELETE' })
     if (res.ok) fetchConsultants()
   }
@@ -294,7 +294,7 @@ export default function ConsultantsPage() {
            <div className="flex flex-col">
             <span className="font-bold text-slate-900 leading-tight">{[c.firstName, c.name].filter(Boolean).join(' ')}</span>
             <span className="text-[10px] font-black uppercase tracking-wider text-blue-600/80 mt-0.5">
-              {c.specialty || 'Generalist'}
+              {c.specialty || t('generalist')}
             </span>
           </div>
         </div>
@@ -323,11 +323,11 @@ export default function ConsultantsPage() {
         <div className="flex gap-4">
           <div className="flex flex-col">
             <span className="text-lg font-black text-slate-900 leading-none">{c._count?.missions || 0}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Missions</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t('columns.missions')}</span>
           </div>
           <div className="flex flex-col border-l border-slate-100 pl-4">
             <span className="text-lg font-black text-slate-900 leading-none">{c._count?.reservations || 0}</span>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sessions</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{t('columns.sessions')}</span>
           </div>
         </div>
       ),
@@ -347,12 +347,12 @@ export default function ConsultantsPage() {
           {c.isActive ? (
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="w-3 h-3" />
-              Active Node
+              {t('status.activeNode')}
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
               <ShieldAlert className="w-3 h-3" />
-              Suspended
+              {t('status.suspended')}
             </div>
           )}
         </button>
@@ -366,7 +366,7 @@ export default function ConsultantsPage() {
           <button 
             onClick={() => openFile(c.cvUrl!)} 
             className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600 transition-all hover:bg-blue-100 hover:scale-105 shadow-sm group relative"
-            title="View CV"
+            title={t('viewCv')}
           >
             <FileText className="w-4 h-4" />
           </button>
@@ -381,7 +381,7 @@ export default function ConsultantsPage() {
                   "w-10 h-10 rounded-2xl flex items-center justify-center transition-all hover:scale-110 hover:z-10 shadow-sm border-2 border-white",
                   i === 0 ? "bg-purple-50 text-purple-600" : i === 1 ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600"
                 )}
-                title={`View Certificate ${i + 1}`}
+                title={t('viewCertificate', { num: i + 1 })}
               >
                 <Award className="w-4 h-4" />
               </button>
@@ -411,13 +411,13 @@ export default function ConsultantsPage() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 p-2 rounded-[24px] shadow-2xl border-slate-100 backdrop-blur-xl bg-white/90">
-              <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">Expert Protocols</DropdownMenuLabel>
+              <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('expertProtocols')}</DropdownMenuLabel>
               <DropdownMenuItem 
                onClick={() => handleOpenEdit(c)}
                className="rounded-xl px-3 py-2.5 cursor-pointer transition-colors focus:bg-blue-50 focus:text-blue-600 font-bold text-sm"
               >
                 <Pencil className="w-4 h-4 mr-3" />
-                Modify Profile
+                {t('modifyProfile')}
               </DropdownMenuItem>
               <DropdownMenuSeparator className="my-1 bg-slate-50" />
               <DropdownMenuItem 
@@ -427,12 +427,12 @@ export default function ConsultantsPage() {
                 {c.isActive ? (
                   <>
                     <UserX className="w-4 h-4 mr-3 text-red-500" />
-                    Suspend Access
+                    {t('suspendAccess')}
                   </>
                 ) : (
                   <>
                     <UserCheck className="w-4 h-4 mr-3 text-emerald-500" />
-                    Restore Node
+                    {t('restoreNode')}
                   </>
                 )}
               </DropdownMenuItem>
@@ -441,7 +441,7 @@ export default function ConsultantsPage() {
                 className="rounded-xl px-3 py-2.5 cursor-pointer transition-colors focus:bg-red-50 focus:text-red-500 font-bold text-sm text-red-400"
               >
                 <Trash2 className="w-4 h-4 mr-3" />
-                Désactiver le consultant
+                {t('deactivateConsultant')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -512,7 +512,7 @@ export default function ConsultantsPage() {
                   {[detailConsultant?.firstName, detailConsultant?.name].filter(Boolean).join(' ') || 'Consultant'}
                 </DialogTitle>
                 <DialogDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400">
-                  {detailConsultant?.specialty || 'Generalist'} • {detailConsultant?.isActive ? '🟢 Active' : '🔴 Inactive'}
+                  {detailConsultant?.specialty || t('generalist')} • {detailConsultant?.isActive ? '🟢 Active' : '🔴 Inactive'}
                 </DialogDescription>
               </div>
             </div>
@@ -520,21 +520,21 @@ export default function ConsultantsPage() {
           
           <ScrollArea className="max-h-[60vh]">
             <div className="p-8 pt-4 space-y-1">
-              <DetailRow icon={Mail} label="Email" value={detailConsultant?.email} />
-              <DetailRow icon={UserPlus} label="First Name" value={detailConsultant?.firstName} />
-              <DetailRow icon={UserPlus} label="Last Name" value={detailConsultant?.name} />
-              <DetailRow icon={Phone} label="Phone" value={detailConsultant?.phone} />
-              <DetailRow icon={Briefcase} label="Specialty" value={detailConsultant?.specialty} />
-              <DetailRow icon={DollarSign} label="Hourly Rate" value={detailConsultant?.hourlyRate ? `${detailConsultant.hourlyRate} DT/h` : null} />
-              <DetailRow icon={FileText} label="Bio" value={detailConsultant?.bio} />
-              <DetailRow icon={Image} label="Image URL" value={detailConsultant?.imageUrl} />
-              <DetailRow icon={Calendar} label="Registered" value={detailConsultant ? format(new Date(detailConsultant.createdAt), 'PPP') : null} />
-              <DetailRow icon={Calendar} label="Last Updated" value={detailConsultant ? format(new Date(detailConsultant.updatedAt), 'PPP') : null} />
+              <DetailRow icon={Mail} label={t('detail.email')} value={detailConsultant?.email} />
+              <DetailRow icon={UserPlus} label={t('detail.firstName')} value={detailConsultant?.firstName} />
+              <DetailRow icon={UserPlus} label={t('detail.lastName')} value={detailConsultant?.name} />
+              <DetailRow icon={Phone} label={t('detail.phone')} value={detailConsultant?.phone} />
+              <DetailRow icon={Briefcase} label={t('detail.specialty')} value={detailConsultant?.specialty} />
+              <DetailRow icon={DollarSign} label={t('detail.hourlyRate')} value={detailConsultant?.hourlyRate ? `${detailConsultant.hourlyRate} DT/h` : null} />
+              <DetailRow icon={FileText} label={t('detail.bio')} value={detailConsultant?.bio} />
+              <DetailRow icon={Image} label={t('detail.imageUrl')} value={detailConsultant?.imageUrl} />
+              <DetailRow icon={Calendar} label={t('detail.registered')} value={detailConsultant ? format(new Date(detailConsultant.createdAt), 'PPP') : null} />
+              <DetailRow icon={Calendar} label={t('detail.lastUpdated')} value={detailConsultant ? format(new Date(detailConsultant.updatedAt), 'PPP') : null} />
 
               {/* Services */}
               {detailConsultant && detailConsultant.services.length > 0 && (
                 <div className="pt-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 block mb-3">Assigned Services</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 block mb-3">{t('assignedServices')}</span>
                   <div className="flex flex-wrap gap-1.5">
                     {detailConsultant.services.map(s => (
                       <Badge key={s.id} variant="outline" className="rounded-lg border-blue-100 bg-blue-50/50 text-blue-600 text-[9px] font-bold uppercase tracking-tight py-0.5">
@@ -548,13 +548,13 @@ export default function ConsultantsPage() {
               {/* CV */}
               {detailConsultant?.cvUrl && (
                 <div className="pt-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 block mb-3">CV / Resume</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 block mb-3">{t('cvResume')}</span>
                   <button
                     onClick={() => openFile(detailConsultant.cvUrl!)}
                     className="flex items-center gap-2 p-3 rounded-xl bg-blue-50/50 text-blue-600 text-xs font-bold hover:bg-blue-100 transition-colors w-full"
                   >
                     <FileText className="w-4 h-4" />
-                    View CV / Resume
+                    {t('viewCvResume')}
                   </button>
                 </div>
               )}
@@ -562,7 +562,7 @@ export default function ConsultantsPage() {
               {/* Certifications */}
               {detailConsultant && detailConsultant.certifications.length > 0 && (
                 <div className="pt-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 block mb-3">Certifications</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 block mb-3">{t('certifications')}</span>
                   <div className="space-y-2">
                     {detailConsultant.certifications.map((cert, i) => (
                       <button
@@ -571,7 +571,7 @@ export default function ConsultantsPage() {
                         className="flex items-center gap-2 p-2 rounded-xl bg-purple-50/50 text-purple-600 text-xs font-bold hover:bg-purple-100 transition-colors w-full text-left"
                       >
                         <Award className="w-4 h-4 flex-shrink-0" />
-                        <span className="truncate">Certificate {i + 1}</span>
+                        <span className="truncate">{t('certificate', { num: i + 1 })}</span>
                       </button>
                     ))}
                   </div>
@@ -581,19 +581,19 @@ export default function ConsultantsPage() {
               {/* Engagement stats */}
               {detailConsultant && (
                 <div className="pt-4">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 block mb-3">Engagement Stats</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-300 block mb-3">{t('engagementStats')}</span>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="p-3 rounded-2xl bg-slate-50/80 text-center">
                       <span className="text-lg font-black text-slate-900 block">{detailConsultant._count.missions}</span>
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Missions</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{t('missions')}</span>
                     </div>
                     <div className="p-3 rounded-2xl bg-slate-50/80 text-center">
                       <span className="text-lg font-black text-slate-900 block">{detailConsultant._count.orders}</span>
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Orders</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{t('orders')}</span>
                     </div>
                     <div className="p-3 rounded-2xl bg-slate-50/80 text-center">
                       <span className="text-lg font-black text-slate-900 block">{detailConsultant._count.reservations}</span>
-                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Sessions</span>
+                      <span className="text-[9px] font-bold uppercase tracking-wider text-slate-400">{t('sessions')}</span>
                     </div>
                   </div>
                 </div>
@@ -606,14 +606,14 @@ export default function ConsultantsPage() {
               onClick={() => { setDetailConsultant(null); if (detailConsultant) handleOpenEdit(detailConsultant); }}
               className="flex-1 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black h-12 shadow-lg shadow-blue-100 transition-all hover:scale-[1.02]"
             >
-              <Pencil className="w-4 h-4 mr-2" /> Edit Profile
+              <Pencil className="w-4 h-4 mr-2" /> {t('editProfile')}
             </Button>
             <Button
               variant="outline"
               onClick={() => setDetailConsultant(null)}
               className="rounded-2xl h-12 font-bold border-slate-200"
             >
-              Close
+              {commonT('close')}
             </Button>
           </div>
         </DialogContent>
@@ -629,10 +629,10 @@ export default function ConsultantsPage() {
                </div>
                <div>
                  <DialogTitle className="text-2xl font-black text-slate-900 leading-none mb-1">
-                   {editItem ? 'Refine Consultant' : 'Onboard New Expert'}
+                    {editItem ? t('form.refineConsultant') : t('form.onboardNewExpert')}
                  </DialogTitle>
                  <DialogDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400">
-                   {editItem ? `ID: ${editItem.id.slice(0, 8)}...` : 'Strategic Resource Creation'}
+                    {editItem ? `ID: ${editItem.id.slice(0, 8)}...` : t('form.strategicResourceCreation')}
                  </DialogDescription>
                </div>
             </div>
@@ -646,24 +646,24 @@ export default function ConsultantsPage() {
 
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">First Name</Label>
-                  <Input value={form.firstName || ''} onChange={e => setForm({ ...form, firstName: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="John" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.firstName')}</Label>
+                  <Input value={form.firstName || ''} onChange={e => setForm({ ...form, firstName: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder={t('form.firstNamePlaceholder')} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Last Name</Label>
-                  <Input value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} required className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="Doe" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.lastName')}</Label>
+                  <Input value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} required className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder={t('form.lastNamePlaceholder')} />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Email</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.email')}</Label>
                   <Input type="email" value={form.email || ''} onChange={e => setForm({ ...form, email: e.target.value })} required className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Phone</Label>
-                  <Input value={form.phone || ''} onChange={e => setForm({ ...form, phone: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="+216 XX XXX XXX" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.phone')}</Label>
+                  <Input value={form.phone || ''} onChange={e => setForm({ ...form, phone: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder={t('form.phonePlaceholder')} />
                 </div>
                 {!editItem && (
                   <div className="space-y-2 col-span-2">
-                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Secure Protocol (Password)</Label>
+                    <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.secureProtocol')}</Label>
                     <div className="relative">
                       <Input type={showPassword ? 'text' : 'password'} value={form.password || ''} onChange={e => setForm({ ...form, password: e.target.value })} required className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold pr-12" />
                       <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-blue-600 transition-colors">
@@ -673,22 +673,22 @@ export default function ConsultantsPage() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Prime Specialty</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.primeSpecialty')}</Label>
                   <Input value={form.specialty || ''} onChange={e => setForm({ ...form, specialty: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Hourly Rate (DT)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.hourlyRate')}</Label>
                   <Input type="number" step="0.01" value={form.hourlyRate || ''} onChange={e => setForm({ ...form, hourlyRate: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" />
                 </div>
                 <div className="space-y-2 col-span-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Avatar Content URL</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.avatarContentUrl')}</Label>
                   <Input value={form.imageUrl || ''} onChange={e => setForm({ ...form, imageUrl: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" />
                 </div>
 
                 {/* ── CV Upload (like register page) ── */}
                 <div className="space-y-2 col-span-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5" /> CV / Resume <span className="text-slate-300 font-normal normal-case">(PDF, DOC)</span>
+                    <FileText className="w-3.5 h-3.5" /> {t('form.cvResume')} <span className="text-slate-300 font-normal normal-case">{t('form.cvFormats')}</span>
                   </Label>
                   
                   {/* Show existing CV if editing */}
@@ -696,11 +696,11 @@ export default function ConsultantsPage() {
                     <div className="flex items-center justify-between p-3 rounded-2xl bg-blue-50/60 border border-blue-100/50">
                       <div className="flex items-center gap-2 min-w-0">
                         <FileText className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                        <span className="text-xs font-bold text-blue-600 truncate">Current CV uploaded</span>
+                        <span className="text-xs font-bold text-blue-600 truncate">{t('form.currentCvUploaded')}</span>
                       </div>
                       <div className="flex gap-1.5 flex-shrink-0">
-                        <button type="button" onClick={() => openFile(form.cvUrl!)} className="text-[10px] font-bold text-blue-600 bg-blue-100 rounded-lg px-2 py-1 hover:bg-blue-200 transition-colors">View</button>
-                        <button type="button" onClick={() => setForm({ ...form, cvUrl: null })} className="text-[10px] font-bold text-red-500 bg-red-50 rounded-lg px-2 py-1 hover:bg-red-100 transition-colors">Remove</button>
+                        <button type="button" onClick={() => openFile(form.cvUrl!)} className="text-[10px] font-bold text-blue-600 bg-blue-100 rounded-lg px-2 py-1 hover:bg-blue-200 transition-colors">{commonT('view')}</button>
+                        <button type="button" onClick={() => setForm({ ...form, cvUrl: null })} className="text-[10px] font-bold text-red-500 bg-red-50 rounded-lg px-2 py-1 hover:bg-red-100 transition-colors">{commonT('delete')}</button>
                       </div>
                     </div>
                   )}
@@ -721,9 +721,9 @@ export default function ConsultantsPage() {
                       <div className="flex flex-col items-center gap-1.5">
                         <Upload className="w-6 h-6 text-slate-300 group-hover:text-blue-400 transition-colors" />
                         <span className="text-sm text-slate-400 group-hover:text-blue-500 font-medium transition-colors">
-                          {editItem && form.cvUrl ? 'Click to replace CV' : 'Click to upload CV'}
+                          {editItem && form.cvUrl ? t('form.clickToReplaceCv') : t('form.clickToUploadCv')}
                         </span>
-                        <span className="text-[10px] text-slate-300">PDF, DOC, DOCX</span>
+                        <span className="text-[10px] text-slate-300">{t('form.cvFormatsDetailed')}</span>
                       </div>
                     )}
                   </div>
@@ -733,7 +733,7 @@ export default function ConsultantsPage() {
                 {/* ── Certifications Upload (like register page) ── */}
                 <div className="space-y-2 col-span-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
-                    <Award className="w-3.5 h-3.5" /> Certifications <span className="text-slate-300 font-normal normal-case">(facultatif — PDF, JPG, PNG)</span>
+                    <Award className="w-3.5 h-3.5" /> {t('form.certifications')} <span className="text-slate-300 font-normal normal-case">{t('form.certFormats')}</span>
                   </Label>
                   
                   {/* Show existing certifications if editing */}
@@ -743,11 +743,11 @@ export default function ConsultantsPage() {
                         <div key={`existing-${i}`} className="flex items-center justify-between p-2.5 rounded-xl bg-purple-50/60 border border-purple-100/50">
                           <div className="flex items-center gap-2 min-w-0">
                             <Award className="w-4 h-4 text-purple-600 flex-shrink-0" />
-                            <span className="text-xs font-bold text-purple-600 truncate">Certificate {i + 1}</span>
+                            <span className="text-xs font-bold text-purple-600 truncate">{t('certificate', { num: i + 1 })}</span>
                           </div>
                           <div className="flex gap-1.5 flex-shrink-0">
-                            <button type="button" onClick={() => openFile(cert)} className="text-[10px] font-bold text-purple-600 bg-purple-100 rounded-lg px-2 py-1 hover:bg-purple-200 transition-colors">View</button>
-                            <button type="button" onClick={() => removeCertification(i)} className="text-[10px] font-bold text-red-500 bg-red-50 rounded-lg px-2 py-1 hover:bg-red-100 transition-colors">Remove</button>
+                            <button type="button" onClick={() => openFile(cert)} className="text-[10px] font-bold text-purple-600 bg-purple-100 rounded-lg px-2 py-1 hover:bg-purple-200 transition-colors">{commonT('view')}</button>
+                            <button type="button" onClick={() => removeCertification(i)} className="text-[10px] font-bold text-red-500 bg-red-50 rounded-lg px-2 py-1 hover:bg-red-100 transition-colors">{commonT('delete')}</button>
                           </div>
                         </div>
                       ))}
@@ -762,7 +762,7 @@ export default function ConsultantsPage() {
                           <div className="flex items-center gap-2 min-w-0">
                             <Upload className="w-4 h-4 text-emerald-600 flex-shrink-0" />
                             <span className="text-xs font-bold text-emerald-600 truncate">{f.name}</span>
-                            <Badge className="bg-emerald-100 text-emerald-600 border-none text-[8px] font-bold uppercase">New</Badge>
+                            <Badge className="bg-emerald-100 text-emerald-600 border-none text-[8px] font-bold uppercase">{t('new')}</Badge>
                           </div>
                           <button type="button" onClick={() => setCertFiles(prev => prev.filter((_, j) => j !== i))} className="text-red-400 hover:text-red-600 flex-shrink-0">
                             <X className="w-4 h-4" />
@@ -778,21 +778,21 @@ export default function ConsultantsPage() {
                   >
                     <div className="flex flex-col items-center gap-1.5">
                       <Upload className="w-6 h-6 text-slate-300 group-hover:text-purple-400 transition-colors" />
-                      <span className="text-sm text-slate-400 group-hover:text-purple-500 font-medium transition-colors">Click to add certifications</span>
-                      <span className="text-[10px] text-slate-300">PDF, JPG, PNG — Multiple files allowed</span>
+                      <span className="text-sm text-slate-400 group-hover:text-purple-500 font-medium transition-colors">{t('form.clickToAddCertifications')}</span>
+                      <span className="text-[10px] text-slate-300">{t('form.certFormatsMultiple')}</span>
                     </div>
                   </div>
                   <input ref={certRef} type="file" accept=".pdf,.jpg,.jpeg,.png" multiple className="hidden" onChange={e => { setCertFiles(prev => [...prev, ...Array.from(e.target.files || [])]); if (certRef.current) certRef.current.value = '' }} />
                 </div>
 
                 <div className="space-y-2 col-span-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Expert Narrative (Bio)</Label>
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.expertNarrative')}</Label>
                   <Textarea value={form.bio || ''} onChange={e => setForm({ ...form, bio: e.target.value })} rows={4} className="rounded-3xl bg-slate-50 border-transparent focus:bg-white transition-all font-medium" />
                 </div>
 
                 <div className="col-span-2 p-6 rounded-[32px] bg-slate-50/50 border border-slate-100">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-4">
-                    <Award className="w-3.5 h-3.5" /> Service Assignment
+                    <Award className="w-3.5 h-3.5" /> {t('form.serviceAssignment')}
                   </Label>
                   <div className="grid grid-cols-2 gap-3">
                     {services.map(service => (
@@ -808,7 +808,7 @@ export default function ConsultantsPage() {
                         <label htmlFor={service.id} className="text-xs font-bold text-slate-600 cursor-pointer">{service.name}</label>
                       </div>
                     ))}
-                    {services.length === 0 && <p className="text-[10px] font-bold text-slate-300 italic">No services defined</p>}
+                    {services.length === 0 && <p className="text-[10px] font-bold text-slate-300 italic">{t('form.noServicesDefined')}</p>}
                   </div>
                 </div>
 
@@ -818,14 +818,14 @@ export default function ConsultantsPage() {
                     checked={form.isActive ?? true} 
                     onCheckedChange={(c) => setForm({ ...form, isActive: c as boolean })} 
                   />
-                  <Label htmlFor="isActive" className="text-xs font-black uppercase tracking-widest text-emerald-700 cursor-pointer">Set as Active Expert Node</Label>
+                  <Label htmlFor="isActive" className="text-xs font-black uppercase tracking-widest text-emerald-700 cursor-pointer">{t('form.setActiveNode')}</Label>
                 </div>
               </div>
             </form>
           </ScrollArea>
 
           <DialogFooter className="p-8 bg-slate-50/50 border-t border-white">
-            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} disabled={submitting} className="rounded-2xl font-bold text-slate-400 px-6">Discard</Button>
+            <Button variant="ghost" onClick={() => setIsDialogOpen(false)} disabled={submitting} className="rounded-2xl font-bold text-slate-400 px-6">{commonT('discard')}</Button>
             <Button 
                type="submit"
                form="consultant-form"
@@ -833,9 +833,9 @@ export default function ConsultantsPage() {
                className="rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black italic px-8 h-12 shadow-xl shadow-blue-100 transition-all hover:scale-105"
             >
               {submitting ? (
-                <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Uploading...</>
+                <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> {t('form.uploading')}</>
               ) : (
-                <>{editItem ? 'Finalize Modification' : 'Deploy Protocol'} <ArrowRight className="w-5 h-5 ml-2" /></>
+                <>{editItem ? t('form.finalizeModification') : t('form.deployProtocol')} <ArrowRight className="w-5 h-5 ml-2" /></>
               )}
             </Button>
           </DialogFooter>

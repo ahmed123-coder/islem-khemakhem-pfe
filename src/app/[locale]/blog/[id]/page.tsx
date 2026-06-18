@@ -3,19 +3,24 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { useTranslations } from 'next-intl'
+import { getTranslations } from 'next-intl/server'
 
-export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export async function generateMetadata({ params }: { params: Promise<{ id: string; locale: string }> }) {
+  const { id, locale } = await params
+  const t = await getTranslations({ locale, namespace: 'blog' })
   const article = await prisma.blog.findUnique({ where: { id } })
-  if (!article) return { title: 'Not Found' }
+  if (!article) return { title: t('notFound') }
   return {
-    title: `${article.title} | Business Consulting`,
+    title: `${article.title} | ${t('metaCategory')}`,
     description: article.excerpt,
   }
 }
 
 export default async function BlogPost({ params }: { params: Promise<{ locale: string; id: string }> }) {
   const { locale, id } = await params
+  const t = useTranslations('blog')
+  const commonT = useTranslations('common')
   const article = await prisma.blog.findUnique({ where: { id } })
 
   if (!article || !article.published) {
@@ -29,12 +34,12 @@ export default async function BlogPost({ params }: { params: Promise<{ locale: s
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-16 md:py-24">
           <Link href={`/${locale}/blog`} className="inline-flex items-center text-[#2B5A8E] hover:text-[#1d3d61] font-medium mb-8 transition-colors">
             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-            Retour au blog
+            {t('backToBlog')}
           </Link>
           
           <div className="flex items-center gap-4 mb-6">
             <Badge variant="secondary" className="bg-blue-100/80 text-blue-800 hover:bg-blue-200 border-none px-3 py-1">
-              Expert Consultant
+              {t('expertConsultant')}
             </Badge>
             <time className="text-sm font-medium text-gray-500 flex items-center gap-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -61,8 +66,8 @@ export default async function BlogPost({ params }: { params: Promise<{ locale: s
               </div>
             )}
             <div>
-              <p className="font-bold text-gray-900">DSL Conseil</p>
-              <p className="text-sm text-gray-500">Équipe Consulting</p>
+              <p className="font-bold text-gray-900">{t('dslConsulting')}</p>
+              <p className="text-sm text-gray-500">{t('consultingTeam')}</p>
             </div>
           </div>
         </div>
@@ -94,10 +99,10 @@ export default async function BlogPost({ params }: { params: Promise<{ locale: s
         </div>
         
         <div className="mt-16 pt-8 border-t border-gray-200 flex items-center justify-between">
-          <p className="text-gray-900 font-bold">Avez-vous trouvé cet article utile ?</p>
+          <p className="text-gray-900 font-bold">{t('foundHelpful')}</p>
           <div className="flex gap-4">
-            <Button variant="outline" className="rounded-full shadow-sm hover:bg-gray-50">Oui</Button>
-            <Button variant="outline" className="rounded-full shadow-sm hover:bg-gray-50">Non</Button>
+            <Button variant="outline" className="rounded-full shadow-sm hover:bg-gray-50">{commonT('yes')}</Button>
+            <Button variant="outline" className="rounded-full shadow-sm hover:bg-gray-50">{commonT('no')}</Button>
           </div>
         </div>
       </div>

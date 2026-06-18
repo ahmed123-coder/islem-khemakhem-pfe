@@ -143,7 +143,7 @@ export default function BlogsCMS() {
       setIsEditing(false)
       return
     }
-    if (!confirm('Are you sure you want to delete this?')) return
+    if (!confirm(t('confirmDelete'))) return
     try {
       const res = await fetch(`/api/admin/blogs?id=${selectedId}`, { method: 'DELETE' })
       if (res.ok) {
@@ -228,7 +228,7 @@ export default function BlogsCMS() {
                           "rounded-lg px-2 py-0 border-none text-[9px] font-black uppercase tracking-tight",
                           blog.published ? "bg-blue-50 text-blue-600" : "bg-orange-50 text-orange-600"
                         )}>
-                          {blog.published ? 'Live' : 'Draft'}
+                          {blog.published ? t('live') : t('draft')}
                         </Badge>
                         <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
                           <Calendar className="w-2.5 h-2.5" />
@@ -452,11 +452,11 @@ export default function BlogsCMS() {
                                   )}
                                </div>
                             </div>
-                            <h1 className="text-3xl font-black text-slate-900 leading-tight">{form.title || 'Draft Title'}</h1>
+                            <h1 className="text-3xl font-black text-slate-900 leading-tight">{form.title || t('draftTitle')}</h1>
                             <div className="flex items-center gap-3">
                                <div className="w-8 h-8 rounded-full bg-blue-600" />
                                <div className="text-[10px] font-bold uppercase tracking-wider">
-<p className="text-slate-900">DSL Editor</p>
+<p className="text-slate-900">{t('dslEditor')}</p>
                                    <p className="text-slate-400">{t("publishedToday")}</p>
                                </div>
                             </div>

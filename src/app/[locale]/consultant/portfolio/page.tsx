@@ -102,17 +102,17 @@ export default function ConsultantPortfolio() {
     const phone = profile.phone.replace(/\D/g, '').slice(0, 8)
 
     if (!fullName || !firstName) {
-      toast.error('Le nom et le prénom sont requis.')
+      toast.error(t('nameRequired'))
       return
     }
 
     if (!/^[A-Za-zÀ-ÿ\s-]+$/.test(fullName) || !/^[A-Za-zÀ-ÿ\s-]+$/.test(firstName)) {
-      toast.error('Le nom et le prénom ne doivent contenir que des lettres, espaces ou tirets.')
+      toast.error(t('nameLettersOnly'))
       return
     }
 
     if (phone && !/^[0-9]{8}$/.test(phone)) {
-      toast.error('Le téléphone doit contenir 8 chiffres.')
+      toast.error(t('phone8Digits'))
       return
     }
 
@@ -141,13 +141,13 @@ export default function ConsultantPortfolio() {
       })
       const result = await res.json()
       if (!res.ok) throw new Error(result.error || 'Impossible de mettre à jour le profil.')
-      toast.success('Profil mis à jour')
+      toast.success(t('profileUpdated'))
       await fetchProfile()
       setPhotoFile(null)
       setCvFile(null)
       setCertFiles([])
     } catch (error: any) {
-      toast.error(error.message || 'Une erreur est survenue.')
+      toast.error(error.message || t('errorOccurred'))
     } finally {
       setSaving(false)
     }
@@ -167,8 +167,8 @@ export default function ConsultantPortfolio() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-black text-slate-900">Portfolio & profil</h1>
-            <p className="text-slate-500 text-sm mt-2">Consultez votre portfolio et mettez à jour votre profil consultant comme lors de l’inscription.</p>
+            <h1 className="text-3xl font-black text-slate-900">{t('title')}</h1>
+            <p className="text-slate-500 text-sm mt-2">{t('description')}</p>
           </div>
           <Button onClick={handleSave} disabled={saving} className="bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-black text-xs uppercase tracking-widest px-6">
             {saving ? 'Enregistrement...' : 'Enregistrer'}
@@ -249,23 +249,23 @@ export default function ConsultantPortfolio() {
             </div>
 
             <Card className="rounded-[2rem] border-none shadow-xl p-6">
-              <h3 className="text-xl font-black text-slate-900 mb-4">Profil consultant</h3>
+              <h3 className="text-xl font-black text-slate-900 mb-4">{t('profileInfo')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div><label className="text-xs uppercase tracking-widest text-slate-400 font-black">Nom</label><Input value={profile.name} onChange={e => updateField('name', e.target.value)} className="mt-2 rounded-xl" /></div>
-                <div><label className="text-xs uppercase tracking-widest text-slate-400 font-black">Prénom</label><Input value={profile.firstName} onChange={e => updateField('firstName', e.target.value)} className="mt-2 rounded-xl" /></div>
-                <div><label className="text-xs uppercase tracking-widest text-slate-400 font-black">Email</label><Input value={profile.email} disabled className="mt-2 rounded-xl bg-slate-100" /></div>
-                <div><label className="text-xs uppercase tracking-widest text-slate-400 font-black">Téléphone</label><div className="flex mt-2"><span className="inline-flex items-center px-3 rounded-l-xl bg-slate-100 border border-r-0 border-slate-200 text-slate-500 text-sm">+216</span><Input value={profile.phone} onChange={e => updateField('phone', e.target.value.replace(/\D/g, '').slice(0, 8))} className="rounded-l-none" placeholder="XX XXX XXX" /></div></div>
-                <div className="md:col-span-2"><label className="text-xs uppercase tracking-widest text-slate-400 font-black">Spécialité</label><Input value={profile.specialty} onChange={e => updateField('specialty', e.target.value)} className="mt-2 rounded-xl" /></div>
-                <div className="md:col-span-2"><label className="text-xs uppercase tracking-widest text-slate-400 font-black">Biographie</label><textarea value={profile.bio} onChange={e => updateField('bio', e.target.value)} rows={4} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700" /></div>
+                <div><label className="text-xs uppercase tracking-widest text-slate-400 font-black">{t('lastName')}</label><Input value={profile.name} onChange={e => updateField('name', e.target.value)} className="mt-2 rounded-xl" /></div>
+                <div><label className="text-xs uppercase tracking-widest text-slate-400 font-black">{t('firstName')}</label><Input value={profile.firstName} onChange={e => updateField('firstName', e.target.value)} className="mt-2 rounded-xl" /></div>
+                <div><label className="text-xs uppercase tracking-widest text-slate-400 font-black">{t('email')}</label><Input value={profile.email} disabled className="mt-2 rounded-xl bg-slate-100" /></div>
+                <div><label className="text-xs uppercase tracking-widest text-slate-400 font-black">{t('phone')}</label><div className="flex mt-2"><span className="inline-flex items-center px-3 rounded-l-xl bg-slate-100 border border-r-0 border-slate-200 text-slate-500 text-sm">+216</span><Input value={profile.phone} onChange={e => updateField('phone', e.target.value.replace(/\D/g, '').slice(0, 8))} className="rounded-l-none" placeholder="XX XXX XXX" /></div></div>
+                <div className="md:col-span-2"><label className="text-xs uppercase tracking-widest text-slate-400 font-black">{t('specialty')}</label><Input value={profile.specialty} onChange={e => updateField('specialty', e.target.value)} className="mt-2 rounded-xl" /></div>
+                <div className="md:col-span-2"><label className="text-xs uppercase tracking-widest text-slate-400 font-black">{t('bio')}</label><textarea value={profile.bio} onChange={e => updateField('bio', e.target.value)} rows={4} className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700" /></div>
               </div>
             </Card>
 
             <Card className="rounded-[2rem] border-none shadow-xl p-6">
-              <h3 className="text-xl font-black text-slate-900 mb-4">Pièces jointes</h3>
+              <h3 className="text-xl font-black text-slate-900 mb-4">{t('attachments')}</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4"><label className="text-xs uppercase tracking-widest text-slate-400 font-black flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Photo</label><input ref={photoInputRef} type="file" accept="image/png,image/jpeg,image/jpg" className="hidden" onChange={e => setPhotoFile(e.target.files?.[0] || null)} /><button type="button" onClick={() => photoInputRef.current?.click()} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-600">{photoFile ? `📷 ${photoFile.name}` : (profile.imageUrl ? 'Remplacer la photo actuelle' : 'Choisir une photo (PNG/JPG)')}</button></div>
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4"><label className="text-xs uppercase tracking-widest text-slate-400 font-black flex items-center gap-2"><FileText className="w-4 h-4" /> CV</label><input ref={cvInputRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={e => setCvFile(e.target.files?.[0] || null)} /><button type="button" onClick={() => cvInputRef.current?.click()} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-600">{cvFile ? `📄 ${cvFile.name}` : (profile.cvUrl ? 'Remplacer le CV actuel' : 'Choisir un CV (PDF/DOC)')}</button></div>
-                <div className="md:col-span-2 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4"><label className="text-xs uppercase tracking-widest text-slate-400 font-black flex items-center gap-2"><Award className="w-4 h-4" /> Certifications</label><input ref={certInputRef} type="file" accept=".pdf,.png,.jpg,.jpeg" multiple className="hidden" onChange={e => setCertFiles(Array.from(e.target.files || []))} /><button type="button" onClick={() => certInputRef.current?.click()} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-600">{certFiles.length > 0 ? `${certFiles.length} certification(s) sélectionnée(s)` : 'Choisir des certifications'}</button>{profile.certifications?.length ? <p className="mt-2 text-xs text-slate-500">Certifications déjà enregistrées : {profile.certifications.length}</p> : null}</div>
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4"><label className="text-xs uppercase tracking-widest text-slate-400 font-black flex items-center gap-2"><ImageIcon className="w-4 h-4" /> {t('photo')}</label><input ref={photoInputRef} type="file" accept="image/png,image/jpeg,image/jpg" className="hidden" onChange={e => setPhotoFile(e.target.files?.[0] || null)} /><button type="button" onClick={() => photoInputRef.current?.click()} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-600">{photoFile ? `📷 ${photoFile.name}` : (profile.imageUrl ? 'Remplacer la photo actuelle' : 'Choisir une photo (PNG/JPG)')}</button></div>
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4"><label className="text-xs uppercase tracking-widest text-slate-400 font-black flex items-center gap-2"><FileText className="w-4 h-4" /> {t('cv')}</label><input ref={cvInputRef} type="file" accept=".pdf,.doc,.docx" className="hidden" onChange={e => setCvFile(e.target.files?.[0] || null)} /><button type="button" onClick={() => cvInputRef.current?.click()} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-600">{cvFile ? `📄 ${cvFile.name}` : (profile.cvUrl ? 'Remplacer le CV actuel' : 'Choisir un CV (PDF/DOC)')}</button></div>
+                <div className="md:col-span-2 rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4"><label className="text-xs uppercase tracking-widest text-slate-400 font-black flex items-center gap-2"><Award className="w-4 h-4" /> {t('certifications')}</label><input ref={certInputRef} type="file" accept=".pdf,.png,.jpg,.jpeg" multiple className="hidden" onChange={e => setCertFiles(Array.from(e.target.files || []))} /><button type="button" onClick={() => certInputRef.current?.click()} className="mt-3 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-left text-sm text-slate-600">{certFiles.length > 0 ? `${certFiles.length} certification(s) sélectionnée(s)` : 'Choisir des certifications'}</button>{profile.certifications?.length ? <p className="mt-2 text-xs text-slate-500">Certifications déjà enregistrées : {profile.certifications.length}</p> : null}</div>
               </div>
             </Card>
 

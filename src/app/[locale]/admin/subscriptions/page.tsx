@@ -92,10 +92,10 @@ export default function SubscriptionsPage() {
       if (invoice) {
         window.open(`/api/client/invoices/${invoice.id}/download`, '_blank')
       } else {
-        alert('No invoice found for this order.')
+        alert(t('invoice.noInvoice'))
       }
     } catch (error) {
-      alert('Failed to fetch invoice.')
+        alert(t('invoice.fetchFailed'))
     }
   }
 

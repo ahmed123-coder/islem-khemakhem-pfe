@@ -346,7 +346,7 @@ const getStatusBadge = (status: string) => {
                   <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('schedule')}</TableHead>
                   <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('assignedService')}</TableHead>
                   <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('state')}</TableHead>
-                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Zoom</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('zoom')}</TableHead>
                   <TableHead className="text-right pr-10 text-[10px] font-black uppercase tracking-widest text-slate-400">{t('actions')}</TableHead>
                 </TableRow>
               </TableHeader>

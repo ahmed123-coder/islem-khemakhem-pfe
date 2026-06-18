@@ -57,7 +57,7 @@ export default function Hero() {
               </Link>
               <Link href={`/${locale}/solutions`}>
                 <Button className="bg-white text-[#7AB648] hover:bg-gray-100 rounded-lg px-6 py-6 text-base font-semibold border-2 border-white">
-                  {t('discoverSolutions')}
+                  {t('hero.discoverSolutions')}
                 </Button>
               </Link>
             </div>

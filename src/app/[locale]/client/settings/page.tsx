@@ -2,6 +2,7 @@
 // src/app/[locale]/client/settings/page.tsx
 
 import { useEffect, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -40,6 +41,9 @@ export default function ClientSettingsPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle')
+
+  const t = useTranslations('clientPage.settings')
+  const commonT = useTranslations('common')
 
   // ── Chargement du profil au montage ──────────────────────────────
   useEffect(() => {
@@ -110,7 +114,7 @@ export default function ClientSettingsPage() {
     <div className="flex h-full items-center justify-center min-h-[400px]">
       <div className="flex flex-col items-center gap-3">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#1B3F7A] border-t-transparent" />
-        <p className="text-sm text-gray-500 font-medium">Chargement...</p>
+        <p className="text-sm text-gray-500 font-medium">{t('loading')}</p>
       </div>
     </div>
   )
@@ -122,10 +126,10 @@ export default function ClientSettingsPage() {
       <div>
         <div className="flex items-center gap-2 mb-1">
           <div className="w-1 h-7 bg-[#1B3F7A] rounded-full" />
-          <h1 className="text-2xl font-bold text-gray-900">Paramètres du compte</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
         </div>
         <p className="text-gray-500 text-sm ml-3">
-          Gérez vos informations personnelles et professionnelles
+          {t('description')}
         </p>
       </div>
 
@@ -135,31 +139,31 @@ export default function ClientSettingsPage() {
           <div className="w-8 h-8 bg-[#1B3F7A]/10 rounded-xl flex items-center justify-center">
             <User className="w-4 h-4 text-[#1B3F7A]" />
           </div>
-          <h3 className="text-base font-semibold text-gray-900">Informations personnelles</h3>
+          <h3 className="text-base font-semibold text-gray-900">{t('personalInfo')}</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
           {/* Nom */}
           <div>
-            <label className={labelCls}>Nom <span className="text-red-500">*</span></label>
+            <label className={labelCls}>{t('lastName')} <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={profile.name}
               onChange={e => update('name', e.target.value)}
-              placeholder="Ben Ali"
+              placeholder={t('lastNamePlaceholder')}
               className={inputCls}
             />
           </div>
 
           {/* Prénom */}
           <div>
-            <label className={labelCls}>Prénom <span className="text-red-500">*</span></label>
+            <label className={labelCls}>{t('firstName')} <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={profile.firstName}
               onChange={e => update('firstName', e.target.value)}
-              placeholder="Mohamed"
+              placeholder={t('firstNamePlaceholder')}
               className={inputCls}
             />
           </div>
@@ -169,8 +173,8 @@ export default function ClientSettingsPage() {
             <label className={labelCls}>
               <span className="flex items-center gap-1.5">
                 <Mail size={13} className="text-gray-400" />
-                Adresse e-mail
-                <span className="ml-auto text-xs text-gray-400 font-normal">Non modifiable</span>
+                {t('emailLabel')}
+                <span className="ml-auto text-xs text-gray-400 font-normal">{t('notModifiable')}</span>
               </span>
             </label>
             <input
@@ -186,18 +190,18 @@ export default function ClientSettingsPage() {
             <label className={labelCls}>
               <span className="flex items-center gap-1.5">
                 <Phone size={13} className="text-gray-400" />
-                Téléphone
+                {t('phone')}
               </span>
             </label>
             <div className="flex">
               <span className="inline-flex items-center px-3 border border-r-0 border-gray-200 rounded-l-xl bg-gray-100 text-gray-600 text-sm font-medium whitespace-nowrap">
-                🇹🇳 +216
+                🇹🇳 {t('phonePrefix')}
               </span>
               <input
                 type="tel"
                 value={profile.phone}
                 onChange={e => update('phone', e.target.value.replace(/\D/g, '').slice(0, 8))}
-                placeholder="XX XXX XXX"
+                placeholder={t('phonePlaceholder')}
                 maxLength={8}
                 className={`${inputCls} rounded-l-none`}
               />
@@ -209,14 +213,14 @@ export default function ClientSettingsPage() {
             <label className={labelCls}>
               <span className="flex items-center gap-1.5">
                 <MapPin size={13} className="text-gray-400" />
-                Adresse
+                {t('address')}
               </span>
             </label>
             <input
               type="text"
               value={profile.address}
               onChange={e => update('address', e.target.value)}
-              placeholder="Rue, Ville, Gouvernorat"
+              placeholder={t('addressPlaceholder')}
               className={inputCls}
             />
           </div>
@@ -230,7 +234,7 @@ export default function ClientSettingsPage() {
           <div className="w-8 h-8 bg-[#7AB648]/10 rounded-xl flex items-center justify-center">
             <Briefcase className="w-4 h-4 text-[#7AB648]" />
           </div>
-          <h3 className="text-base font-semibold text-gray-900">Informations professionnelles</h3>
+          <h3 className="text-base font-semibold text-gray-900">{t('professionalInfo')}</h3>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -240,14 +244,14 @@ export default function ClientSettingsPage() {
             <label className={labelCls}>
               <span className="flex items-center gap-1.5">
                 <Building2 size={13} className="text-gray-400" />
-                Nom de l'entreprise
+                {t('companyName')}
               </span>
             </label>
             <input
               type="text"
               value={profile.company}
               onChange={e => update('company', e.target.value)}
-              placeholder="Mon Entreprise SARL"
+              placeholder={t('companyNamePlaceholder')}
               className={inputCls}
             />
           </div>
@@ -257,18 +261,18 @@ export default function ClientSettingsPage() {
             <label className={labelCls}>
               <span className="flex items-center gap-1.5">
                 <FileText size={13} className="text-gray-400" />
-                Matricule fiscale
+                {t('matriculeFiscale')}
               </span>
             </label>
             <input
               type="text"
               value={profile.matriculeFiscale}
               onChange={e => update('matriculeFiscale', e.target.value.toUpperCase())}
-              placeholder="1234567A"
+              placeholder={t('matriculePlaceholder')}
               className={inputCls}
             />
             {profile.matriculeFiscale && !/^\d{7}[A-Z]/.test(profile.matriculeFiscale) && (
-              <p className="text-xs text-amber-500 mt-1">⚠️ Format : 7 chiffres + 1 lettre (ex: 1234567A)</p>
+              <p className="text-xs text-amber-500 mt-1">{t('matriculeFormat')}</p>
             )}
           </div>
 
@@ -277,7 +281,7 @@ export default function ClientSettingsPage() {
             <label className={labelCls}>
               <span className="flex items-center gap-1.5">
                 <Briefcase size={13} className="text-gray-400" />
-                Secteur d'activité
+                {t('sector')}
               </span>
             </label>
             <select
@@ -285,7 +289,7 @@ export default function ClientSettingsPage() {
               onChange={e => update('sector', e.target.value)}
               className={inputCls}
             >
-              <option value="">Sélectionnez un secteur</option>
+              <option value="">{t('selectSector')}</option>
               {SECTORS.map(s => (
                 <option key={s} value={s}>{s}</option>
               ))}
@@ -297,14 +301,14 @@ export default function ClientSettingsPage() {
             <label className={labelCls}>
               <span className="flex items-center gap-1.5">
                 <FileText size={13} className="text-gray-400" />
-                Besoins / Attentes
-                <span className="ml-auto text-xs text-gray-400 font-normal">Facultatif</span>
+                {t('needs')}
+                <span className="ml-auto text-xs text-gray-400 font-normal">{t('optional')}</span>
               </span>
             </label>
             <textarea
               value={profile.needs}
               onChange={e => update('needs', e.target.value)}
-              placeholder="Décrivez vos besoins en conseil..."
+              placeholder={t('needsPlaceholder')}
               rows={3}
               maxLength={500}
               className={`${inputCls} resize-none`}
@@ -323,22 +327,22 @@ export default function ClientSettingsPage() {
           className="flex items-center gap-2 bg-[#1B3F7A] hover:bg-[#152f5c] disabled:opacity-60 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-md active:scale-[0.98] text-sm"
         >
           {saving ? (
-            <><Loader2 className="w-4 h-4 animate-spin" /> Enregistrement...</>
+            <><Loader2 className="w-4 h-4 animate-spin" /> {t('saving')}</>
           ) : (
-            <><Save className="w-4 h-4" /> Enregistrer les modifications</>
+            <><Save className="w-4 h-4" /> {t('saveChanges')}</>
           )}
         </button>
 
         {saveStatus === 'success' && (
           <div className="flex items-center gap-2 text-green-600 text-sm font-medium">
             <CheckCircle2 className="w-4 h-4" />
-            Profil mis à jour avec succès
+            {t('profileUpdated')}
           </div>
         )}
         {saveStatus === 'error' && (
           <div className="flex items-center gap-2 text-red-500 text-sm font-medium">
             <AlertCircle className="w-4 h-4" />
-            Erreur lors de la mise à jour
+            {t('updateError')}
           </div>
         )}
       </div>
@@ -350,18 +354,18 @@ export default function ClientSettingsPage() {
             <div className="w-8 h-8 bg-amber-50 rounded-xl flex items-center justify-center">
               <CreditCard className="w-4 h-4 text-amber-500" />
             </div>
-            <h3 className="text-base font-semibold text-gray-900">Mon abonnement</h3>
+            <h3 className="text-base font-semibold text-gray-900">{t('subscription')}</h3>
           </div>
           <div className="space-y-3">
             <div className="flex items-center justify-between py-2 border-b border-gray-50">
               <span className="text-sm text-gray-600 flex items-center gap-2">
-                <CreditCard size={14} className="text-gray-400" /> Plan
+                <CreditCard size={14} className="text-gray-400" /> {t('plan')}
               </span>
               <Badge className="bg-[#1B3F7A] text-white">{subscription.plan}</Badge>
             </div>
             <div className="flex items-center justify-between py-2 border-b border-gray-50">
               <span className="text-sm text-gray-600 flex items-center gap-2">
-                <Calendar size={14} className="text-gray-400" /> Statut
+                <Calendar size={14} className="text-gray-400" /> {t('status')}
               </span>
               <Badge className={subscription.status === 'ACTIVE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}>
                 {subscription.status}
@@ -369,7 +373,7 @@ export default function ClientSettingsPage() {
             </div>
             {subscription.endDate && (
               <div className="flex items-center justify-between py-2">
-                <span className="text-sm text-gray-600">Prochaine facturation</span>
+                <span className="text-sm text-gray-600">{t('nextBillingDate')}</span>
                 <span className="text-sm font-medium">
                   {new Date(subscription.endDate).toLocaleDateString('fr-FR')}
                 </span>

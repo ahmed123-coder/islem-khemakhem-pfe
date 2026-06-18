@@ -63,19 +63,19 @@ export default function AdminBillingPage() {
         body: JSON.stringify({ id, ...updates })
       })
       if (res.ok) {
-        toast.success('Invoice updated')
+        toast.success(t('messages.invoiceUpdated'))
         setEditInvoice(null)
         fetchInvoices()
       }
     } catch (error) {
-      toast.error('Update failed')
+      toast.error(t('messages.updateFailed'))
     }
   }
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newInvoice.clientId || !newInvoice.amount || !newInvoice.dueDate) {
-      toast.error('Veuillez remplir les champs obligatoires')
+      toast.error(t('messages.requiredFields'))
       return
     }
 
@@ -86,7 +86,7 @@ export default function AdminBillingPage() {
         body: JSON.stringify(newInvoice)
       })
       if (res.ok) {
-        toast.success('Facture créée avec succès')
+        toast.success(t('messages.invoiceCreated'))
         setShowCreateModal(false)
         setNewInvoice({ clientId: '', amount: '', dueDate: '', status: 'PENDING', orderId: '' })
         fetchInvoices()
@@ -95,7 +95,7 @@ export default function AdminBillingPage() {
         toast.error(err.error || 'Erreur lors de la création')
       }
     } catch (error) {
-      toast.error('Erreur de réseau')
+      toast.error(t('messages.networkError'))
     }
   }
 
@@ -104,11 +104,11 @@ export default function AdminBillingPage() {
     try {
       const res = await fetch(`/api/admin/billing?id=${id}`, { method: 'DELETE' })
       if (res.ok) {
-        toast.success('Deleted')
+        toast.success(t('messages.deleted'))
         setInvoices(invoices.filter(i => i.id !== id))
       }
     } catch (error) {
-      toast.error('Delete failed')
+      toast.error(t('messages.deleteFailed'))
     }
   }
 
@@ -202,21 +202,21 @@ export default function AdminBillingPage() {
                   <button 
                     onClick={() => window.open(`/api/client/invoices/${inv.id}/download`, '_blank')}
                     className="p-3 bg-slate-50 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-all active:scale-95"
-                    title="Télécharger"
+                    title={t('download')}
                   >
                     <Download className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => setEditInvoice(inv)}
                     className="p-3 bg-slate-50 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-all active:scale-95"
-                    title="Modifier"
+                    title={t('edit')}
                   >
                     <Pencil className="w-4 h-4" />
                   </button>
                   <button 
                     onClick={() => handleDelete(inv.id)}
                     className="p-3 bg-slate-50 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 transition-all active:scale-95"
-                    title="Supprimer"
+                    title={t('delete')}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -227,7 +227,7 @@ export default function AdminBillingPage() {
             {editInvoice?.id === inv.id && (
               <div className="mt-8 pt-8 border-t border-slate-50 grid grid-cols-1 md:grid-cols-3 gap-6 animate-in slide-in-from-top-4">
                 <div>
-                  <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Statut</label>
+                  <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">{t('columns.status')}</label>
                   <select 
                     className="w-full bg-slate-50 border-none rounded-xl p-3 text-sm font-bold"
                     defaultValue={inv.status}
@@ -240,7 +240,7 @@ export default function AdminBillingPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">Nouvelle Echéance</label>
+                  <label className="text-[10px] font-black uppercase text-slate-400 block mb-2">{t('newDueDate')}</label>
                   <input 
                     type="date" 
                     className="w-full bg-slate-50 border-none rounded-xl p-3 text-sm font-bold"
@@ -248,7 +248,7 @@ export default function AdminBillingPage() {
                   />
                 </div>
                 <div className="flex items-end">
-                   <Button variant="outline" className="w-full rounded-xl h-12 font-bold" onClick={() => setEditInvoice(null)}>Fermer</Button>
+                   <Button variant="outline" className="w-full rounded-xl h-12 font-bold" onClick={() => setEditInvoice(null)}>{commonT('close')}</Button>
                 </div>
               </div>
             )}
@@ -317,7 +317,7 @@ export default function AdminBillingPage() {
               </div>
 
               <div>
-                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2 px-1">Statut Initial</label>
+                <label className="text-[10px] font-black uppercase text-slate-400 block mb-2 px-1">{t('initialStatus')}</label>
                 <div className="grid grid-cols-3 gap-2">
                   {['PENDING', 'UNPAID', 'PAID'].map((s) => (
                     <button
