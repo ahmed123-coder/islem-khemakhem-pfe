@@ -4,7 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
 import { usePathname } from 'next/navigation'
-import { Mail, Phone, MapPin, Globe, Settings, Users, TrendingUp, Shield } from 'lucide-react'
+import { Mail, Phone, MapPin, Globe, Settings, Users, TrendingUp, Shield, Lightbulb } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 
@@ -13,16 +13,19 @@ export default function Footer() {
   const pathname = usePathname()
   const locale = pathname.split('/')[1] || 'fr'
   const [logoUrl, setLogoUrl] = useState<string | null>(null)
+  const [services, setServices] = useState<any[]>([])
+  const [approaches, setApproaches] = useState<any[]>([])
 
   useEffect(() => {
-    fetch('/api/content/logo')
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.value && data.value.url) {
-          setLogoUrl(data.value.url)
-        }
-      })
-      .catch(() => setLogoUrl(null))
+    Promise.all([
+      fetch('/api/content/logo').then(res => res.json()).then(data => data?.value?.url || null).catch(() => null),
+      fetch('/api/services').then(res => res.ok ? res.json() : []),
+      fetch('/api/blogs').then(res => res.ok ? res.json() : [])
+    ]).then(([logo, servicesData, approachesData]) => {
+      setLogoUrl(logo as string | null)
+      setServices(Array.isArray(servicesData) ? servicesData : [])
+      setApproaches(Array.isArray(approachesData) ? approachesData : [])
+    }).catch(() => {})
   }, [])
 
   return (
@@ -48,15 +51,15 @@ export default function Footer() {
           <div className="border-l-2 border-[#7AB648] pl-8">
             <h4 className="text- font-bold mb-5 text-[#7AB648] uppercase tracking-widest">{t('approaches.title')}</h4>
             <ul className="space-y-3">
-              {[
-                { icon: <Settings className="h-4 w-4 text-[#7AB648]" />, label: t('approaches.coaching') },
-                { icon: <Users className="h-4 w-4 text-[#7AB648]" />, label: t('approaches.change') },
-                { icon: <TrendingUp className="h-4 w-4 text-[#7AB648]" />, label: t('approaches.training') }
-              ].map((item) => (
-                <li key={item.label}>
-                  <Link href={`/${locale}/approches`} className="flex items-center gap-3 text-gray-500 hover:text-[#1B3F7A] transition-colors text-sm">
-                    {item.icon}
-                    {item.label}
+              {approaches.slice(0, 6).map((approach: any) => (
+                <li key={approach.id}>
+                  <Link href={`/${locale}/blog/${approach.id}`} className="flex items-center gap-3 text-gray-500 hover:text-[#1B3F7A] transition-colors text-sm">
+                    {approach.icon ? (
+                      <img src={approach.icon} alt="" className="w-4 h-4 object-contain" />
+                    ) : (
+                      <Lightbulb className="h-4 w-4 text-[#7AB648]" />
+                    )}
+                    {approach.title}
                   </Link>
                 </li>
               ))}
@@ -66,15 +69,15 @@ export default function Footer() {
           <div className="border-l-2 border-[#7AB648] pl-8">
             <h4 className="text- font-bold mb-5 text-[#7AB648] uppercase tracking-widest">{t('solutions.title')}</h4>
             <ul className="space-y-3">
-              {[
-                { icon: <TrendingUp className="h-4 w-4 text-[#7AB648]" />, label: t('solutions.performance') },
-                { icon: <Globe className="h-4 w-4 text-[#7AB648]" />, label: t('solutions.gpec') },
-                { icon: <Shield className="h-4 w-4 text-[#7AB648]" />, label: t('solutions.employerBrand') }
-              ].map((item) => (
-                <li key={item.label}>
-                  <Link href={`/${locale}/solutions`} className="flex items-center gap-3 text-gray-500 hover:text-[#1B3F7A] transition-colors text-sm">
-                    {item.icon}
-                    {item.label}
+              {services.slice(0, 6).map((service: any) => (
+                <li key={service.id}>
+                  <Link href={`/${locale}/solutions/${service.id}`} className="flex items-center gap-3 text-gray-500 hover:text-[#1B3F7A] transition-colors text-sm">
+                    {(service.icon || service.logo) ? (
+                      <img src={service.icon || service.logo} alt="" className="w-4 h-4 object-contain" />
+                    ) : (
+                      <TrendingUp className="h-4 w-4 text-[#7AB648]" />
+                    )}
+                    {service.name}
                   </Link>
                 </li>
               ))}
