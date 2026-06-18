@@ -1,5 +1,7 @@
 import { prisma } from './prisma';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export class BillingService {
   static async generateInvoiceNumber(): Promise<string> {
@@ -89,10 +91,51 @@ export class BillingService {
     const serviceName = invoice.order?.serviceTier?.service?.name || 'Prestation de conseil';
     const tierType = invoice.order?.serviceTier?.tierType || 'Standard';
 
+    // ── Logo ──
+    let logoImage = null;
+    try {
+      // Essaye d'abord Cloudinary (logo dynamique depuis la BD)
+      const logoContent = await prisma.siteContent.findUnique({ where: { key: 'logo' } });
+      if (logoContent && (logoContent.value as any)?.url) {
+        const logoUrl = (logoContent.value as any).url;
+        const response = await fetch(logoUrl);
+        const logoBytes = await response.arrayBuffer();
+        const contentType = response.headers.get('content-type') || '';
+        if (contentType.includes('png')) {
+          logoImage = await pdfDoc.embedPng(logoBytes);
+        } else {
+          logoImage = await pdfDoc.embedJpg(logoBytes);
+        }
+      } else {
+        // Fallback : logo local dans /public/logo.png
+        const logoPath = path.join(process.cwd(), 'public', 'logo.png');
+        if (fs.existsSync(logoPath)) {
+          const logoBytes = fs.readFileSync(logoPath);
+          logoImage = await pdfDoc.embedPng(logoBytes);
+        }
+      }
+    } catch {
+      // Si le logo est introuvable, on continue sans lui
+    }
+
     // ── Header ──
     page.drawRectangle({ x: 0, y: height - 140, width, height: 140, color: blue });
-    page.drawText('DSL CONSULTING', { x: 40, y: y(45), size: 22, font: fontBold, color: white });
-    page.drawText('Business Consulting & Management Solutions', { x: 40, y: y(70), size: 10, font, color: rgb(0.8, 0.85, 0.95) });
+
+    // Affiche le logo si disponible, sinon texte DSL CONSULTING
+    if (logoImage) {
+      const logoDims = logoImage.scaleToFit(120, 60);
+      page.drawImage(logoImage, {
+        x: 40,
+        y: y(90),
+        width: logoDims.width,
+        height: logoDims.height,
+        opacity: 1,
+      });
+    } else {
+      page.drawText('DSL CONSULTING', { x: 40, y: y(45), size: 22, font: fontBold, color: white });
+    }
+
+    page.drawText('Business Consulting & Management Solutions', { x: 40, y: y(115), size: 10, font, color: rgb(0.8, 0.85, 0.95) });
     page.drawText('FACTURE', { x: width - 160, y: y(45), size: 24, font: fontBold, color: white });
 
     // ── Invoice Meta ──

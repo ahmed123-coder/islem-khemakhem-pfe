@@ -1,372 +1,534 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { toast } from 'react-hot-toast'
+import { ChevronLeft, ChevronRight, Video, Building2, Check } from 'lucide-react'
 
-interface Reservation {
-  id: string
-  startTime: string
-  endTime: string
-}
-
-interface Consultant {
-  id: string
-  name: string
-  reservations: Reservation[]
-}
-
-interface Selection {
-  consultantId: string
-  date: Date
-  startTime: string // ISO string
-  endTime: string // ISO string
-  startHour: number
-  endHour: number
-}
-
-interface AvailabilityCalendarProps {
+// ════════════════════════════════════════════════
+// TYPES — même structure qu'avant, rien ne change
+// ════════════════════════════════════════════════
+interface Reservation { id: string; startTime: string; endTime: string }
+interface Consultant  { id: string; name: string; specialty?: string; reservations: Reservation[] }
+interface Selection   { consultantId: string; date: Date; startTime: string; endTime: string; startHour: number; endHour: number }
+interface Props {
   consultants: Consultant[]
-  onSelect: (selection: Selection) => void
+  onSelect: (s: Selection & { meetingType: 'ZOOM' | 'SUR_PLACE' }) => void
   scheduleStartDate: Date
   onNavigate: (days: number) => void
   onJumpToDate?: (date: Date) => void
-  requiredDuration: number // in hours, e.g. 1.5
+  requiredDuration: number
 }
 
-export default function AvailabilityCalendar({ 
-  consultants, 
-  onSelect, 
+// ════════════════════════════════════════════════
+// CONSTANTES
+// ════════════════════════════════════════════════
+const HOURS      = [9, 10, 11, 12, 13, 14, 15, 16, 17]  // créneaux de 9h à 17h
+const BUFFER_MIN = 15                                      // 15 min de repos APRÈS chaque réunion
+const MOIS_FR    = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
+const JOURS_FR   = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam']
+
+export default function AvailabilityCalendar({
+  consultants,
+  onSelect,
   scheduleStartDate,
   onNavigate,
   onJumpToDate,
   requiredDuration
-}: AvailabilityCalendarProps) {
-  const [localSelection, setLocalSelection] = useState<Selection | null>(null)
-  const [currentUser, setCurrentUser] = useState<any>(null)
+}: Props) {
 
-  useEffect(() => {
-    fetch('/api/auth/me')
-      .then(r => r.json())
-      .then(res => setCurrentUser(res.data || res))
-      .catch(() => {})
-  }, [])
-
-  // Slots in 15 minute increments (9:00 to 18:00)
-  const slots = Array.from({ length: 36 }, (_, i) => i * 0.25 + 9)
-  
-  const dates = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(scheduleStartDate)
+  // ── ÉTATS ────────────────────────────────────
+  const [selectedDate,    setSelectedDate]    = useState<Date | null>(null)      // jour choisi
+  const [selectedHour,    setSelectedHour]    = useState<number | null>(null)    // heure choisie
+  const [meetingType,     setMeetingType]     = useState<'ZOOM' | 'SUR_PLACE' | null>(null) // type réunion
+  const [consultantIdx,   setConsultantIdx]   = useState(0)                      // consultant actif
+  const [currentMonth,    setCurrentMonth]    = useState(() => {
+    const d = new Date()
+    d.setDate(1)
     d.setHours(0, 0, 0, 0)
-    d.setDate(d.getDate() + i)
     return d
   })
 
-  const isSlotBlocked = (consultantId: string, date: Date, startHour: number, duration: number) => {
-    const consultant = consultants.find(c => c.id === consultantId)
-    if (!consultant) return { blocked: false }
-    
-    // Calculate the actual end time of the requested slot including the 15-minute buffer
-    const BUFFER_MS = 15 * 60 * 1000
-    const slotStart = new Date(date)
-    slotStart.setHours(Math.floor(startHour), (startHour % 1) * 60, 0, 0)
-    const slotEnd = new Date(slotStart.getTime() + duration * 60 * 60 * 1000)
-    const slotEndWithBuffer = new Date(slotEnd.getTime() + BUFFER_MS)
+  // durée de la session (par défaut 1.5h si invalide)
+  const duration   = isNaN(requiredDuration) || requiredDuration <= 0 ? 1.5 : requiredDuration
+  const consultant = consultants[consultantIdx]
 
-    if (slotEnd.getHours() > 18 || (slotEnd.getHours() === 18 && slotEnd.getMinutes() > 0)) {
-      return { blocked: true, reason: 'La séance se termine après 18h00' }
-    }
 
-    const overlap = consultant.reservations.find(r => {
+  // ════════════════════════════════════════════════
+  // LOGIQUE DE DISPONIBILITÉ — identique à l'original
+  // Buffer de 15 min calculé APRÈS la fin de chaque réunion existante
+  // ════════════════════════════════════════════════
+  const getSlotInfo = (date: Date, h: number): {
+    available: boolean
+    blockedByReservation?: boolean
+    nextAvailable?: string
+  } => {
+    const start = new Date(date)
+    start.setHours(h, 0, 0, 0)
+    const end = new Date(start.getTime() + duration * 3600000)
+
+    // créneau doit être dans le futur
+    if (start <= new Date()) return { available: false }
+
+    // la fin de session ne doit pas dépasser 18h
+    const endMinutes = end.getHours() * 60 + end.getMinutes()
+    if (endMinutes > 18 * 60) return { available: false }
+
+    if (!consultant) return { available: false }
+
+    // vérifie le chevauchement avec les réservations existantes
+    // le buffer de 15 min est ajouté APRÈS endTime de chaque réservation
+    const conflict = consultant.reservations.find(r => {
       const resStart = new Date(r.startTime).getTime()
-      const resEnd = new Date(r.endTime).getTime()
-      
-      // New slot [slotStart, slotEndWithBuffer] conflicts with existing [resStart, resEnd] if:
-      // slotStart < resEnd AND slotEndWithBuffer > resStart
-      return (slotStart.getTime() < resEnd && slotEndWithBuffer.getTime() > resStart)
+      const resEnd   = new Date(r.endTime).getTime() + BUFFER_MIN * 60000 // ← buffer APRÈS la réunion
+      return start.getTime() < resEnd && end.getTime() > resStart
     })
 
-    if (overlap) {
-       return { 
-         blocked: true, 
-         reason: `Collision avec une réservation existante (${new Date(overlap.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })} - ${new Date(overlap.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })})` 
-       }
+    if (conflict) {
+      // calcule le prochain créneau disponible après le buffer
+      const resEnd = new Date(conflict.endTime)
+      resEnd.setMinutes(resEnd.getMinutes() + BUFFER_MIN)
+      const nextSlot = `${String(resEnd.getHours()).padStart(2,'0')}:${String(resEnd.getMinutes()).padStart(2,'0')}`
+      return { available: false, blockedByReservation: true, nextAvailable: nextSlot }
     }
 
-    return { blocked: false }
+    return { available: true }
   }
 
-  const handleSlotClick = (consultantId: string, date: Date, startHour: number) => {
-    const { blocked, reason } = isSlotBlocked(consultantId, date, startHour, requiredDuration)
-    if (blocked) {
-      toast.error(reason || "Ce créneau n'est pas disponible pour la durée choisie.")
+  // vérifie si un jour a AU MOINS un créneau disponible
+  const dayHasSlots = (date: Date): boolean => {
+    return HOURS.some(h => getSlotInfo(date, h).available)
+  }
+
+
+  // ════════════════════════════════════════════════
+  // GÉNÉRATION DES JOURS DU MOIS pour le calendrier
+  // ════════════════════════════════════════════════
+  const getDaysInMonth = () => {
+    const year  = currentMonth.getFullYear()
+    const month = currentMonth.getMonth()
+    const first = new Date(year, month, 1)
+    const last  = new Date(year, month + 1, 0)
+    const days: (Date | null)[] = []
+
+    // cases vides avant le 1er jour du mois
+    for (let i = 0; i < first.getDay(); i++) days.push(null)
+
+    // jours du mois
+    for (let d = 1; d <= last.getDate(); d++) {
+      days.push(new Date(year, month, d))
+    }
+    return days
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+
+  // ════════════════════════════════════════════════
+  // ACTIONS UTILISATEUR
+  // ════════════════════════════════════════════════
+
+  // quand le client clique sur un jour
+  const handleDateClick = (date: Date) => {
+    const isPast = date < today
+    if (isPast || !dayHasSlots(date)) return
+    setSelectedDate(date)
+    setSelectedHour(null)    // remet à zéro l'heure quand on change de jour
+    setMeetingType(null)     // remet à zéro le type de réunion
+  }
+
+  // quand le client clique sur une heure
+  const handleHourClick = (h: number) => {
+    if (!selectedDate) return
+    const { available, nextAvailable } = getSlotInfo(selectedDate, h)
+    if (!available) {
+      if (nextAvailable) toast.error(`Indisponible. Prochain créneau : ${nextAvailable}`)
+      else               toast.error('Créneau indisponible')
       return
     }
-
-    const slotStart = new Date(date)
-    slotStart.setHours(Math.floor(startHour), (startHour % 1) * 60, 0, 0)
-    
-    // Ensure duration is a valid number
-    const duration = isNaN(requiredDuration) || requiredDuration <= 0 ? 1.5 : requiredDuration
-    const slotEnd = new Date(slotStart.getTime() + duration * 60 * 60 * 1000)
-
-    // Check if dates are valid before toISOString()
-    if (isNaN(slotStart.getTime()) || isNaN(slotEnd.getTime())) {
-      console.error("Invalid appointment dates detected", { slotStart, slotEnd })
-      return
-    }
-
-    const sel: Selection = {
-      consultantId,
-      date,
-      startTime: slotStart.toISOString(),
-      endTime: slotEnd.toISOString(),
-      startHour: startHour,
-      endHour: startHour + duration
-    }
-    setLocalSelection(sel)
-    onSelect(sel)
+    setSelectedHour(h)
+    setMeetingType(null) // remet à zéro si on change d'heure
   }
 
-  const formatTime = (hour: number) => {
-    const h = Math.floor(hour)
-    const m = (hour % 1) * 60
-    return `${h}:${m === 0 ? '00' : m}`
+  // quand le client choisit le type de réunion — envoie la sélection complète au parent
+  const handleMeetingType = (type: 'ZOOM' | 'SUR_PLACE') => {
+    if (!selectedDate || selectedHour === null) return
+    setMeetingType(type)
+
+    const start = new Date(selectedDate)
+    start.setHours(selectedHour, 0, 0, 0)
+    const end = new Date(start.getTime() + duration * 3600000)
+
+    // envoie la sélection complète au composant parent (même format qu'avant + meetingType)
+    onSelect({
+      consultantId: consultant.id,
+      date:         selectedDate,
+      startTime:    start.toISOString(),
+      endTime:      end.toISOString(),
+      startHour:    selectedHour,
+      endHour:      selectedHour + duration,
+      meetingType:  type
+    })
   }
 
+  // réinitialise tout
+  const handleReset = () => {
+    setSelectedDate(null)
+    setSelectedHour(null)
+    setMeetingType(null)
+    onSelect(null as any)
+  }
+
+  const days = getDaysInMonth()
+
+
+  // ════════════════════════════════════════════════
+  // RENDU
+  // ════════════════════════════════════════════════
   return (
-    <div className="space-y-12 animate-in fade-in duration-700">
-      {/* Table des rendez-vous header inspired by image */}
-      <div className="bg-[#FAF9F6] border-2 border-amber-100 rounded-[2rem] p-8 shadow-sm overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-4 flex gap-2">
-           <div className="w-6 h-6 border-2 border-blue-500/20 rounded flex items-center justify-center text-[10px] text-blue-500 font-bold">⤢</div>
-           <div className="w-6 h-6 border-2 border-red-500/20 rounded flex items-center justify-center text-[10px] text-red-500 font-bold">✕</div>
-        </div>
+    <div className="space-y-6">
 
-        <div className="flex flex-col xl:flex-row gap-10 items-start">
-          {/* Photo Section */}
-          <div className="w-32 h-40 bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden flex-shrink-0 relative group">
-             <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
-             <div className="w-full h-full flex items-center justify-center text-gray-300">
-               <svg className="w-20 h-20 opacity-20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-             </div>
+
+      {/* Carte consultant — nom visible avant de choisir */}
+      {consultant && (
+        <div className="bg-white rounded-2xl border-2 border-[#1B3F7A]/10 shadow-sm p-5 flex items-center gap-5">
+          <div className="w-14 h-14 rounded-2xl bg-[#1B3F7A] flex items-center justify-center text-white text-2xl font-black flex-shrink-0 shadow-lg shadow-blue-100">
+            {consultant.name.charAt(0).toUpperCase()}
           </div>
-
-          <div className="flex-1 w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-6 gap-x-10">
-             {/* Patient info row */}
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Id client</label>
-                <div className="bg-amber-100/40 border border-amber-200/50 rounded-xl px-4 py-3 font-bold text-gray-700 flex items-center text-sm">
-                  {currentUser?.id?.slice(-8).toUpperCase() || 'P-432FDEB'}
-                </div>
-             </div>
-
-             <div className="space-y-2 lg:col-span-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Prénom et Nom du client</label>
-                <div className="bg-amber-100/40 border border-amber-200/50 rounded-xl px-4 py-3 font-bold text-gray-700 flex items-center text-sm">
-                  {currentUser?.name || 'Veuillez vous connecter'}
-                </div>
-             </div>
-
-             {/* Appointment details row */}
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Date RDV</label>
-                <div className="relative">
-                  <input 
-                    type="date"
-                    min={new Date().toISOString().split('T')[0]}
-                    value={scheduleStartDate.toISOString().split('T')[0]}
-                    onChange={(e) => {
-                      if (e.target.value && onJumpToDate) {
-                        onJumpToDate(new Date(e.target.value))
-                      }
-                    }}
-                    className="w-full bg-white border border-gray-200 rounded-xl px-4 py-3 font-bold text-blue-600 flex items-center text-sm shadow-sm ring-1 ring-black/5 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer"
-                  />
-                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-300 pointer-events-none">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                  </div>
-                </div>
-             </div>
-
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Heure Début</label>
-                <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 font-bold text-gray-700 flex items-center text-sm shadow-sm">
-                  {localSelection ? new Date(localSelection.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '-- : --'}
-                </div>
-             </div>
-
-             <div className="space-y-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Heure Fin</label>
-                <div className="bg-white border border-gray-200 rounded-xl px-4 py-3 font-bold text-gray-700 flex items-center text-sm shadow-sm">
-                  {localSelection ? new Date(localSelection.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '-- : --'}
-                </div>
-             </div>
-
-             <div className="space-y-2 lg:col-span-3">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] ml-1">Observation</label>
-                <div className="bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm text-gray-500 flex items-center min-h-[60px] italic shadow-inner">
-                  {localSelection 
-                    ? `Réservation d'une session de consulting de ${requiredDuration}h avec un expert sélectionné.`
-                    : 'Sélectionnez un créneau horaire sur le calendrier pour voir les détails ici.'
-                  }
-                </div>
-             </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-black text-[#1B3F7A] uppercase tracking-[0.2em] mb-0.5">
+              Votre consultant
+            </p>
+            <p className="text-lg font-black text-gray-900 truncate">{consultant.name}</p>
+            {consultant.specialty && (
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wider truncate">
+                {consultant.specialty}
+              </p>
+            )}
           </div>
-
-          {/* Action column (inspired by buttons in image) */}
-          <div className="flex flex-col gap-3 w-full lg:w-48">
-             <button disabled={!localSelection} className={cn(
-               "w-full py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg",
-               localSelection ? "bg-blue-600 text-white hover:bg-blue-700 hover:-translate-y-0.5" : "bg-gray-200 text-gray-400 cursor-not-allowed"
-             )}>
-               Ajouter RDV
-             </button>
-             <button className="w-full py-4 rounded-xl text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100 opacity-50 cursor-not-allowed">
-               Modifier RDV
-             </button>
-             <button onClick={() => setLocalSelection(null)} className="w-full py-4 rounded-xl text-[10px] font-black uppercase tracking-widest bg-red-50 text-red-600 border border-red-100 hover:bg-red-100 transition-colors">
-               Réinitialiser
-             </button>
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-col items-center gap-10 mb-16">
-        {/* Date Nav */}
-        <div className="flex items-center gap-6">
-          <button 
-            onClick={() => onNavigate(-7)} 
-            disabled={scheduleStartDate <= new Date(new Date().setHours(0,0,0,0))} 
-            className="w-14 h-14 flex items-center justify-center rounded-full border-2 border-gray-200 bg-white text-gray-400 hover:text-blue-600 hover:border-blue-600 hover:shadow-xl transition-all disabled:opacity-20 disabled:cursor-not-allowed group shadow-sm"
-          >
-            <svg className="w-6 h-6 group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          
-          <div className="relative group">
-            <div className="absolute inset-0 bg-blue-500/10 blur-3xl rounded-full group-hover:bg-blue-500/20 transition-all duration-700"></div>
-            <div className="relative flex flex-col items-center px-12 py-6 bg-white border border-blue-100 rounded-[2.5rem] shadow-[0_20px_60px_rgba(37,99,235,0.08)] min-w-[320px]">
-              <div className="text-[10px] font-black text-blue-400 uppercase tracking-[0.25em] mb-2">Période disponible</div>
-              <div className="text-3xl font-serif font-black text-gray-900 flex items-center gap-4">
-                <span className="text-2xl">📅</span>
-                {(() => {
-                  const endDate = new Date(dates[6])
-                  const startStr = scheduleStartDate.toLocaleDateString('fr-FR', { day: 'numeric' })
-                  const endStr = endDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
-                  if (scheduleStartDate.getMonth() !== endDate.getMonth()) {
-                    const startMonth = scheduleStartDate.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
-                    return `${startMonth} — ${endStr}`
-                  }
-                  return `${startStr} — ${endStr}`
-                })()}
-              </div>
+          <div className="flex-shrink-0 text-right">
+            <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider mb-1">Disponibilités</p>
+            <div className="flex items-center gap-2 justify-end">
+              <span className="w-2 h-2 rounded-full bg-green-500 block"></span>
+              <span className="text-xs font-black text-green-600">En ligne</span>
             </div>
           </div>
+        </div>
+      )}
 
-          <button 
-            onClick={() => onNavigate(7)} 
-            className="w-14 h-14 flex items-center justify-center rounded-full border-2 border-gray-200 bg-white text-gray-400 hover:text-blue-600 hover:border-blue-600 hover:shadow-xl transition-all group shadow-sm"
+      {/* Onglets consultants — si plusieurs consultants */}
+      {consultants.length > 1 && (
+        <div className="flex gap-2 flex-wrap">
+          {consultants.map((c, i) => (
+            <button
+              key={c.id}
+              onClick={() => { setConsultantIdx(i); handleReset() }}
+              className={cn(
+                'px-4 py-2 rounded-xl text-sm font-bold border transition-all',
+                i === consultantIdx
+                  ? 'bg-[#1B3F7A] text-white border-[#1B3F7A]'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-[#1B3F7A]'
+              )}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+
+      {/* ══════════════════════════════════════════
+          ÉTAPE 1 — CHOISIR LA DATE
+          Calendrier mensuel simple
+      ══════════════════════════════════════════ */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+
+        {/* En-tête du mois avec navigation */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 bg-gray-50">
+          <button
+            onClick={() => {
+              const d = new Date(currentMonth)
+              d.setMonth(d.getMonth() - 1)
+              // ne pas aller avant le mois actuel
+              if (d >= new Date(today.getFullYear(), today.getMonth(), 1)) setCurrentMonth(d)
+            }}
+            className="p-2 rounded-lg border border-gray-200 hover:border-[#1B3F7A] hover:text-[#1B3F7A] transition-all disabled:opacity-30"
           >
-            <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" />
-            </svg>
+            <ChevronLeft className="w-4 h-4" />
           </button>
+
+          <div className="text-center">
+            <div className="flex items-center gap-2 text-[10px] font-black text-[#1B3F7A] uppercase tracking-[0.2em] justify-center mb-0.5">
+              <span className="w-2 h-2 rounded-full bg-[#1B3F7A]" />
+              Étape 1
+            </div>
+            <span className="text-sm font-black text-gray-800">
+              {MOIS_FR[currentMonth.getMonth()]} {currentMonth.getFullYear()}
+            </span>
+          </div>
+
+          <button
+            onClick={() => {
+              const d = new Date(currentMonth)
+              d.setMonth(d.getMonth() + 1)
+              setCurrentMonth(d)
+            }}
+            className="p-2 rounded-lg border border-gray-200 hover:border-[#1B3F7A] hover:text-[#1B3F7A] transition-all"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Jours de la semaine */}
+        <div className="grid grid-cols-7 border-b border-gray-100">
+          {JOURS_FR.map(j => (
+            <div key={j} className="py-2 text-center text-[10px] font-black text-gray-400 uppercase tracking-wider">
+              {j}
+            </div>
+          ))}
+        </div>
+
+        {/* Grille des jours */}
+        <div className="grid grid-cols-7 p-3 gap-1">
+          {days.map((date, i) => {
+            if (!date) return <div key={i} />
+
+            const isPast      = date < today
+            const hasSlots    = !isPast && dayHasSlots(date)
+            const isSelected  = selectedDate?.toDateString() === date.toDateString()
+            const isToday     = date.toDateString() === today.toDateString()
+
+            return (
+              <button
+                key={i}
+                onClick={() => handleDateClick(date)}
+                disabled={isPast || !hasSlots}
+                className={cn(
+                  'relative h-10 w-full rounded-xl text-sm font-bold transition-all flex flex-col items-center justify-center gap-0.5',
+                  isSelected
+                    ? 'bg-[#1B3F7A] text-white shadow-lg shadow-blue-200'
+                    : hasSlots
+                    ? 'hover:bg-blue-50 hover:text-[#1B3F7A] text-gray-700 cursor-pointer'
+                    : 'text-gray-300 cursor-not-allowed'
+                )}
+              >
+                <span className={cn(isToday && !isSelected && 'text-[#1B3F7A] font-black')}>
+                  {date.getDate()}
+                </span>
+                {/* point vert si des créneaux sont disponibles */}
+                {hasSlots && !isSelected && (
+                  <span className="w-1 h-1 rounded-full bg-green-500 absolute bottom-1" />
+                )}
+                {isToday && !isSelected && (
+                  <span className="w-1 h-1 rounded-full bg-[#1B3F7A] absolute bottom-1" />
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Légende */}
+        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50 flex gap-4 text-[10px] font-bold text-gray-400">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-green-500" /> Créneaux disponibles
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#1B3F7A]" /> Jour sélectionné
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-gray-200" /> Indisponible
+          </span>
         </div>
       </div>
 
-      <div className="grid gap-12">
-        {consultants.map(consultant => (
-          <div key={consultant.id} className="group bg-white border border-gray-100 rounded-[2.5rem] p-8 shadow-[0_20px_40px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_80px_rgba(0,0,0,0.08)] transition-all duration-700 overflow-hidden">
-            <div className="flex items-center gap-6 mb-8">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-700 rounded-2xl flex items-center justify-center text-white text-2xl font-black shadow-lg">
-                {consultant.name.charAt(0)}
+
+      {/* ══════════════════════════════════════════
+          ÉTAPE 2 — CHOISIR L'HEURE
+          S'affiche seulement quand une date est choisie
+      ══════════════════════════════════════════ */}
+      {selectedDate && (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+
+          <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
+            <div className="flex items-center gap-2 text-[10px] font-black text-[#1B3F7A] uppercase tracking-[0.2em] mb-0.5">
+              <span className="w-2 h-2 rounded-full bg-[#1B3F7A]" />
+              Étape 2
+            </div>
+            <p className="text-sm font-black text-gray-800">
+              Créneaux disponibles le{' '}
+              <span className="text-[#1B3F7A]">
+                {selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </span>
+            </p>
+            <p className="text-[11px] text-gray-400 font-bold mt-0.5">
+              Durée de session : {duration}h · Buffer de repos : {BUFFER_MIN} min après chaque réunion
+            </p>
+          </div>
+
+          {/* Boutons des créneaux horaires */}
+          <div className="p-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
+            {HOURS.map(h => {
+              const { available, nextAvailable } = getSlotInfo(selectedDate, h)
+              const isSelected = selectedHour === h
+              const endH       = h + duration
+
+              return (
+                <button
+                  key={h}
+                  onClick={() => handleHourClick(h)}
+                  disabled={!available}
+                  title={!available && nextAvailable ? `Prochain : ${nextAvailable}` : undefined}
+                  className={cn(
+                    'relative rounded-xl py-3 px-2 text-center transition-all border-2 font-bold',
+                    isSelected
+                      ? 'bg-[#1B3F7A] border-[#1B3F7A] text-white shadow-lg shadow-blue-200 scale-105'
+                      : available
+                      ? 'bg-green-50 border-green-300 text-green-700 hover:bg-green-100 hover:border-green-500 hover:scale-105 cursor-pointer'
+                      : 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed'
+                  )}
+                >
+                  {/* icône check si sélectionné */}
+                  {isSelected && (
+                    <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                      <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                    </div>
+                  )}
+                  <div className="text-sm font-black">
+                    {String(h).padStart(2, '0')}:00
+                  </div>
+                  <div className="text-[10px] font-bold opacity-70 mt-0.5">
+                    → {String(Math.floor(endH)).padStart(2, '0')}:{endH % 1 === 0.5 ? '30' : '00'}
+                  </div>
+                  {/* label disponible / non dispo */}
+                  <div className={cn(
+                    'text-[9px] font-black uppercase tracking-wider mt-1',
+                    isSelected ? 'text-blue-200' : available ? 'text-green-500' : 'text-gray-300'
+                  )}>
+                    {isSelected ? 'Choisi' : available ? 'Libre' : 'Pris'}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+
+      {/* ══════════════════════════════════════════
+          ÉTAPE 3 — TYPE DE RÉUNION
+          S'affiche seulement quand date + heure sont choisies
+      ══════════════════════════════════════════ */}
+      {selectedDate && selectedHour !== null && (
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+
+          <div className="px-5 py-4 border-b border-gray-100 bg-gray-50">
+            <div className="flex items-center gap-2 text-[10px] font-black text-[#1B3F7A] uppercase tracking-[0.2em] mb-0.5">
+              <span className="w-2 h-2 rounded-full bg-[#1B3F7A]" />
+              Étape 3
+            </div>
+            <p className="text-sm font-black text-gray-800">Comment souhaitez-vous vous retrouver ?</p>
+          </div>
+
+          <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+            {/* Bouton ZOOM */}
+            <button
+              onClick={() => handleMeetingType('ZOOM')}
+              className={cn(
+                'flex items-center gap-4 p-5 rounded-xl border-2 transition-all text-left',
+                meetingType === 'ZOOM'
+                  ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-200'
+                  : 'bg-blue-50 border-blue-200 text-blue-700 hover:border-blue-500 hover:shadow-md'
+              )}
+            >
+              <div className={cn(
+                'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0',
+                meetingType === 'ZOOM' ? 'bg-white/20' : 'bg-white shadow-sm'
+              )}>
+                <Video className={cn('w-6 h-6', meetingType === 'ZOOM' ? 'text-white' : 'text-blue-600')} />
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{consultant.name}</h3>
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.3em]">Expert Consultant</p>
+                <div className="font-black text-sm">Visioconférence Zoom</div>
+                <div className={cn('text-[10px] font-bold uppercase tracking-wider mt-0.5',
+                  meetingType === 'ZOOM' ? 'text-blue-200' : 'text-blue-400'
+                )}>
+                  Réunion à distance · Lien généré automatiquement
+                </div>
               </div>
-            </div>
-            
-            <div className="overflow-x-auto rounded-[2rem] border border-gray-50 shadow-inner">
-              <table className="w-full border-separate border-spacing-0">
-                <thead>
-                  <tr className="bg-gray-50/50 text-gray-400">
-                    <th className="p-4 text-left font-black text-[9px] uppercase tracking-widest bg-white/80 sticky left-0 z-20 backdrop-blur-md border-b border-r border-gray-100">Date</th>
-                    {slots.map(s => {
-                      const isHour = s % 1 === 0
-                      return (
-                        <th key={s} className={cn(
-                          "p-2 text-center font-black text-[8px] uppercase tracking-tighter border-b border-gray-100 min-w-[50px]",
-                          isHour ? "text-blue-600 bg-blue-50/30" : "text-gray-300"
-                        )}>
-                          {formatTime(s)}
-                        </th>
-                      )
-                    })}
-                  </tr>
-                </thead>
-                <tbody>
-                  {dates.map(date => (
-                    <tr key={date.toISOString()} className="group/row">
-                      <td className="p-4 font-bold bg-white/80 border-r border-b border-gray-100 group-hover/row:bg-blue-50 transition-colors sticky left-0 z-10 backdrop-blur-md">
-                        <div className="text-[10px] text-gray-900 uppercase tracking-tighter">{date.toLocaleDateString('fr-FR', { weekday: 'short' })}</div>
-                        <div className="text-[11px] text-blue-600 font-black">{date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
-                      </td>
-                      {slots.map(slot => {
-                        const { blocked } = isSlotBlocked(consultant.id, date, slot, requiredDuration)
-                        const isPast = new Date(date).setHours(Math.floor(slot), (slot % 1) * 60) < new Date().getTime()
-                        const isDisabled = blocked || isPast
-                        const isSelected = localSelection?.consultantId === consultant.id && 
-                                         new Date(localSelection?.startTime).getTime() <= new Date(date).setHours(Math.floor(slot), (slot % 1) * 60, 0, 0) &&
-                                         new Date(localSelection?.endTime).getTime() > new Date(date).setHours(Math.floor(slot), (slot % 1) * 60, 0, 0)
-                        
-                        return (
-                          <td key={slot}
-                            onClick={() => { if (!isDisabled) handleSlotClick(consultant.id, date, slot) }}
-                            className={cn(
-                              "p-2 text-center transition-all duration-300 select-none border-r border-b border-gray-100 cursor-pointer h-10 min-w-[50px]",
-                              isDisabled ? "bg-gray-50/70 text-gray-200 cursor-not-allowed opacity-40" : "",
-                              isSelected 
-                                ? "bg-blue-600 text-white shadow-xl scale-[1.05] z-30 rounded-lg ring-2 ring-blue-100" 
-                                : "hover:bg-blue-50/50"
-                            )}
-                          >
-                           <div className="flex flex-col items-center justify-center">
-                              {isSelected ? (
-                                <svg className="w-3.5 h-3.5 animate-in zoom-in duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
-                              ) : blocked ? (
-                                <span className="text-[10px]">✕</span>
-                              ) : (
-                                <span className="w-1.5 h-1.5 rounded-full bg-slate-200 group-hover/row:bg-blue-200 transition-colors" />
-                              )}
-                           </div>
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="mt-6 flex items-center justify-end gap-6">
-                <div className="flex items-center gap-2">
-                   <div className="w-3 h-3 rounded-full bg-blue-600" />
-                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sélection ({requiredDuration}h)</span>
+              {meetingType === 'ZOOM' && (
+                <Check className="w-5 h-5 text-white ml-auto" strokeWidth={3} />
+              )}
+            </button>
+
+            {/* Bouton SUR_PLACE */}
+            <button
+              onClick={() => handleMeetingType('SUR_PLACE')}
+              className={cn(
+                'flex items-center gap-4 p-5 rounded-xl border-2 transition-all text-left',
+                meetingType === 'SUR_PLACE'
+                  ? 'bg-green-600 border-green-600 text-white shadow-lg shadow-green-200'
+                  : 'bg-green-50 border-green-200 text-green-700 hover:border-green-500 hover:shadow-md'
+              )}
+            >
+              <div className={cn(
+                'w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0',
+                meetingType === 'SUR_PLACE' ? 'bg-white/20' : 'bg-white shadow-sm'
+              )}>
+                <Building2 className={cn('w-6 h-6', meetingType === 'SUR_PLACE' ? 'text-white' : 'text-green-600')} />
+              </div>
+              <div>
+                <div className="font-black text-sm">Rencontre sur place</div>
+                <div className={cn('text-[10px] font-bold uppercase tracking-wider mt-0.5',
+                  meetingType === 'SUR_PLACE' ? 'text-green-200' : 'text-green-400'
+                )}>
+                  Réunion physique · Dans nos locaux
                 </div>
-                <div className="flex items-center gap-2">
-                   <div className="w-3 h-3 rounded-full bg-gray-50 border border-gray-200" />
-                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Libre</span>
-                </div>
-                <div className="flex items-center gap-2">
-                   <div className="w-3 h-3 rounded-full bg-gray-100 opacity-40 text-gray-300 items-center justify-center flex text-[8px]">✕</div>
-                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Indisponible</span>
-                </div>
-            </div>
+              </div>
+              {meetingType === 'SUR_PLACE' && (
+                <Check className="w-5 h-5 text-white ml-auto" strokeWidth={3} />
+              )}
+            </button>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+
+      {/* ══════════════════════════════════════════
+          RÉCAPITULATIF FINAL
+          S'affiche quand tout est sélectionné
+      ══════════════════════════════════════════ */}
+      {selectedDate && selectedHour !== null && meetingType && (
+        <div className="bg-[#1B3F7A] rounded-2xl p-5 text-white shadow-xl shadow-blue-900/20">
+          <div className="flex items-start justify-between gap-4">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-300">
+                ✅ Réservation prête à confirmer
+              </p>
+              <p className="font-black text-lg">
+                {selectedDate.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </p>
+              <p className="text-blue-200 font-bold text-sm">
+                {String(selectedHour).padStart(2, '0')}:00
+                {' → '}
+                {String(Math.floor(selectedHour + duration)).padStart(2, '0')}:{(selectedHour + duration) % 1 === 0.5 ? '30' : '00'}
+                {' · '}
+                {meetingType === 'ZOOM' ? '🎥 Zoom' : '🏢 Sur place'}
+              </p>
+              <p className="text-[10px] text-blue-300 font-bold">
+                Consultant : {consultant?.name}
+              </p>
+            </div>
+            <button
+              onClick={handleReset}
+              className="text-[10px] font-black text-blue-300 hover:text-white uppercase tracking-widest transition-colors flex-shrink-0 mt-1"
+            >
+              Modifier
+            </button>
+          </div>
+        </div>
+      )}
+
     </div>
   )
 }

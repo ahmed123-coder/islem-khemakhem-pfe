@@ -6,6 +6,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Mail, Phone, MapPin, Clock, Send } from 'lucide-react'
+import { contactSchema, type ContactFormData } from '@/lib/validation/schemas/contact.schemas'
+
+type FormErrors = Partial<Record<keyof ContactFormData, string>>
 
 export default function Contact() {
   const [formData, setFormData] = useState({
@@ -16,6 +19,7 @@ export default function Contact() {
     subject: '',
     message: ''
   })
+  const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle')
   const [heroData, setHeroData] = useState<any>(null)
@@ -32,10 +36,32 @@ export default function Contact() {
       .catch(err => console.error(err))
   }, [])
 
+  const validateField = (name: string, value: string) => {
+    const result = contactSchema.safeParse({ ...formData, [name]: value })
+    if (!result.success) {
+      const fieldError = (result.error as any).issues.find((e: any) => e.path.join('.') === name)
+      setErrors(prev => ({ ...prev, [name]: fieldError?.message }))
+    } else {
+      setErrors(prev => ({ ...prev, [name]: undefined }))
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsSubmitting(true)
+    setErrors({})
     setSubmitStatus('idle')
+
+    const result = contactSchema.safeParse(formData)
+    if (!result.success) {
+      const fieldErrors: FormErrors = {}
+      ;(result.error as any).issues.forEach((err: any) => {
+        fieldErrors[err.path.join('.') as keyof FormErrors] = err.message
+      })
+      setErrors(fieldErrors)
+      return
+    }
+
+    setIsSubmitting(true)
 
     try {
       const response = await fetch('/api/contact', {
@@ -47,8 +73,18 @@ export default function Contact() {
       if (response.ok) {
         setSubmitStatus('success')
         setFormData({ name: '', email: '', company: '', phone: '', subject: '', message: '' })
+        setErrors({})
       } else {
-        setSubmitStatus('error')
+        const data = await response.json()
+        if (data.errors) {
+          const fieldErrors: FormErrors = {}
+          data.errors.forEach((err: { field: string; message: string }) => {
+            fieldErrors[err.field as keyof FormErrors] = err.message
+          })
+          setErrors(fieldErrors)
+        } else {
+          setSubmitStatus('error')
+        }
       }
     } catch (error) {
       setSubmitStatus('error')
@@ -58,7 +94,9 @@ export default function Contact() {
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }))
+    const { name, value } = e.target
+    setFormData(prev => ({ ...prev, [name]: value }))
+    validateField(name, value)
   }
 
   return (
@@ -148,7 +186,7 @@ export default function Contact() {
                   </div>
                   <div>
                     <h3 className="text-sm text-gray-500 mb-1">Horaires</h3>
-                    <p className="text-[#1B3F7A] font-medium">Lun-Ven : 9h00 - 18h00</p>
+                    <p className="text-[#1B3F7A] font-medium">Lun-Ven : 8h00 - 18h00</p>
                   </div>
                 </CardContent>
               </Card>
@@ -182,10 +220,11 @@ export default function Contact() {
                           name="name"
                           value={formData.name}
                           onChange={handleChange}
-                          placeholder="Jean Dupont"
+                          placeholder="Nom et prénom"
                           required
-                          className="bg-gray-50 border-gray-200 focus:border-[#7AB648]"
+                          className={`bg-gray-50 border-gray-200 focus:border-[#7AB648] ${errors.name ? 'border-red-500 focus:border-red-500' : ''}`}
                         />
+                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                       </div>
                       <div className="space-y-2">
                         <label htmlFor="email" className="text-sm font-medium text-[#1B3F7A]">Email</label>
@@ -195,10 +234,11 @@ export default function Contact() {
                           name="email"
                           value={formData.email}
                           onChange={handleChange}
-                          placeholder="jean@entreprise.com"
+                          placeholder="Email"
                           required
-                          className="bg-gray-50 border-gray-200 focus:border-[#7AB648]"
+                          className={`bg-gray-50 border-gray-200 focus:border-[#7AB648] ${errors.email ? 'border-red-500 focus:border-red-500' : ''}`}
                         />
+                        {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                       </div>
                     </div>
 
@@ -212,8 +252,10 @@ export default function Contact() {
                           value={formData.company}
                           onChange={handleChange}
                           placeholder="Votre entreprise"
-                          className="bg-gray-50 border-gray-200 focus:border-[#7AB648]"
+                          required
+                          className={`bg-gray-50 border-gray-200 focus:border-[#7AB648] ${errors.company ? 'border-red-500 focus:border-red-500' : ''}`}
                         />
+                        {errors.company && <p className="text-red-500 text-xs mt-1">{errors.company}</p>}
                       </div>
                       <div className="space-y-2">
                         <label htmlFor="phone" className="text-sm font-medium text-[#1B3F7A]">Téléphone</label>
@@ -223,9 +265,11 @@ export default function Contact() {
                           name="phone"
                           value={formData.phone}
                           onChange={handleChange}
-                          placeholder="25 307 534"
-                          className="bg-gray-50 border-gray-200 focus:border-[#7AB648]"
+                          placeholder="Numéro de téléphone"
+                          required
+                          className={'bg-gray-50 border-gray-200 focus:border-[#7AB648] ' + (errors.phone ? 'border-red-500 focus:border-red-500' : '')}
                         />
+                        {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
                       </div>
                     </div>
 
@@ -238,8 +282,10 @@ export default function Contact() {
                         value={formData.subject}
                         onChange={handleChange}
                         placeholder="Objet de votre demande"
-                        className="bg-gray-50 border-gray-200 focus:border-[#7AB648]"
+                        required
+                        className={`bg-gray-50 border-gray-200 focus:border-[#7AB648] ${errors.subject ? 'border-red-500 focus:border-red-500' : ''}`}
                       />
+                      {errors.subject && <p className="text-red-500 text-xs mt-1">{errors.subject}</p>}
                     </div>
 
                     <div className="space-y-2">
@@ -252,8 +298,9 @@ export default function Contact() {
                         onChange={handleChange}
                         required
                         placeholder="Décrivez votre projet ou votre besoin..."
-                        className="bg-gray-50 border-gray-200 focus:border-[#7AB648]"
+                        className={`bg-gray-50 border-gray-200 focus:border-[#7AB648] ${errors.message ? 'border-red-500 focus:border-red-500' : ''}`}
                       />
+                      {errors.message && <p className="text-red-500 text-xs mt-1">{errors.message}</p>}
                     </div>
 
                     <Button

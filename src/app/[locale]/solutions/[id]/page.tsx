@@ -214,8 +214,9 @@ export default function SolutionDetailPage({ params }: { params: { locale: strin
               </button>
               <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-50 transition-all">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
-                </div>
+             
                 Retour aux solutions
+            </div>
             </div>
 
             <TierSelector tiers={selectedService.tiers} onSelect={handleTierSelect} />

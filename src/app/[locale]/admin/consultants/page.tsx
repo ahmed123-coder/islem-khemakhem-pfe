@@ -229,7 +229,9 @@ export default function ConsultantsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm(commonT("delete") + "?")) return
+    // Note : cette action désactive le consultant (soft delete) plutôt que de le
+    // supprimer définitivement, pour préserver l'historique des commandes/missions.
+    if (!confirm("Désactiver ce consultant ? Son historique sera conservé, mais il ne sera plus visible côté clients.")) return
     const res = await fetch(`/api/admin/consultants/${id}`, { method: 'DELETE' })
     if (res.ok) fetchConsultants()
   }
@@ -245,11 +247,24 @@ export default function ConsultantsPage() {
 
   const openFile = (url: string) => {
     let fixed = url
-    if (url.includes('/raw/upload/') && !url.match(/\.[a-z]+$/i)) {
-      fixed = url.replace('/raw/upload/', '/raw/upload/fl_inline/')
+
+    // Cloudinary stocke parfois les fichiers en resource_type 'raw' SANS extension
+    // (ex: .../consultant-cvs/xyafhb8kar1ja0ziqphc) — sans extension, le navigateur
+    // ne sait pas quel type de fichier ouvrir → "page impossible".
+    const hasExtension = /\.[a-z0-9]{2,4}$/i.test(url)
+
+    if (url.includes('/raw/upload/')) {
+      if (!hasExtension) {
+        // Pas d'extension : on force l'affichage en PDF par défaut
+        // (cas le plus courant pour un CV) en ajoutant fl_inline + .pdf
+        fixed = url.replace('/raw/upload/', '/raw/upload/fl_inline/') + '.pdf'
+      } else {
+        fixed = url.replace('/raw/upload/', '/raw/upload/fl_inline/')
+      }
     } else if (url.includes('/image/upload/') && url.endsWith('.pdf')) {
       fixed = url.replace('/image/upload/', '/image/upload/fl_inline/')
     }
+
     window.open(fixed, '_blank')
   }
 
@@ -426,7 +441,7 @@ export default function ConsultantsPage() {
                 className="rounded-xl px-3 py-2.5 cursor-pointer transition-colors focus:bg-red-50 focus:text-red-500 font-bold text-sm text-red-400"
               >
                 <Trash2 className="w-4 h-4 mr-3" />
-                Dismantle Record
+                Désactiver le consultant
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

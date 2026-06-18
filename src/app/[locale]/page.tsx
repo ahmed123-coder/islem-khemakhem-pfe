@@ -64,6 +64,10 @@ export default function Home() { //la base de la page d'accueil, c'est ce qui va
                   {t('approachesSection.cta')}
                   
                 </Button>
+
+
+
+          
               </Link>
             </div>
             <div className="bg-gray-50 rounded-2xl p-8 border border-gray-100 hover:shadow-lg transition-shadow">
@@ -143,7 +147,7 @@ export default function Home() { //la base de la page d'accueil, c'est ce qui va
             </Link>
             <Link href={`/${locale}/solutions`}>
               <Button className="bg-[#7AB648] hover:bg-[#639a3a] text-white rounded-full px-8 py-6 text-base font-bold">
-                {t('cta.viewServices')} 
+                {t('viewServices')} 
               </Button>
             </Link>
             <Link href={`/${locale}/contact`} className="text-white/70 hover:text-white underline underline-offset-4 text-base font-medium transition-colors">

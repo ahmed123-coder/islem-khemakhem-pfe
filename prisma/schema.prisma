@@ -15,7 +15,6 @@ model User {
   firstName     String?
   phone         String?
   company       String?
-  matriculeFiscale String?
   sector        String?
   address       String?
   needs         String?
@@ -28,8 +27,6 @@ model User {
   notifications Notification[]
   orders        Order[]
   reservations  Reservation[]
-  invoices      Invoice[]
-  reviews       Review[]
 }
 
 model Consultant {
@@ -53,9 +50,6 @@ model Consultant {
   reservations  Reservation[]
   services      Service[]
   notifications Notification[]
-  reviews       Review[]
-  avgRating     Float         @default(0)
-  reviewCount   Int           @default(0)
 }
 
 model Service {
@@ -71,9 +65,6 @@ model Service {
   updatedAt   DateTime      @updatedAt
   tiers       ServiceTier[]
   consultants Consultant[]
-  reviews     Review[]
-  avgRating   Float         @default(0)
-  reviewCount Int           @default(0)
 }
 
 model ServiceTier {
@@ -100,7 +91,6 @@ model Order {
   consultantId    String?
   serviceTierId   String
   status          OrderStatus @default(PENDING)
-  paymentMethod   PaymentMethod @default(CARD)
   messagesUsed    Int         @default(0)
   callMinutesUsed Int         @default(0)
   createdAt       DateTime    @default(now())
@@ -112,9 +102,6 @@ model Order {
   client          User        @relation(fields: [clientId], references: [id])
   consultant      Consultant? @relation(fields: [consultantId], references: [id])
   serviceTier     ServiceTier @relation(fields: [serviceTierId], references: [id])
-
-  invoices        Invoice[]
-  reviews         Review[]
 
   @@index([clientId])
   @@index([consultantId])
@@ -275,39 +262,6 @@ model Faq {
   updatedAt DateTime @updatedAt
 }
 
-model Review {
-  id              String      @id @default(cuid())
-  type            ReviewType
-  rating          Int         // 1 to 5
-  comment         String?     @db.Text
-  
-  // Relations
-  clientId        String
-  client          User        @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  
-  // Target: Consultant (Optional)
-  consultantId    String?
-  consultant      Consultant? @relation(fields: [consultantId], references: [id], onDelete: SetNull)
-  
-  // Target: Service/Order (Optional)
-  orderId         String?
-  order           Order?      @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  
-  serviceId       String?
-  service         Service?    @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-
-  // Status for moderation
-  isPublished     Boolean     @default(true)
-  
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-
-  @@unique([orderId, type])
-  @@index([clientId])
-  @@index([consultantId])
-  @@index([serviceId])
-}
-
 
 enum Role {
   CLIENT
@@ -372,62 +326,4 @@ enum NotificationType {
   MISSION
   SYSTEM
   RESERVATION
-  REVIEW
-}
-
-enum PaymentMethod {
-  CARD
-  VIREMENT
-  SUR_PLACE
-}
-
-enum ReviewType {
-  CONSULTANT
-  SERVICE
-}
-
-model Invoice {
-  id              String        @id @default(cuid())
-  invoiceNumber   String        @unique
-  clientId        String
-  orderId         String?
-  amount          Decimal       @db.Decimal(10, 2)
-  status          InvoiceStatus @default(PENDING)
-  issueDate       DateTime      @default(now())
-  dueDate         DateTime
-  paidAt          DateTime?
-  pdfUrl          String?
-  
-  client          User          @relation(fields: [clientId], references: [id])
-  order           Order?        @relation(fields: [orderId], references: [id])
-  payments        Payment[]
-  
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-
-  @@index([clientId])
-  @@index([orderId])
-  @@index([status])
-}
-
-model Payment {
-  id            String        @id @default(cuid())
-  invoiceId     String
-  amount        Decimal       @db.Decimal(10, 2)
-  method        PaymentMethod 
-  status        String        
-  transactionId String?       @unique
-  
-  invoice       Invoice       @relation(fields: [invoiceId], references: [id])
-  
-  createdAt     DateTime      @default(now())
-
-  @@index([invoiceId])
-}
-
-enum InvoiceStatus {
-  PAID
-  UNPAID
-  PENDING
-  CANCELLED
 }

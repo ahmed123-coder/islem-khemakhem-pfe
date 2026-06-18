@@ -38,8 +38,13 @@ export default function Hero() {
               {t('hero.badge')}
             </Badge>
             <h1 className="text-5xl lg:text-6xl font-serif font-bold mb-6 leading-tight tracking-tight text-white">
-              {content?.title || t('hero.defaultTitle')}
-              <div className="w-22 h-1 bg-[#7AB648] rounded-full mt-4"></div>
+              {(content?.title || t('hero.defaultTitle')).split('/n').map((line, idx, arr) => (
+                <span key={idx}>
+                  {line.trim()}
+                  {idx < arr.length - 1 && <br />}
+                </span>
+              ))}
+              <div className="w-24 h-1 bg-[#7AB648] rounded-full mt-4"></div>
             </h1>
             <p className="text-base mb-10 text-white/75 leading-relaxed border-l-4 border-[#7AB648] pl-4 italic">
               {content?.subtitle || t('hero.subtitle')}
@@ -52,7 +57,7 @@ export default function Hero() {
               </Link>
               <Link href={`/${locale}/solutions`}>
                 <Button className="bg-white text-[#7AB648] hover:bg-gray-100 rounded-lg px-6 py-6 text-base font-semibold border-2 border-white">
-                  {t('hero.discoverSolutions')}
+                  {t('discoverSolutions')}
                 </Button>
               </Link>
             </div>

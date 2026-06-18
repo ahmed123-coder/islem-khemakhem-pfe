@@ -55,7 +55,8 @@ import {
   DialogContent,
 } from '@/components/ui/dialog'
 
-const SLOTS = Array.from({ length: 36 }, (_, i) => i * 0.25 + 9) // 9:00 to 18:00 in 15min steps
+const HOURS = [9,10,11,12,13,14,15,16,17]
+const DAYS_FR = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam']
 
 function getMonday(date: Date) {
   const d = new Date(date)
@@ -80,7 +81,11 @@ export default function ConsultantReservations() {
   const [statusFilter, setStatusFilter] = React.useState('all')
 
   const DAYS = React.useMemo(() => {
-    return Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i))
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = addDays(currentWeekStart, i)
+      d.setHours(0,0,0,0)
+      return d
+    })
   }, [currentWeekStart])
 
   // --- Logic & API Preservation ---
@@ -148,26 +153,23 @@ export default function ConsultantReservations() {
     return reservations.filter(r => r.status.toLowerCase() === statusFilter.toLowerCase())
   }, [reservations, statusFilter])
 
+  // Bouton Zoom actif 30 minutes avant le RDV jusqu'à la fin
+  const canJoin = (reservation: any) => {
+    const now        = new Date()
+    const start      = new Date(reservation.startTime)
+    const end        = new Date(reservation.endTime)
+    const trenteMins = 30 * 60 * 1000
+    return now.getTime() >= (start.getTime() - trenteMins)
+        && now.getTime() <= end.getTime()
+  }
+
   const changeWeek = (dir: number) => {
     const d = new Date(currentWeekStart)
     d.setDate(d.getDate() + dir * 7)
     setCurrentWeekStart(d)
   }
 
-  const getReservationAt = (date: Date, slot: number) => {
-    return reservations.find(r => {
-      const rStart = new Date(r.startTime)
-      const rEnd = new Date(r.endTime)
-      
-      const slotTime = new Date(date)
-      slotTime.setHours(Math.floor(slot), Math.round((slot % 1) * 60), 0, 0)
-      
-      const slotMs = slotTime.getTime()
-      return isSameDay(rStart, date) && slotMs >= rStart.getTime() && slotMs < rEnd.getTime()
-    })
-  }
-
-  const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: string) => {
     switch (status) {
       case 'CONFIRMED': return <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">{t('confirmed')}</Badge>
       case 'PENDING': return <Badge className="bg-amber-50 text-amber-600 border-none font-bold px-3 py-1 rounded-full uppercase text-[9px] tracking-widest">{t('pending')}</Badge>
@@ -265,86 +267,75 @@ export default function ConsultantReservations() {
       <Card className="rounded-[40px] border border-white/20 bg-white/70 backdrop-blur-xl shadow-[0_20px_60px_rgba(0,0,0,0.03)] overflow-hidden">
         {viewMode === 'calendar' ? (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="py-6 px-8 text-left text-[10px] font-black uppercase tracking-widest text-slate-400 border-r border-slate-100 w-44">{t('timelineDay')}</th>
-                  {SLOTS.map(s => {
-                    const isHour = s % 1 === 0
-                    return (
-                      <th key={s} className={cn(
-                        "py-4 text-center text-[9px] font-black border-r border-slate-100 last:border-r-0 min-w-[60px]",
-                        isHour ? "text-slate-900 bg-slate-100/50" : "text-slate-300"
-                      )}>
-                        {isHour ? `${s}:00` : Math.round((s % 1) * 60)}
-                      </th>
-                    )
-                  })}
+                <tr className="bg-[#1B3F7A] text-white">
+                  <th className="w-28 px-3 py-3 text-left text-xs font-bold uppercase tracking-wider border-r border-blue-700">Jour</th>
+                  {HOURS.map(h => (
+                    <th key={h} className="px-2 py-3 text-center text-xs font-bold border-r border-blue-700 last:border-r-0 min-w-[80px]">
+                      {String(h).padStart(2,'0')}:00
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {DAYS.map((day, dayIdx) => (
-                  <tr key={dayIdx} className="border-b border-slate-50 last:border-b-0 group">
-                    <td className="py-6 px-8 border-r border-slate-100 bg-slate-50/20 group-hover:bg-emerald-50/30 transition-colors">
-                       <p className="text-sm font-black text-slate-900 uppercase mb-1 leading-none">{format(day, 'EEEE', { locale: dateLocale })}</p>
-                       <p className="text-[10px] font-bold text-slate-400 uppercase italic tracking-tighter">{format(day, 'dd MMMM', { locale: dateLocale })}</p>
-                    </td>
-                    {(() => {
-                      const cells = []
-                      let i = 0
-                      while (i < SLOTS.length) {
-                        const slot = SLOTS[i]
-                        const res = getReservationAt(day, slot)
-                        if (res) {
-                          const rStart = new Date(res.startTime)
-                          const rEnd = new Date(res.endTime)
-                          
-                          // Calculate how many 15min slots this reservation covers
-                          const startHour = rStart.getHours() + rStart.getMinutes() / 60
-                          const endHour = rEnd.getHours() + rEnd.getMinutes() / 60
-                          
-                          let span = 0
-                          while (i + span < SLOTS.length && SLOTS[i + span] < endHour) {
-                            span++
-                          }
-                          
-                          if (span === 0) span = 1
-                          
-                          cells.push(
-                            <td key={slot} colSpan={span} className="p-1.5 border-r border-slate-100 last:border-r-0 relative">
-                              <button
-                                onClick={() => setSelectedRes(res)}
-                                className={cn(
-                                  getStatusColorClass(res.status),
-                                  "w-full h-16 rounded-2xl flex flex-col items-center justify-center transition-all hover:scale-[1.01] active:scale-95 shadow-lg group relative overflow-hidden"
+                {DAYS.map((day, di) => {
+                  const isToday = day.toDateString() === new Date().toDateString()
+                  return (
+                    <tr key={di} className={cn('border-b border-gray-100 last:border-b-0', isToday && 'bg-blue-50/30')}>
+                      <td className="px-3 py-3 border-r border-gray-100 bg-gray-50">
+                        <div className="font-bold text-gray-800 text-xs uppercase">{DAYS_FR[day.getDay()]}</div>
+                        <div className={cn('text-lg font-black leading-none', isToday ? 'text-[#1B3F7A]' : 'text-gray-700')}>{day.getDate()}</div>
+                        <div className="text-[10px] text-gray-400">{format(day, 'MMM', { locale: dateLocale })}</div>
+                      </td>
+                      {HOURS.map(h => {
+                        const res = reservations.find(r => {
+                          const rStart = new Date(r.startTime)
+                          const rEnd = new Date(r.endTime)
+                          return rStart.toDateString() === day.toDateString() &&
+                            h >= rStart.getHours() && h < rEnd.getHours()
+                        })
+                        const startsHere = res && new Date(res.startTime).getHours() === h
+                        return (
+                          <td key={h}
+                            onClick={() => res && setSelectedRes(res)}
+                            className={cn(
+                              'border-r border-gray-100 last:border-r-0 text-center py-2 px-1 transition-all',
+                              res ? (startsHere ? 'cursor-pointer' : 'cursor-pointer') : 'hover:bg-emerald-50/30'
+                            )}
+                          >
+                            {res ? (
+                              <div className={cn(
+                                'mx-auto rounded-lg py-1 px-1 text-white text-[9px] font-black',
+                                getStatusColorClass(res.status)
+                              )}>
+                                {startsHere ? (
+                                  <>
+                                    <div className="truncate">{res.client?.name?.split(' ')[0] || 'Client'}</div>
+                                    <div className="opacity-70">{format(new Date(res.startTime),'HH:mm')}-{format(new Date(res.endTime),'HH:mm')}</div>
+                                  </>
+                                ) : (
+                                  <div className="w-1 h-5 bg-white/30 rounded mx-auto" />
                                 )}
-                              >
-                                <div className="absolute top-0 right-0 w-12 h-12 bg-white/10 rounded-full blur-xl -mr-6 -mt-6" />
-                                <span className="font-black text-[9px] uppercase tracking-widest leading-none z-10 truncate max-w-full px-2">{res.client?.name || 'Client'}</span>
-                                <span className="text-[8px] font-black opacity-60 z-10 mt-1">
-                                  {format(rStart, 'HH:mm')} – {format(rEnd, 'HH:mm')}
-                                </span>
-                              </button>
-                            </td>
-                          )
-                          i += span
-                        } else {
-                          cells.push(
-                            <td key={slot} className="p-0 border-r border-slate-100 last:border-r-0 h-20 min-w-[60px]">
-                              <div className="w-full h-full border-dashed border-slate-50 flex items-center justify-center group-hover:bg-emerald-50/20 transition-colors">
-                                 <div className="w-1 h-1 rounded-full bg-slate-100 opacity-20" />
                               </div>
-                            </td>
-                          )
-                          i++
-                        }
-                      }
-                      return cells
-                    })()}
-                  </tr>
-                ))}
+                            ) : (
+                              <div className="w-2 h-2 rounded-full bg-gray-100 mx-auto" />
+                            )}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
+            {/* Legend */}
+            <div className="px-4 py-3 border-t border-gray-100 bg-gray-50 flex flex-wrap items-center gap-4 text-[11px] font-bold text-gray-500">
+              <span className="flex items-center gap-1.5"><div className="w-4 h-4 rounded bg-emerald-500" /> {t('confirmed')}</span>
+              <span className="flex items-center gap-1.5"><div className="w-4 h-4 rounded bg-amber-400" /> {t('pending')}</span>
+              <span className="flex items-center gap-1.5"><div className="w-4 h-4 rounded bg-blue-500" /> {t('completed')}</span>
+              <span className="flex items-center gap-1.5"><div className="w-4 h-4 rounded bg-rose-500" /> {t('cancelled')}</span>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -355,6 +346,7 @@ export default function ConsultantReservations() {
                   <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('schedule')}</TableHead>
                   <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('assignedService')}</TableHead>
                   <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">{t('state')}</TableHead>
+                  <TableHead className="text-[10px] font-black uppercase tracking-widest text-slate-400">Zoom</TableHead>
                   <TableHead className="text-right pr-10 text-[10px] font-black uppercase tracking-widest text-slate-400">{t('actions')}</TableHead>
                 </TableRow>
               </TableHeader>
@@ -508,7 +500,7 @@ export default function ConsultantReservations() {
                </div>
 
                {/* Connection Portal */}
-               {selectedRes?.status === 'CONFIRMED' && selectedRes?.meetingType === 'ZOOM_MEETING' && (
+               {selectedRes?.status === 'CONFIRMED' && selectedRes?.meetingType === 'ZOOM' && (
                   <div className="p-8 rounded-[32px] bg-slate-900 text-white relative overflow-hidden group border border-slate-800 shadow-2xl">
                      <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700" />
                      <div className="relative flex flex-col items-center md:items-start text-center md:text-left gap-6">

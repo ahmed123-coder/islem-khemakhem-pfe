@@ -1,26 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
+import { contactSchema } from '@/lib/validation/schemas/contact.schemas'
+import { sanitizeObject } from '@/lib/validation/sanitizer'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, email, company, message } = body
+    const sanitized = sanitizeObject(body)
 
-    // Validate required fields
-    if (!name || !email || !message) {
-      return NextResponse.json(
-        { error: 'Name, email, and message are required' },
-        { status: 400 }
-      )
+    const result = contactSchema.safeParse(sanitized)
+
+    if (!result.success) {
+      const errors = (result.error as any).issues.map((err: any) => ({
+        field: err.path.join('.'),
+        message: err.message,
+      }))
+      return NextResponse.json({ errors }, { status: 400 })
     }
 
-    // Save to database
+    const { name, email, message } = result.data
+
     const contact = await prisma.contact.create({
-      data: {
-        name,
-        email,
-        message,
-      },
+      data: { name, email, message },
     })
 
     return NextResponse.json(

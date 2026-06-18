@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth, requireOwnership } from '@/lib/auth/middleware'
 import { prisma } from '@/lib/prisma'
 import { handleError, successResponse } from '@/lib/errors/handler'
+import { getTotalMinutes, getUsedMinutes, hasBlockingReservation, countFinishedSessions, MIN_SESSION_MINUTES } from '@/lib/sessions-config'
 
 export async function GET(req: NextRequest, { params }: { params: { orderId: string } }) {
   const authResult = requireAuth(req, ['CLIENT', 'ADMIN'])
@@ -92,25 +93,45 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         throw new Error('Aucun consultant n\'est assigné à cette commande')
       }
 
-      // 1. Check for active (PENDING or CONFIRMED) reservations
-      const activeReservation = order.reservations.find(r => 
-        r.status === 'PENDING' || r.status === 'CONFIRMED'
-      )
-
-      if (activeReservation) {
+      // 1. Vérifie qu'aucune réservation ne bloque la prochaine séance
+      //    - PENDING (en attente de confirmation du consultant) → bloque
+      //    - CONFIRMED dont la réunion n'a pas encore eu lieu → bloque
+      //    - CONFIRMED dont l'heure est déjà passée → NE bloque PAS
+      //      (compté comme "terminée" même si le consultant n'a pas cliqué "Terminer")
+      if (hasBlockingReservation(order.reservations)) {
         throw new Error('Vous avez déjà une réservation en cours. Terminez-la ou annulez-la avant d\'en prévoir une autre.')
       }
 
-      // 2. Calculate next session index
-      const completedCount = order.reservations.filter(r => r.status === 'COMPLETED').length
-      const sessionsConfig = (order.serviceTier.sessionsConfig as any[]) || []
+      // 2. Calcule le budget de temps restant (maxCallDuration - minutes utilisées)
+      const total      = getTotalMinutes(order.serviceTier)
+      const used       = getUsedMinutes(order.reservations)
+      const nextIndex  = countFinishedSessions(order.reservations)
+      const sessionLabel = `Séance ${nextIndex + 1}`
 
-      if (completedCount >= sessionsConfig.length) {
-        throw new Error('Toutes les séances de ce pack ont été consommées.')
+      // Durée demandée par le client (en minutes, sans le buffer)
+      const requestedMinutes = (new Date(endTime).getTime() - new Date(startTime).getTime()) / 60000
+
+      if (total !== null) {
+        // Pack à budget (BASIC/STANDARD/PREMIUM) : reste-t-il assez de temps ?
+        const remaining = total - used
+
+        if (remaining < MIN_SESSION_MINUTES) {
+          throw new Error('Toutes les séances de ce pack ont été consommées.')
+        }
+
+        // La durée demandée ne doit pas dépasser le temps restant
+        // (+0.5 min de tolérance pour les arrondis)
+        if (requestedMinutes > remaining + 0.5) {
+          const heures = Math.floor(remaining / 60)
+          const minutes = Math.round(remaining % 60)
+          throw new Error(`La durée demandée dépasse le temps restant (${heures}h${minutes > 0 ? minutes : ''}).`)
+        }
+      } else {
+        // Pack illimité (ULTIMATE) : le projet est-il clôturé par le consultant ?
+        if (order.status === 'COMPLETED') {
+          throw new Error('Ce projet est terminé. Aucune nouvelle séance ne peut être réservée.')
+        }
       }
-
-      const nextIndex = completedCount
-      const sessionLabel = sessionsConfig[nextIndex]?.label || `Séance ${nextIndex + 1}`
 
       // 3. Check for consultant availability (overlapping)
       const BUFFER_MS = 15 * 60 * 1000
@@ -163,4 +184,3 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
     return handleError(error, req)
   }
 }
-

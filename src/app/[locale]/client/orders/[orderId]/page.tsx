@@ -1,42 +1,23 @@
 'use client'
 
-import { useEffect, useState, useMemo, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { 
   MessageSquare, 
-  Calendar as CalendarIcon, 
   Target, 
   Send, 
   Clock, 
   CheckCircle2, 
-  ChevronLeft, 
-  ChevronRight,
+  ChevronLeft,
   ExternalLink,
-  User,
   Zap,
-  Phone,
-  Layout,
-  Plus,
-  AlertCircle,
-  MoreVertical,
-  CheckCircle,
-  XCircle,
-  Play,
   ArrowRight,
-  MoreHorizontal,
-  CheckSquare, 
-  Square,
-  List,
-  Table,
-  CalendarDays,
-  Menu,
-  X,
   Star,
-  Pencil
+  Pencil,
+  Sparkles
 } from 'lucide-react'
-import { format, isSameDay } from 'date-fns'
+import { format } from 'date-fns'
 import { toast } from 'react-hot-toast'
 import { JoinZoomButton } from '@/components/JoinZoomButton'
 import { ReviewDialog } from '@/components/reviews/review-dialog'
@@ -45,9 +26,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
+import AvailabilityCalendar from '@/components/solutions/AvailabilityCalendar'
+import { getNextSessionInfo, NextSessionResult } from '@/lib/sessions-config'
 
 export default function OrderDetails() {
   const params = useParams()
@@ -61,34 +43,17 @@ export default function OrderDetails() {
   const [activeTab, setActiveTab] = useState('reservations')
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
-  
-  // Grid states from old version
-  const [reserving, setReserving] = useState(false)
-  const [selectedRes, setSelectedRes] = useState<any>(null)
-  const [pendingSlot, setPendingSlot] = useState<{ day: Date; startHour: number; endHour: number } | null>(null)
-  const [dragStart, setDragStart] = useState<{ day: Date; hour: number } | null>(null)
-  const [dragEnd, setDragEnd] = useState<{ day: Date; hour: number } | null>(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => {
-    const d = new Date()
-    const day = d.getDay()
-    const diff = d.getDate() - day + (day === 0 ? -6 : 1) // Start from Monday
-    const date = new Date(d.setDate(diff))
-    date.setHours(0, 0, 0, 0)
-    return date.getTime()
-  })
 
-  const SLOTS = Array.from({ length: 36 }, (_, i) => i * 0.25 + 9) // 9:00 to 18:00 in 15min steps
-  const DAYS = useMemo(() => {
-    const days = []
-    const start = new Date(currentWeekStart)
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(start)
-      d.setDate(start.getDate() + i)
-      days.push(d)
-    }
-    return days
-  }, [currentWeekStart])
+  const [selectedRes, setSelectedRes] = useState<any>(null)
+
+  // ── ÉTAT pour la réservation de la prochaine séance ──
+  const [nextSessionSelection, setNextSessionSelection] = useState<any>(null) // { date, startTime, endTime, meetingType }
+  const [bookingNextSession, setBookingNextSession]     = useState(false)
+  const [scheduleStartDate, setScheduleStartDate]       = useState<Date>(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  })
 
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -185,44 +150,6 @@ export default function OrderDetails() {
     finally { setSending(false) }
   }
 
-  const bookReservation = async (date: Date, startHour: number, endHour: number, meetingType: 'ZOOM' | 'SUR_PLACE') => {
-    if (order.status !== 'ACTIVE' || reserving) return
-
-    const startTime = new Date(date)
-    startTime.setHours(Math.floor(startHour), Math.round((startHour % 1) * 60), 0, 0)
-    const endTime = new Date(date)
-    endTime.setHours(Math.floor(endHour), Math.round((endHour % 1) * 60), 0, 0)
-
-    if (startTime < new Date()) {
-      toast.error('Vous ne pouvez pas réserver un créneau dans le passé')
-      return
-    }
-
-    setReserving(true)
-    try {
-      const res = await fetch(`/api/client/orders/${orderId}/reservations`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          startTime: startTime.toISOString(), 
-          endTime: endTime.toISOString(),
-          meetingType
-        })
-      })
-      if (res.ok) {
-        toast.success('Réservation demandée au consultant !')
-        fetchReservations()
-      } else {
-        const data = await res.json()
-        toast.error(data.error || 'Erreur lors de la réservation')
-      }
-    } catch (error) {
-      toast.error('Une erreur est survenue')
-    } finally {
-      setReserving(false)
-    }
-  }
-
   const cancelReservation = async (id: string) => {
     if (!confirm('Voulez-vous vraiment annuler cette session ?')) return
     try {
@@ -242,19 +169,6 @@ export default function OrderDetails() {
       console.error(error)
       toast.error('Une erreur est survenue')
     }
-  }
-
-  const getReservationAt = (date: Date, slot: number) => {
-    return reservations.find(r => {
-      const rStart = new Date(r.startTime)
-      const rEnd = new Date(r.endTime)
-      
-      const slotTime = new Date(date)
-      slotTime.setHours(Math.floor(slot), Math.round((slot % 1) * 60), 0, 0)
-      
-      const slotMs = slotTime.getTime()
-      return isSameDay(rStart, date) && slotMs >= rStart.getTime() && slotMs < rEnd.getTime()
-    })
   }
 
   const updateMilestoneStatus = async (milestoneId: string, status: string) => {
@@ -292,21 +206,9 @@ export default function OrderDetails() {
     const now = new Date()
     const start = new Date(reservation.startTime)
     const end = new Date(reservation.endTime)
-    const earlyAccessMs = 15 * 60 * 1000 
+    // Keep the Zoom action available well before the meeting starts.
+    const earlyAccessMs = 24 * 60 * 60 * 1000
     return now.getTime() >= (start.getTime() - earlyAccessMs) && now.getTime() <= end.getTime()
-  }
-
-  const changeWeek = (direction: number) => {
-    const newStart = new Date(currentWeekStart)
-    newStart.setDate(newStart.getDate() + direction * 7)
-    setCurrentWeekStart(newStart.getTime())
-  }
-
-  const getWeekRangeLabel = () => {
-    const start = new Date(currentWeekStart)
-    const end = new Date(currentWeekStart)
-    end.setDate(start.getDate() + 6)
-    return `${start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })} - ${end.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`
   }
 
   const copyToClipboard = (text: string, label: string) => {
@@ -347,38 +249,45 @@ export default function OrderDetails() {
 
   const myReservations = reservations.filter(r => r.orderId === orderId)
 
-  // Logic to determine the next session to book
-  const getNextSessionInfo = () => {
-    if (!order?.serviceTier) return { label: 'Séance', duration: 1 }
-    
-    // Example: Discovery (1h), Training (2h), Specialized (3h)
-    // We look at the order's tier to decide
-    const tier = order.serviceTier.tierType
-    const durations: Record<string, number[]> = {
-      'DISCOVERY': [1],
-      'TRAINING': [2],
-      'TRAINING_PLUS': [2, 2],
-      'TOTAL_PROJECT': [3, 3, 3]
-    }
-    
-    const sessionDurations = durations[tier] || [1]
-    
-    // Check how many successful/pending sessions we have
-    const activeRes = myReservations.filter(r => 
-      ['COMPLETED', 'CONFIRMED', 'PENDING'].includes(r.status)
-    ).sort((a, b) => a.sessionIndex - b.sessionIndex)
-    
-    const nextIndex = activeRes.length
-    const duration = sessionDurations[nextIndex] || sessionDurations[sessionDurations.length - 1]
-    
-    return {
-      index: nextIndex,
-      label: `Séance ${nextIndex + 1}`,
-      duration: duration
+  // ── Calcule si le client peut réserver sa prochaine séance ──
+  const nextSession: NextSessionResult = getNextSessionInfo(order, myReservations)
+
+  // ── Construit le tableau "consultants" attendu par AvailabilityCalendar ──
+  const consultantForCalendar = order.consultant ? [{
+    id: order.consultantId,
+    name: order.consultant.name,
+    specialty: order.consultant.specialty,
+    reservations: reservations.filter(r => r.status !== 'CANCELLED' && r.id !== undefined)
+  }] : []
+
+  // ── Confirme la réservation de la prochaine séance ──
+  const confirmNextSession = async () => {
+    if (!nextSessionSelection) return
+    setBookingNextSession(true)
+    try {
+      const res = await fetch(`/api/client/orders/${orderId}/reservations`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          startTime: nextSessionSelection.startTime,
+          endTime: nextSessionSelection.endTime,
+          meetingType: nextSessionSelection.meetingType
+        })
+      })
+      if (res.ok) {
+        toast.success('Séance réservée ! En attente de confirmation du consultant.')
+        setNextSessionSelection(null)
+        fetchReservations()
+      } else {
+        const data = await res.json()
+        toast.error(data.error || 'Erreur lors de la réservation')
+      }
+    } catch (error) {
+      toast.error('Une erreur est survenue')
+    } finally {
+      setBookingNextSession(false)
     }
   }
-
-  const nextSession = getNextSessionInfo()
 
   return (
     <div className="min-h-full bg-[#F8FAFC] p-6 lg:p-12 font-sans overflow-x-hidden">
@@ -515,7 +424,7 @@ export default function OrderDetails() {
              
              <div className="hidden md:flex items-center gap-4 text-xs font-black uppercase tracking-widest text-slate-400 font-sans">
                 <div className="flex items-center gap-2">
-                   <Clock className="w-4 h-4" /> Usage: {order.callMinutesUsed} / {order.serviceTier?.maxCallDuration || '∞'}m
+                   <Clock className="w-4 h-4" /> Usage: {Math.round(nextSession.usedMinutes)} / {nextSession.totalMinutes ?? '∞'}m
                 </div>
                 <div className="w-1 h-1 bg-slate-300 rounded-full" />
                 <div className="flex items-center gap-2">
@@ -541,6 +450,7 @@ export default function OrderDetails() {
                            <table className="w-full text-left">
                               <thead className="bg-slate-50/30">
                                  <tr className="border-b border-slate-100">
+                                    <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Séance</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date & Heure</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest">Type</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Status</th>
@@ -550,6 +460,11 @@ export default function OrderDetails() {
                               <tbody className="divide-y divide-slate-50">
                                  {myReservations.map(reservation => (
                                     <tr key={reservation.id} className="hover:bg-slate-50/30 transition-colors">
+                                       <td className="px-8 py-6">
+                                          <div className="font-black text-slate-900 text-sm font-sans">
+                                            {reservation.sessionLabel || `Séance ${(reservation.sessionIndex ?? 0) + 1}`}
+                                          </div>
+                                       </td>
                                        <td className="px-8 py-6">
                                           <div className="font-bold text-slate-900 text-sm font-sans">{new Date(reservation.startTime).toLocaleDateString()}</div>
                                           <div className="text-[11px] text-slate-400 font-bold uppercase mt-0.5 tracking-tight font-sans">
@@ -578,7 +493,7 @@ export default function OrderDetails() {
                                           ) : (
                                              <div className="flex flex-col items-end gap-1.5 font-sans">
                                                 <span className="text-[10px] text-slate-300 font-bold italic">
-                                                     {reservation.status === 'CONFIRMED' ? 'Disponible 15m avant' : (reservation.status === 'COMPLETED' ? 'Session terminée' : 'En attente de confirmation')}
+                                                     {reservation.status === 'CONFIRMED' ? 'Disponible 24h avant' : (reservation.status === 'COMPLETED' ? 'Session terminée' : 'En attente de confirmation')}
                                                 </span>
                                                 {reservation.status === 'PENDING' && (
                                                    <button 
@@ -591,6 +506,11 @@ export default function OrderDetails() {
                                              </div>
                                           )}
                                        </td>
+                                       <td className="px-4 py-6 text-right">
+                                          <button onClick={() => setSelectedRes(reservation)} className="text-slate-300 hover:text-blue-600 transition-colors">
+                                             <ExternalLink className="w-4 h-4" />
+                                          </button>
+                                       </td>
                                     </tr>
                                  ))}
                               </tbody>
@@ -599,201 +519,129 @@ export default function OrderDetails() {
                       )}
                    </div>
 
-                   <div className="flex flex-col gap-6">
-                      <div className="flex justify-between items-center bg-white p-6 rounded-[2rem] border border-slate-200 shadow-sm">
-                         <div className="flex flex-col">
-                            <h2 className="text-xl font-black text-slate-900 tracking-tight font-sans uppercase">Emploi du temps de l'expert</h2>
-                            <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest font-sans">Réservez vos créneaux en cliquant sur les espaces vides</p>
-                         </div>
-                         <div className="flex items-center gap-4 font-sans">
-                            <button 
-                               onClick={() => changeWeek(-1)}
-                               className="p-3 border border-slate-200 rounded-xl bg-slate-50 hover:bg-white hover:shadow-lg transition-all active:scale-95 group"
-                            >
-                               <ChevronLeft className="w-4 h-4 text-slate-500 group-hover:text-blue-600" />
-                            </button>
-                            <span className="text-xs font-black text-slate-900 uppercase tracking-widest bg-slate-100 px-6 py-3 rounded-xl border border-slate-200 min-w-[240px] text-center">
-                               {getWeekRangeLabel()}
-                            </span>
-                            <button 
-                               onClick={() => changeWeek(1)}
-                               className="p-3 border border-slate-200 rounded-xl bg-slate-50 hover:bg-white hover:shadow-lg transition-all active:scale-95 group"
-                            >
-                               <ChevronRight className="w-4 h-4 text-slate-500 group-hover:text-blue-600" />
-                            </button>
-                         </div>
-                      </div>
+                   {/* ══════════════════════════════════════════
+                       SECTION — RÉSERVER LA PROCHAINE SÉANCE
+                       S'affiche uniquement quand nextSession.canBook === true
+                   ══════════════════════════════════════════ */}
+                   {nextSession.canBook && (
+                     <div className="space-y-6">
+                       <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[2rem] p-8 text-white shadow-xl shadow-blue-200 relative overflow-hidden">
+                          <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24 blur-2xl" />
+                          <div className="relative z-10 flex items-start gap-4">
+                             <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center flex-shrink-0">
+                                <Sparkles className="w-6 h-6" />
+                             </div>
+                             <div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-200 mb-1">
+                                   Prochaine étape disponible
+                                </p>
+                                <h3 className="text-2xl font-black tracking-tight">
+                                   Réservez votre {nextSession.label.toLowerCase()}
+                                </h3>
+                                <p className="text-blue-100 text-sm font-bold mt-1">
+                                   Durée proposée : {nextSession.duration}h
+                                   {nextSession.totalMinutes !== null
+                                     ? ` · Temps restant : ${Math.floor((nextSession.remainingMinutes || 0) / 60)}h${Math.round((nextSession.remainingMinutes || 0) % 60) > 0 ? Math.round((nextSession.remainingMinutes || 0) % 60) : ''} sur ${Math.floor(nextSession.totalMinutes / 60)}h${nextSession.totalMinutes % 60 > 0 ? nextSession.totalMinutes % 60 : ''}`
+                                     : ' · Pack personnalisé (illimité)'}
+                                </p>
+                             </div>
+                          </div>
+                       </div>
 
-                      <div className="overflow-x-auto rounded-[2.5rem] border border-slate-200 bg-white shadow-2xl overflow-hidden font-sans">
-                        <table className="w-full border-collapse" onMouseLeave={() => setIsDragging(false)}>
-                           <thead className="bg-slate-50/50">
-                              <tr className="border-b border-slate-100">
-                                 <th className="p-6 text-slate-400 font-black text-[10px] uppercase tracking-widest text-left border-r border-slate-100 sticky left-0 z-20 bg-slate-50/80 backdrop-blur-sm">Jour / Heure</th>
-                                 {SLOTS.map(slot => {
-                                    const isHour = slot % 1 === 0
-                                    return (
-                                       <th key={slot} className={cn(
-                                          "p-4 text-center font-black text-[9px] uppercase tracking-tighter border-r border-slate-100 min-w-[70px]",
-                                          isHour ? "text-blue-600 bg-blue-50/30" : "text-slate-300"
-                                       )}>
-                                          {isHour ? `${slot}:00` : Math.round((slot % 1) * 60)}
-                                       </th>
-                                    )
-                                 })}
-                              </tr>
-                           </thead>
-                           <tbody>
-                              {DAYS.map((day, dayIndex) => (
-                                 <tr key={dayIndex} className="border-b border-slate-50 group/row">
-                                    <td className="p-6 border-r border-slate-100 bg-slate-50/30 group-hover/row:bg-blue-50/30 transition-colors sticky left-0 z-20 backdrop-blur-sm min-w-[140px]">
-                                       <div className="font-black text-slate-900 text-xs uppercase tracking-tight">{day.toLocaleDateString('fr-FR', { weekday: 'short' })}</div>
-                                       <div className="text-[10px] text-blue-500 font-black mt-0.5">{day.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</div>
-                                    </td>
-                                    {(() => {
-                                       const cells = []
-                                       let i = 0
-                                       while (i < SLOTS.length) {
-                                          const slot = SLOTS[i]
-                                          const res = getReservationAt(day, slot)
-                                          const isPast = new Date(day).setHours(Math.floor(slot), Math.round((slot % 1) * 60)) < new Date().getTime()
-                                          const isSelectable = !res && order.status === 'ACTIVE' && !isPast
-                                          const isSameDayDrag = dragStart && dragStart.day.toDateString() === day.toDateString()
-                                          const isSameDayPending = pendingSlot && new Date(pendingSlot.day).toDateString() === day.toDateString()
-                                          const isInDrag = (isSameDayDrag && dragStart && dragEnd && slot >= dragStart.hour && slot <= dragEnd.hour) ||
-                                                           (isSameDayPending && pendingSlot && slot >= pendingSlot.startHour && slot < pendingSlot.endHour)
+                       {/* Calendrier simplifié — même composant que la page d'achat */}
+                       <AvailabilityCalendar
+                         consultants={consultantForCalendar}
+                         onSelect={setNextSessionSelection}
+                         scheduleStartDate={scheduleStartDate}
+                         requiredDuration={nextSession.duration}
+                         onNavigate={(days) => {
+                           const newDate = new Date(scheduleStartDate)
+                           newDate.setDate(newDate.getDate() + days)
+                           const today = new Date()
+                           today.setHours(0, 0, 0, 0)
+                           setScheduleStartDate(newDate < today ? today : newDate)
+                         }}
+                         onJumpToDate={setScheduleStartDate}
+                       />
 
-                                          if (res) {
-                                             const rStart = new Date(res.startTime)
-                                             const rEnd = new Date(res.endTime)
-                                             
-                                             const startHour = rStart.getHours() + rStart.getMinutes() / 60
-                                             const endHour = rEnd.getHours() + rEnd.getMinutes() / 60
-                                             
-                                             let span = 0
-                                             while (i + span < SLOTS.length && SLOTS[i + span] < endHour) span++
-                                             if (span === 0) span = 1
+                       {/* Bouton de confirmation — apparaît quand date+heure+type sont choisis */}
+                       {nextSessionSelection && (
+                         <div className="bg-[#1B3F7A] rounded-2xl p-6 text-white shadow-xl shadow-blue-900/20 flex flex-wrap items-center justify-between gap-4">
+                           <div>
+                             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-300 mb-1">
+                               {nextSession.label} prête à confirmer
+                             </p>
+                             <p className="font-black text-lg">
+                               {new Date(nextSessionSelection.startTime).toLocaleDateString('fr-FR', {
+                                 weekday: 'long', day: 'numeric', month: 'long'
+                               })}
+                             </p>
+                             <p className="text-blue-200 font-bold text-sm">
+                               {new Date(nextSessionSelection.startTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                               {' → '}
+                               {new Date(nextSessionSelection.endTime).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                               {' · '}
+                               {nextSessionSelection.meetingType === 'SUR_PLACE' ? '🏢 Sur place' : '🎥 Zoom'}
+                             </p>
+                           </div>
+                           <Button
+                             onClick={confirmNextSession}
+                             disabled={bookingNextSession}
+                             className="bg-white text-blue-900 hover:bg-amber-400 px-8 py-6 rounded-2xl font-black text-xs uppercase tracking-widest shadow-xl"
+                           >
+                             {bookingNextSession ? 'Réservation...' : 'Confirmer la séance'}
+                           </Button>
+                         </div>
+                       )}
+                     </div>
+                   )}
 
-                                             const isOwn = res.orderId === orderId
-                                             const bgColor = getReservationStatusColor(res.status)
+                   {/* ══════════════════════════════════════════
+                       MESSAGES D'ÉTAT — quand la prochaine séance
+                       n'est pas encore réservable
+                   ══════════════════════════════════════════ */}
+                   {!nextSession.canBook && nextSession.reason === 'ACTIVE_RESERVATION_EXISTS' && (
+                     <div className="bg-amber-50 border border-amber-100 rounded-[2rem] p-6 flex items-center gap-4">
+                        <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                           <Clock className="w-6 h-6 text-amber-600" />
+                        </div>
+                        <div>
+                           <p className="font-black text-amber-900 text-sm uppercase tracking-tight">Séance en cours</p>
+                           <p className="text-amber-700 text-sm font-medium mt-0.5">
+                              Vous avez déjà une séance en attente ou confirmée. La prochaine séance se débloquera une fois celle-ci terminée.
+                           </p>
+                        </div>
+                     </div>
+                   )}
 
-                                             cells.push(
-                                                <td
-                                                   key={slot}
-                                                   colSpan={span}
-                                                   className="h-16 p-1 border-r border-slate-50 relative group/cell"
-                                                   onClick={() => isOwn && setSelectedRes(res)}
-                                                >
-                                                   <div className={cn(
-                                                      bgColor,
-                                                      "h-full rounded-2xl flex flex-col items-center justify-center transition-all shadow-md group-hover/cell:scale-[1.01] group-hover/cell:shadow-xl",
-                                                      isOwn ? 'cursor-pointer' : 'cursor-help opacity-70 grayscale-[0.3]'
-                                                   )}>
-                                                      <span className="text-white font-black text-[9px] uppercase tracking-[0.15em] drop-shadow-sm">
-                                                         {isOwn ? 'Ma Session' : 'Occupé'}
-                                                      </span>
-                                                      <span className="text-white/90 text-[8px] font-bold mt-0.5 tracking-tighter">
-                                                         {format(rStart, 'HH:mm')} – {format(new Date(rEnd.getTime() - (isOwn ? 15*60*1000 : 0)), 'HH:mm')}
-                                                      </span>
-                                                   </div>
-                                                </td>
-                                             )
-                                             i += span
-                                          } else {
-                                             cells.push(
-                                                <td
-                                                   key={slot}
-                                                   className="h-16 p-1 border-r border-slate-50 min-w-[70px] group/cell select-none"
-                                                   onMouseDown={() => {
-                                                      if (!isSelectable) return
-                                                      
-                                                      const duration = nextSession.duration
-                                                      const calculatedEndHour = slot + duration
-                                                      
-                                                      let finalEndHour = calculatedEndHour
-                                                      for(let h = slot; h < calculatedEndHour; h += 0.25) {
-                                                         if (getReservationAt(day, h)) {
-                                                            finalEndHour = h
-                                                            break
-                                                         }
-                                                      }
-                                                      
-                                                      if (finalEndHour > slot) {
-                                                         setPendingSlot({ day, startHour: slot, endHour: finalEndHour })
-                                                         setDragStart({ day, hour: slot })
-                                                         setDragEnd({ day, hour: finalEndHour - 0.25 })
-                                                      } else {
-                                                         toast.error('Pas assez d\'espace pour cette séance')
-                                                         setDragStart(null)
-                                                         setDragEnd(null)
-                                                      }
-                                                      setIsDragging(true)
-                                                   }}
-                                                   onMouseEnter={() => {
-                                                      if (isDragging && dragStart && dragStart.day.toDateString() === day.toDateString() && slot >= dragStart.hour) {
-                                                         setDragEnd({ day, hour: slot })
-                                                      }
-                                                   }}
-                                                   onMouseUp={() => {
-                                                      if (isDragging && dragStart && dragEnd) {
-                                                         setPendingSlot({ day: dragStart.day, startHour: dragStart.hour, endHour: dragEnd.hour + 0.25 })
-                                                      }
-                                                      setIsDragging(false)
-                                                      setDragStart(null)
-                                                      setDragEnd(null)
-                                                   }}
-                                                >
-                                                   <div className={cn(
-                                                      "w-full h-full rounded-2xl flex items-center justify-center transition-all duration-300",
-                                                      isPast ? 'cursor-not-allowed opacity-20' :
-                                                      isInDrag ? 'bg-blue-600 shadow-xl shadow-blue-100 cursor-pointer scale-[1.02]' :
-                                                      isSelectable ? 'hover:bg-blue-50 hover:shadow-inner cursor-pointer' : 'cursor-not-allowed grayscale-[0.8] opacity-10'
-                                                   )}>
-                                                      <span className={cn(
-                                                         "text-[10px] font-black transition-colors",
-                                                         isPast ? 'text-slate-200' :
-                                                         isInDrag ? 'text-white' :
-                                                         'text-slate-50 group-hover/cell:text-blue-400'
-                                                      )}>
-                                                         {isInDrag ? (slot === dragStart?.hour ? '\u25B6' : '\u2014') : '\u25CB'}
-                                                      </span>
-                                                   </div>
-                                                </td>
-                                             )
-                                             i++
-                                          }
-                                       }
-                                       return cells
-                                    })()}
-                                 </tr>
-                              ))}
-                           </tbody>
-                        </table>
-                      </div>
+                   {!nextSession.canBook && nextSession.reason === 'ALL_SESSIONS_DONE' && (
+                     <div className="bg-emerald-50 border border-emerald-100 rounded-[2rem] p-6 flex items-center gap-4">
+                        <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                           <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+                        </div>
+                        <div>
+                           <p className="font-black text-emerald-900 text-sm uppercase tracking-tight">Toutes les séances sont planifiées</p>
+                           <p className="text-emerald-700 text-sm font-medium mt-0.5">
+                              Vous avez utilisé {Math.round(nextSession.usedMinutes)} minutes sur {nextSession.totalMinutes} incluses dans ce pack. Merci de votre confiance !
+                           </p>
+                        </div>
+                     </div>
+                   )}
 
-                      {/* Legend */}
-                      <div className="flex flex-wrap gap-8 px-8 py-6 bg-white border border-slate-200 rounded-[2rem] shadow-sm">
-                         <div className="flex items-center gap-3">
-                            <div className="w-4 h-4 rounded-lg bg-yellow-400 shadow-sm shadow-yellow-100"></div>
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest font-sans">En attente</span>
-                         </div>
-                         <div className="flex items-center gap-3">
-                            <div className="w-4 h-4 rounded-lg bg-emerald-500 shadow-sm shadow-emerald-100"></div>
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest font-sans">Confirmé</span>
-                         </div>
-                         <div className="flex items-center gap-3">
-                            <div className="w-4 h-4 rounded-lg bg-blue-500 shadow-sm shadow-blue-100"></div>
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest font-sans">Terminé</span>
-                         </div>
-                         <div className="flex items-center gap-3">
-                            <div className="w-4 h-4 rounded-lg bg-red-400 shadow-sm shadow-red-100"></div>
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest font-sans">Annulé</span>
-                         </div>
-                         <div className="flex items-center gap-3">
-                            <div className="w-4 h-4 rounded-lg bg-purple-400 shadow-sm shadow-purple-100"></div>
-                            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest font-sans">Absence</span>
-                         </div>
-                      </div>
-                   </div>
+                   {!nextSession.canBook && nextSession.reason === 'PROJECT_COMPLETED' && (
+                     <div className="bg-slate-50 border border-slate-100 rounded-[2rem] p-6 flex items-center gap-4">
+                        <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                           <CheckCircle2 className="w-6 h-6 text-slate-500" />
+                        </div>
+                        <div>
+                           <p className="font-black text-slate-900 text-sm uppercase tracking-tight">Projet clôturé</p>
+                           <p className="text-slate-500 text-sm font-medium mt-0.5">
+                              Votre consultant a marqué ce projet comme terminé. Aucune nouvelle séance ne peut être réservée.
+                           </p>
+                        </div>
+                     </div>
+                   )}
+
                 </div>
              </TabsContent>
 
@@ -1042,64 +890,6 @@ export default function OrderDetails() {
 
       </div>
       
-      {/* Meeting Type Selection Modal from Old Version */}
-      {pendingSlot && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[100]" onClick={() => setPendingSlot(null)}>
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            className="bg-white rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.2)] max-w-md w-full mx-4 p-8 border border-white/20" 
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex flex-col items-center text-center mb-8">
-               <div className="w-20 h-20 bg-blue-50 rounded-[2rem] flex items-center justify-center mb-6">
-                  <CalendarIcon className="w-10 h-10 text-blue-600" />
-               </div>
-               <h2 className="text-2xl font-black text-slate-900 tracking-tight uppercase">Type de réunion</h2>
-               <p className="text-sm font-bold text-slate-400 mt-2 uppercase tracking-widest">
-                  {pendingSlot.day.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
-                  <br/>
-                  <span className="text-blue-600">{pendingSlot.startHour}h \u2013 {pendingSlot.endHour}h</span>
-               </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                onClick={() => { bookReservation(pendingSlot.day, pendingSlot.startHour, pendingSlot.endHour, 'ZOOM'); setPendingSlot(null) }}
-                className="flex flex-col items-center gap-4 p-6 border-2 border-blue-100 rounded-[2rem] hover:border-blue-500 hover:bg-blue-50 transition-all group group/btn"
-              >
-                <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center group-hover/btn:bg-blue-600 transition-colors">
-                   <Play className="w-6 h-6 text-blue-600 fill-current group-hover/btn:text-white" />
-                </div>
-                <div className="text-center">
-                  <span className="font-black text-slate-900 uppercase text-xs block tracking-widest">Zoom</span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Réunion en ligne</span>
-                </div>
-              </button>
-              <button
-                onClick={() => { bookReservation(pendingSlot.day, pendingSlot.startHour, pendingSlot.endHour, 'SUR_PLACE'); setPendingSlot(null) }}
-                className="flex flex-col items-center gap-4 p-6 border-2 border-emerald-100 rounded-[2rem] hover:border-emerald-500 hover:bg-emerald-50 transition-all group/btn"
-              >
-                <div className="w-14 h-14 bg-emerald-100 rounded-2xl flex items-center justify-center group-hover/btn:bg-emerald-600 transition-colors">
-                   <Target className="w-6 h-6 text-emerald-600 group-hover/btn:text-white" />
-                </div>
-                <div className="text-center">
-                  <span className="font-black text-slate-900 uppercase text-xs block tracking-widest">Sur Place</span>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Réunion physique</span>
-                </div>
-              </button>
-            </div>
-            
-            <button 
-               onClick={() => setPendingSlot(null)} 
-               className="mt-8 w-full text-[10px] font-black text-slate-400 hover:text-slate-600 uppercase tracking-[0.3em] transition-colors"
-            >
-               Annuler la sélection
-            </button>
-          </motion.div>
-        </div>
-      )}
-
       {/* Reservation Detail Modal from Old Version */}
       {selectedRes && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-[100]" onClick={() => setSelectedRes(null)}>

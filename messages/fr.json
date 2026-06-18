@@ -67,7 +67,7 @@
       "title": "DSL Conseil - Conseil en Entreprise et Solutions de Gestion",
       "subtitle": "Transformez votre entreprise avec l'excellence. Conseil en management, RH, qualité et performance.",
       "cta": "Commencer",
-      "ctaSecondary": "Découvrir nos services"
+      "discoverSolutions": "Découvrir nos solutions"
     },
     "values": {
       "title": "Nos valeurs — Le sens de DSL",
@@ -114,13 +114,13 @@
     "solutionsSection": {
       "title": "Nos Solutions",
       "description": "Nos solutions sont conçues pour répondre à vos besoins stratégiques : le management de la performance pour piloter vos résultats, la GPEC pour anticiper vos besoins en talents, et la marque employeur pour attirer et fidéliser les meilleurs profils.",
-      "cta": "Voir nos solutions"
+      "cta": "Découvrir nos solutions"
     },
     "cta": {
       "title": "Accédez directement à nos approches spécialisées.",
       "subtitle": "Choisissez la solution adaptée à vos besoins uniques ou connectez-vous pour un accompagnement sur mesure.",
       "createAccount": "Créer un compte",
-      "viewServices": "Voir les services",
+      "viewServices": "Voir nos solutions",
       "contactUs": "Nous contacter"
     },
     "hero": {
@@ -511,7 +511,7 @@
       "upgradeExperience": "Améliorer l'expérience",
       "noActiveMembership": "Aucun abonnement actif",
       "noActiveDesc": "Vous n'avez pas encore initialisé un flux de conseil. Parcourez nos formules premium pour commencer.",
-      "discoverServices": "Découvrir les services",
+      "discoverServices": "Découvrir les solutions",
       "missionsTracking": "Suivi des missions",
       "registered": "Enregistrées",
       "milestonesAchieved": "{completed} sur {total} étapes atteintes",
@@ -786,7 +786,7 @@
       "ourSolutions": "Nos Solutions",
       "selectDomain": "Sélectionnez le domaine d'expertise pour lequel vous souhaitez un accompagnement sur mesure.",
       "exploreSolution": "Explorer cette Solution",
-      "backToServices": "Retour aux services",
+      "backToServices": "Retour aux solutions",
       "selectFormula": "SÉLECTION DE LA FORMULE",
       "changeFormula": "Changer de formule",
       "bookAppointment": "PRISE DE RENDEZ-VOUS",
@@ -884,11 +884,11 @@
       "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce message ?"
     },
     "services": {
-      "title": "Moteur Services",
-      "description": "Gérer les services et les niveaux de prix",
-      "search": "Rechercher des services...",
-      "addNew": "Ajouter Nouveau Service",
-      "noServices": "Aucun service trouvé"
+      "title": "Moteur Solutions",
+      "description": "Gérer les solutions et les niveaux de prix",
+      "search": "Rechercher des solutions...",
+      "addNew": "Ajouter Nouvelle Solution",
+      "noServices": "Aucune solution trouvée"
     },
     "blogs": {
       "title": "Moteur de Contenu",
@@ -1111,20 +1111,20 @@
       "publishLive": "Publier en direct"
     },
     "solution": {
-      "title": "Moteur de Services",
-      "description": "Concevez et gérez votre portefeuille de services, vos niveaux de prix et vos capacités.",
+      "title": "Moteur de Solutions",
+      "description": "Concevez et gérez votre portefeuille de solutions, vos niveaux de prix et vos capacités.",
       "breadcrumbs": {
         "content": "Contenu",
-        "services": "Services"
+        "services": "Solutions"
       },
-      "filterServices": "Filtrer les services...",
-      "service": "Service",
-      "noServiceSelected": "Aucun service sélectionné",
-      "noServiceDesc": "Choisissez un service ou créez une nouvelle offre pour gérer les paramètres, les niveaux et les capacités.",
+      "filterServices": "Filtrer les solutions...",
+      "service": "Solution",
+      "noServiceSelected": "Aucune solution sélectionnée",
+      "noServiceDesc": "Choisissez une solution ou créez une nouvelle offre pour gérer les paramètres, les niveaux et les capacités.",
       "getStarted": "Commencer",
-      "refineService": "Affiner le service",
+      "refineService": "Affiner la solution",
       "newOffering": "Nouvelle offre",
-      "serviceId": "ID SERVICE",
+      "serviceId": "ID SOLUTION",
       "strategicResource": "Création de ressource stratégique",
       "serviceIdentity": "Identité du service",
       "eService": "ex. Audit Stratégique",
