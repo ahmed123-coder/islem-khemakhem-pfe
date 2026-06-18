@@ -3,7 +3,6 @@ import { CheckCircle2, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { prisma } from '@/lib/prisma'
-import { useTranslations } from 'next-intl'
 import { getTranslations } from 'next-intl/server'
 
 export const dynamic = 'force-dynamic'
@@ -43,9 +42,9 @@ async function getApproches() {
   }
 }
 
-export default async function ApprochesPage() {
-  const t = useTranslations('approaches')
-  const commonT = useTranslations('common')
+export default async function ApprochesPage({ params: { locale } }: { params: { locale: string } }) {
+  const t = await getTranslations({ locale, namespace: 'approaches' })
+  const commonT = await getTranslations({ locale, namespace: 'common' })
   const faqs = await getFaqs();
   const approches = await getApproches();
   let heroData: any = null;
