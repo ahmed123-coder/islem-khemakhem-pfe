@@ -147,7 +147,7 @@ export default function Home() { //la base de la page d'accueil, c'est ce qui va
             </Link>
             <Link href={`/${locale}/solutions`}>
               <Button className="bg-[#7AB648] hover:bg-[#639a3a] text-white rounded-full px-8 py-6 text-base font-bold">
-                {t('viewServices')} 
+                {t('cta.viewServices')} 
               </Button>
             </Link>
             <Link href={`/${locale}/contact`} className="text-white/70 hover:text-white underline underline-offset-4 text-base font-medium transition-colors">
