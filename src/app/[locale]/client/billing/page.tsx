@@ -100,7 +100,7 @@ export default function BillingPage() {
 
                       <div className="text-right shrink-0">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t('amount')}</p>
-                        <p className="text-2xl font-black text-slate-900">{invoice.amount} €</p>
+                        <p className="text-2xl font-black text-slate-900">{invoice.amount} DT</p>
                       </div>
                     </div>
                     <div className="px-8 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-end">

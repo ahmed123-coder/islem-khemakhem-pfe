@@ -1168,11 +1168,13 @@
         "system": "System",
         "consultants": "Consultants"
       },
+      "activeNode": "Active",
+      "suspended": "Inactive",
       "status": {
         "active": "Active",
         "inactive": "Inactive",
-        "activeNode": "Active Node",
-        "suspended": "Suspended"
+        "activeNode": "Active",
+        "suspended": "Inactive"
       },
       "detail": {
         "email": "Email",
@@ -1200,7 +1202,12 @@
         "secureProtocol": "Secure Protocol (Password)",
         "primeSpecialty": "Prime Specialty",
         "hourlyRate": "Hourly Rate (DT)",
-        "avatarContentUrl": "Avatar Content URL",
+        "avatarContentUrl": "Avatar Photo",
+        "avatarFormats": "(JPG, PNG)",
+        "currentAvatarUploaded": "Current avatar uploaded",
+        "clickToReplaceAvatar": "Click to replace avatar",
+        "clickToUploadAvatar": "Click to upload avatar",
+        "avatarFormatsDetailed": "JPG, PNG, WEBP",
         "cvResume": "CV / Resume",
         "cvFormats": "(PDF, DOC)",
         "currentCvUploaded": "Current CV uploaded",
@@ -1437,7 +1444,7 @@
       "createNew": "New Invoice",
       "noInvoices": "No invoices found",
       "allStatuses": "All statuses",
-      "currency": "€",
+      "currency": "DT",
       "confirmDelete": "Are you sure you want to delete this invoice?",
       "columns": {
         "invoice": "Invoice #",
@@ -1452,11 +1459,9 @@
         "pending": "PENDING",
         "unpaid": "UNPAID"
       },
-      "actions": {
-        "edit": "Edit",
-        "download": "Download PDF",
-        "delete": "Delete"
-      },
+      "download": "Download",
+      "edit": "Edit",
+      "delete": "Delete",
       "form": {
         "client": "Recipient Client",
         "selectClient": "Select a client",
@@ -1473,10 +1478,7 @@
         "networkError": "Network error"
       },
       "newDueDate": "New Due Date",
-      "initialStatus": "Initial Status",
-      "download": "Download",
-      "edit": "Edit",
-      "delete": "Delete"
+      "initialStatus": "Initial Status"
     },
     "schedule": {
       "title": "Consultants Schedule",

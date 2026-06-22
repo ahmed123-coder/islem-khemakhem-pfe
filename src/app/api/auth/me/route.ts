@@ -2,6 +2,7 @@ import { NextRequest } from 'next/server'
 import { requireAuth } from '@/lib/auth/middleware'
 import { prisma } from '@/lib/prisma'
 import { handleError, successResponse } from '@/lib/errors/handler'
+import { NotFoundError } from '@/lib/errors/types'
 
 export async function GET(req: NextRequest) {
   const authResult = requireAuth(req)
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (!user) {
-      return handleError(new Error('User not found'), req)
+      return handleError(new NotFoundError('User'), req)
     }
 
     return successResponse(user)

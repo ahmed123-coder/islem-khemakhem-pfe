@@ -255,35 +255,41 @@ export default function RegisterPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className={labelCls}>{tr('lastName')} <span className="text-red-500">*</span></label>
-                      <input type="text" value={client.lastName} onChange={e => setClient({...client, lastName: e.target.value})} placeholder="Dupont" className={inputCls} pattern="[A-Za-zÀ-ÿ\s\-]+" required />
+                      <input type="text" value={client.lastName} onChange={e => setClient({...client, lastName: e.target.value})} 
+                      placeholder="Nom" className={inputCls} pattern="[A-Za-zÀ-ÿ\s\-]+" required />
                     </div>
                     <div>
                       <label className={labelCls}>{tr('firstName')} <span className="text-red-500">*</span></label>
-                      <input type="text" value={client.firstName} onChange={e => setClient({...client, firstName: e.target.value})} placeholder="Jean" className={inputCls} pattern="[A-Za-zÀ-ÿ\s\-]+" required />
+                      <input type="text" value={client.firstName} onChange={e => setClient({...client, firstName: e.target.value})} 
+                      placeholder="Prénom" className={inputCls} pattern="[A-Za-zÀ-ÿ\s\-]+" required />
                     </div>
                   </div>
                   
                   <div>
                     <label className={labelCls}>{tr('email')} <span className="text-red-500">*</span></label>
-                    <input type="email" value={client.email} onChange={e => setClient({...client, email: e.target.value})} placeholder="jean@entreprise.com" className={inputCls} required />
+                    <input type="email" value={client.email} onChange={e => setClient({...client, email: e.target.value})} 
+                    placeholder="Email" className={inputCls} required />
                   </div>
                   
                   <div>
                     <label className={labelCls}>{tr('phone')} <span className="text-red-500">*</span></label>
                     <div className="flex">
                       <span className="inline-flex items-center px-3 border border-r-0 border-gray-200 rounded-l-xl bg-gray-100 text-gray-600 text-sm">{tr('phonePrefix')}</span>
-                      <input type="tel" value={client.phone} onChange={e => setClient({...client, phone: e.target.value.replace(/\D/g, '')})} placeholder="XX XXX XXX" className={`${inputCls} rounded-l-none`} pattern="[0-9]{8}" maxLength={8} required />
+                      <input type="tel" value={client.phone} onChange={e => setClient({...client, phone: e.target.value.replace(/\D/g, '')})} 
+                      placeholder="XX XXX XXX" className={`${inputCls} rounded-l-none`} pattern="[0-9]{8}" maxLength={8} required />
                     </div>
                   </div>
                   
                   <div>
                     <label className={labelCls}>{tr('company')} <span className="text-red-500">*</span></label>
-                    <input type="text" value={client.company} onChange={e => setClient({...client, company: e.target.value})} placeholder="Mon Entreprise SARL" className={inputCls} required />
+                    <input type="text" value={client.company} onChange={e => setClient({...client, company: e.target.value})} 
+                    placeholder="Nom de l'entreprise" className={inputCls} required />
                   </div>
                   
                   <div>
                     <label className={labelCls}>{tr('matriculeFiscale')} <span className="text-red-500">*</span></label>
-                    <input type="text" value={client.matriculeFiscale} onChange={e => setClient({...client, matriculeFiscale: e.target.value})} placeholder="1234567X/A/000" className={inputCls} required />
+                    <input type="text" value={client.matriculeFiscale} onChange={e => setClient({...client, matriculeFiscale: e.target.value})} 
+                    placeholder="1234567X/A/000" className={inputCls} required />
                   </div>
                   
                   <div>
@@ -296,7 +302,8 @@ export default function RegisterPage() {
                   
                   <div>
                     <label className={labelCls}>{tr('address')} <span className="text-red-500">*</span></label>
-                    <input type="text" value={client.address} onChange={e => setClient({...client, address: e.target.value})} placeholder="Rue, Ville, Gouvernorat" className={inputCls} required />
+                    <input type="text" value={client.address} onChange={e => setClient({...client, address: e.target.value})} 
+                    placeholder="Adresse" className={inputCls} required />
                   </div>
                   
                   <div>
@@ -356,17 +363,17 @@ export default function RegisterPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className={labelCls}>{tr('lastName')} <span className="text-red-500">*</span></label>
-                      <input type="text" value={consultant.lastName} onChange={e => setConsultant({...consultant, lastName: e.target.value})} placeholder="Mohamed" className={inputCls} pattern="[A-Za-zÀ-ÿ\s\-]+" required />
+                      <input type="text" value={consultant.lastName} onChange={e => setConsultant({...consultant, lastName: e.target.value})} placeholder="Nom" className={inputCls} pattern="[A-Za-zÀ-ÿ\s\-]+" required />
                     </div>
                     <div>
                       <label className={labelCls}>{tr('firstName')} <span className="text-red-500">*</span></label>
-                      <input type="text" value={consultant.firstName} onChange={e => setConsultant({...consultant, firstName: e.target.value})} placeholder="Ahmed" className={inputCls} pattern="[A-Za-zÀ-ÿ\s\-]+" required />
+                      <input type="text" value={consultant.firstName} onChange={e => setConsultant({...consultant, firstName: e.target.value})} placeholder="Prénom" className={inputCls} pattern="[A-Za-zÀ-ÿ\s\-]+" required />
                     </div>
                   </div>
                   
                   <div>
                     <label className={labelCls}>{tr('email')} <span className="text-red-500">*</span></label>
-                    <input type="email" value={consultant.email} onChange={e => setConsultant({...consultant, email: e.target.value})} placeholder="ahmed@consultpro.com" className={inputCls} required />
+                    <input type="email" value={consultant.email} onChange={e => setConsultant({...consultant, email: e.target.value})} placeholder="Email" className={inputCls} required />
                   </div>
                   
                   <div>

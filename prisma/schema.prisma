@@ -17,6 +17,7 @@ model User {
   company       String?
   sector        String?
   address       String?
+  matriculeFiscale String?
   needs         String?
   role          Role           @default(CLIENT)
   isActive      Boolean        @default(true)
@@ -86,14 +87,15 @@ model ServiceTier {
 }
 
 model Order {
-  id              String      @id @default(cuid())
+  id              String        @id @default(cuid())
   clientId        String
   consultantId    String?
   serviceTierId   String
-  status          OrderStatus @default(PENDING)
-  messagesUsed    Int         @default(0)
-  callMinutesUsed Int         @default(0)
-  createdAt       DateTime    @default(now())
+  status          OrderStatus   @default(PENDING)
+  paymentMethod   PaymentMethod @default(CARD)
+  messagesUsed    Int           @default(0)
+  callMinutesUsed Int           @default(0)
+  createdAt       DateTime      @default(now())
   closedAt        DateTime?
   calls           Call[]
   messages        Message[]
@@ -304,6 +306,12 @@ enum SenderType {
 enum UploaderType {
   CLIENT
   CONSULTANT
+}
+
+enum PaymentMethod {
+  CARD
+  VIREMENT
+  SUR_PLACE
 }
 
 enum ReservationStatus {

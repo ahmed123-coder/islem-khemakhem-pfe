@@ -215,7 +215,7 @@ export default function ConsultantPortfolio() {
                   </div>
                   <div className="flex justify-between mb-2">
                     <span className="text-slate-400 font-bold text-xs uppercase">{t("hourlyRate")}:</span>
-                    <span className="font-black text-slate-900">${consultant?.hourlyRate || 0}/hr</span>
+                    <span className="font-black text-slate-900">{consultant?.hourlyRate || 0} DT/h</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400 font-bold text-xs uppercase">{t("status")}:</span>

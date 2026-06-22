@@ -258,10 +258,7 @@ export default function AdminDashboard() {
                   <Users className="w-6 h-6 text-white" />
                 </div>
                 {/* badge de croissance */}
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[10px] font-black uppercase tracking-wider">
-                  <TrendingUp className="w-3 h-3" />
-                  +{stats.growth}% {adminT('grow')}
-                </div>
+                
               </div>
               {/* bas : label + grand chiffre + graphique */}
               <div>

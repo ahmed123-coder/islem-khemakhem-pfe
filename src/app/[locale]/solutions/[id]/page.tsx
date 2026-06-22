@@ -197,26 +197,20 @@ export default function SolutionDetailPage({ params }: { params: { locale: strin
       <div className="max-w-7xl mx-auto px-6">
         {step === 2 && selectedService && (
           <div className="space-y-12 animate-in fade-in slide-in-from-bottom-5 duration-700">
-            <div className="flex items-center justify-between">
-              <button 
-                onClick={() => router.push(`/${locale}/solutions`)} 
-                className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-bold transition-colors group"
-              >
-                
-              </button>
-              <div className="flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-xs font-bold shadow-sm">
-                <span className="w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-[10px] font-black">1</span>
-                Découvrez nos différentes offres et choisissez celle qui correspond le mieux à vos besoins.
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-xs font-bold shadow-sm min-w-0">
+                <span className="w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0">1</span>
+                <span className="truncate">Découvrez nos différentes offres et choisissez celle qui correspond le mieux à vos besoins.</span>
               </div>
               <button 
                 onClick={() => router.push(`/${locale}/solutions`)} 
-                className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-bold transition-colors group">
-              </button>
-              <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-50 transition-all">
+                className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-bold transition-colors group flex-shrink-0 whitespace-nowrap"
+              >
+                <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-50 transition-all flex-shrink-0">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
-             
+                </div>
                 Retour aux solutions
-            </div>
+              </button>
             </div>
 
             <TierSelector tiers={selectedService.tiers} onSelect={handleTierSelect} />
@@ -225,18 +219,18 @@ export default function SolutionDetailPage({ params }: { params: { locale: strin
 
         {step === 3 && (
           <div className="space-y-12 animate-in fade-in duration-700">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-4">
               <button 
                 onClick={() => setStep(2)} 
-                className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-bold transition-colors group"
+                className="flex items-center gap-2 text-gray-500 hover:text-blue-600 font-bold transition-colors group flex-shrink-0 whitespace-nowrap"
               >
-                <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-50 transition-all">
+                <div className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center group-hover:border-blue-200 group-hover:bg-blue-50 transition-all flex-shrink-0">
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" /></svg>
                 </div>
                 Revenir aux formules
               </button>
-              <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-xs font-bold shadow-sm">
-                <span className="w-5 h-5 bg-green-600 text-white rounded-full flex items-center justify-center text-[10px] font-black">2</span>
+              <div className="flex items-center gap-2 bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-xs font-bold shadow-sm flex-shrink-0 whitespace-nowrap">
+                <span className="w-5 h-5 bg-green-600 text-white rounded-full flex items-center justify-center text-[10px] font-black flex-shrink-0">2</span>
                 PRISE DE RENDEZ-VOUS
               </div>
             </div>

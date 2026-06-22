@@ -58,7 +58,19 @@ export async function DELETE(
   if (!authResult.success) return authResult.response
 
   try {
-    await prisma.user.delete({ where: { id: params.id } })
+    const { id } = params
+
+    await prisma.missionFile.deleteMany({ where: { uploadedById: id } })
+
+    await prisma.order.deleteMany({ where: { clientId: id } })
+
+    await prisma.reservation.deleteMany({ where: { clientId: id } })
+
+    await prisma.$executeRawUnsafe('DELETE FROM "Payment" WHERE "invoiceId" IN (SELECT "id" FROM "Invoice" WHERE "clientId" = $1)', id)
+    await prisma.$executeRawUnsafe('DELETE FROM "Invoice" WHERE "clientId" = $1', id)
+
+    await prisma.user.delete({ where: { id } })
+
     return successResponse({ success: true })
   } catch (error) {
     return handleError(error, req)

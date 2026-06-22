@@ -61,10 +61,10 @@ export default function PaymentModal({ price, tierName, onSuccess, onClose }: Pa
 
   return (
     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xl flex items-center justify-center z-50 animate-in fade-in duration-500 overflow-y-auto py-10">
-      <div className="bg-white rounded-[3rem] shadow-[0_50px_120px_rgba(0,0,0,0.3)] max-w-2xl w-full mx-4 overflow-hidden border border-white transform animate-in zoom-in-95 slide-in-from-bottom-10 duration-500" onClick={e => e.stopPropagation()}>
+      <div className="bg-white rounded-[2.5rem] shadow-[0_30px_80px_rgba(0,0,0,0.25)] max-w-lg w-full mx-4 overflow-hidden border border-white transform animate-in zoom-in-95 slide-in-from-bottom-10 duration-500" onClick={e => e.stopPropagation()}>
         
         {/* Header Section */}
-        <div className={`transition-all duration-700 ${paymentSuccess ? 'bg-green-600' : 'bg-[#2B5A8E]'} p-10 text-white relative overflow-hidden text-center`}>
+        <div className={`transition-all duration-700 ${paymentSuccess ? 'bg-green-600' : 'bg-[#2B5A8E]'} p-6 text-white relative overflow-hidden text-center`}>
           <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
           {paymentSuccess ? (
             <div className="relative z-10 animate-in zoom-in duration-500">
@@ -81,7 +81,7 @@ export default function PaymentModal({ price, tierName, onSuccess, onClose }: Pa
               <div className="flex justify-between items-start mb-6">
                 <div className="text-left">
                   <div className="text-[10px] font-black uppercase tracking-[0.3em] opacity-70 mb-2">Finalisation de Commande</div>
-                  <h2 className="text-3xl font-black tracking-tight">{Number(price).toFixed(0)}<span className="text-lg ml-0.5">€</span></h2>
+                  <h2 className="text-3xl font-black tracking-tight">{Number(price).toFixed(0)}<span className="text-lg ml-0.5">DT</span></h2>
                 </div>
                 <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors text-xl font-bold">&times;</button>
               </div>
@@ -97,7 +97,7 @@ export default function PaymentModal({ price, tierName, onSuccess, onClose }: Pa
         </div>
 
         {!paymentSuccess && (
-          <div className="p-10">
+          <div className="p-6">
             {/* Method Selection Tabs */}
             <div className="flex p-1 bg-gray-100 rounded-2xl mb-8">
               <button 

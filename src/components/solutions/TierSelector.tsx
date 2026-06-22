@@ -90,7 +90,7 @@ export default function TierSelector({ tiers, onSelect }: TierSelectorProps) {
             <div className="text-center mb-6">
               <div className="flex items-center justify-center gap-1">
                 <span className="text-4xl font-black text-gray-900 tracking-tight">{Number(tier.price).toFixed(0)}</span>
-                <span className="text-lg text-gray-400 font-bold self-start mt-1">€</span>
+                <span className="text-lg text-gray-400 font-bold self-start mt-1">DT</span>
               </div>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-1">Investissement</p>
             </div>

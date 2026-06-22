@@ -1350,7 +1350,7 @@
       "createNew": "Nouvelle Facture",
       "noInvoices": "Aucune facture trouvée",
       "allStatuses": "Tous les statuts",
-      "currency": "€",
+      "currency": "DT",
       "confirmDelete": "Êtes-vous sûr de vouloir supprimer cette facture ?",
       "columns": {
         "invoice": "Facture N°",

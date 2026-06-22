@@ -628,7 +628,7 @@ export default function ConsultantsPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.firstName')}</Label>
-                  <Input value={form.firstName || ''} onChange={e => setForm({ ...form, firstName: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder={t('form.firstNamePlaceholder')} />
+                  <Input value={form.firstName || ''} onChange={e => setForm({ ...form, firstName: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="Nom" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.lastName')}</Label>
