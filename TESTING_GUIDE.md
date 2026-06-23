@@ -130,3 +130,8 @@ curl -X POST http://localhost:3000/api/auth/login \
 - Run seed again: `npx prisma db seed`
 - Check Prisma Studio: `npx prisma studio`
 - Verify API responses in Network tab
+
+
+
+
+fadite

@@ -2,58 +2,70 @@
 
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { Home, Briefcase, Users, Calendar, Settings, LogOut } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { Home, Settings, LogOut, Users, Calendar, Briefcase } from 'lucide-react'
 
 export default function ConsultantSidebar() {
   const pathname = usePathname()
   const router = useRouter()
+  const locale = pathname.split('/')[1] || 'en'
+  const t = useTranslations('dashboard.consultant')
+  const commonT = useTranslations('common')
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/login')
+    router.push(`/${locale}/login`)
   }
 
   const links = [
-    { href: '/consultant', icon: Home, label: 'Dashboard' },
-    { href: '/consultant/missions', icon: Briefcase, label: 'Missions' },
-    { href: '/consultant/clients', icon: Users, label: 'Clients' },
-    { href: '/consultant/schedule', icon: Calendar, label: 'Schedule' },
-    { href: '/consultant/settings', icon: Settings, label: 'Settings' },
+    { href: `/${locale}/consultant`, label: t('workspace'), icon: Home },
+    { href: `/${locale}/consultant/clients`, label: t('clients'), icon: Users },
+    { href: `/${locale}/consultant/reservations`, label: t('reservations'), icon: Calendar },
+    { href: `/${locale}/consultant/portfolio`, label: t('portfolio'), icon: Briefcase },
+    { href: `/${locale}/consultant/settings`, label: t('settings'), icon: Settings },
   ]
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 min-h-screen shadow-lg">
-      <div className="p-6 border-b border-gray-100">
-        <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">Consultant Portal</h2>
-        <p className="text-xs text-gray-500 mt-1">Manage your clients</p>
+    <aside className="w-[90px] md:w-64 bg-gradient-to-b from-gray-900 to-gray-800 text-white flex flex-col shadow-xl transition-all duration-300">
+      <div className="p-4 md:p-6 border-b border-gray-700/50 flex items-center justify-center md:justify-start">
+        <h1 className="hidden md:block text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">{t('title')}</h1>
+        <span className="md:hidden text-green-400 font-bold text-xs text-center">CP</span>
       </div>
-      <nav className="px-4 py-4 space-y-1 overflow-y-auto scrollbar-hide">
-        {links.map((link) => {
+
+      <nav className="flex-1 p-2 md:p-4 space-y-1">
+        {links.map(link => {
           const Icon = link.icon
           const isActive = pathname === link.href
           return (
             <Link
               key={link.href}
               href={link.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                isActive
-                  ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-lg shadow-purple-500/30'
-                  : 'text-gray-600 hover:bg-gray-50 hover:translate-x-1'
+              title={link.label}
+              className={`flex items-center justify-center md:justify-start gap-3 px-2 md:px-4 py-3 rounded-xl transition-all duration-200 group ${
+                isActive ? 'bg-gradient-to-r from-green-600 to-green-500 shadow-lg shadow-green-500/30' : 'hover:bg-gray-700/50 md:hover:translate-x-1'
               }`}
             >
               <Icon size={20} className={isActive ? '' : 'group-hover:scale-110 transition-transform'} />
-              <span className="font-medium">{link.label}</span>
+              <span className="hidden md:block font-medium">{link.label}</span>
             </Link>
           )
         })}
-        <button 
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 w-full transition-all duration-200 group hover:translate-x-1"
-        >
-          <LogOut size={20} className="group-hover:scale-110 transition-transform" />
-          <span className="font-medium">Logout</span>
-        </button>
       </nav>
+
+      <div className="p-2 md:p-4 border-t border-gray-700/50 space-y-1">
+        <Link href={`/${locale}/`} title={commonT('backToSite')} className="flex items-center justify-center md:justify-start gap-2 px-2 md:px-4 py-2 rounded-xl hover:bg-gray-700/50 transition-all duration-200 group md:hover:translate-x-1">
+          <Home size={16} className="group-hover:scale-110 transition-transform" />
+          <span className="hidden md:block text-sm">{commonT('backToSite')}</span>
+        </Link>
+        <button
+          onClick={handleLogout}
+          title={commonT('signOut')}
+          className="flex items-center justify-center md:justify-start gap-2 px-2 md:px-4 py-2 rounded-xl hover:bg-red-500/20 hover:text-red-400 transition-all duration-200 w-full text-left group md:hover:translate-x-1"
+        >
+          <LogOut size={16} className="group-hover:scale-110 transition-transform" />
+          <span className="hidden md:block text-sm">{commonT('signOut')}</span>
+        </button>
+      </div>
     </aside>
   )
 }

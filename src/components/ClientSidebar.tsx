@@ -1,58 +1,73 @@
 'use client'
 
+import * as React from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { Home, FileText, MessageSquare, Settings, LogOut } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
+import { useTranslations } from 'next-intl'
+import { Package, Search, Settings, LogOut, Home, CreditCard } from 'lucide-react'
+import { DashboardSidebar, SidebarNavGroup } from '@/components/dashboard/DashboardSidebar'
 
 export default function ClientSidebar() {
-  const pathname = usePathname()
   const router = useRouter()
+  const pathname = usePathname()
+  const locale = pathname.split('/')[1] || 'en'
+  const t = useTranslations('dashboard.client')
+  const commonT = useTranslations('common')
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' })
-    router.push('/login')
+    router.push(`/${locale}/login`)
   }
 
-  const links = [
-    { href: '/client', icon: Home, label: 'Dashboard' },
-    { href: '/client/missions', icon: FileText, label: 'My Missions' },
-    { href: '/client/messages', icon: MessageSquare, label: 'Messages' },
-    { href: '/client/settings', icon: Settings, label: 'Settings' },
+  const groups: SidebarNavGroup[] = [
+    {
+      items: [
+        { href: `/${locale}/client`, label: t('subscriptions'), icon: Package },
+        { href: `/${locale}/client/solutions`, label: t('solutions'), icon: Search },
+        { href: `/${locale}/client/billing`, label: t('billing'), icon: CreditCard },
+        { href: `/${locale}/client/settings`, label: t('settings'), icon: Settings },
+      ]
+    }
   ]
 
-  return (
-    <aside className="w-64 bg-white border-r border-gray-200 min-h-screen shadow-lg">
-      <div className="p-6 border-b border-gray-100">
-        <h2 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Client Portal</h2>
-        <p className="text-xs text-gray-500 mt-1">Manage your missions</p>
+  const footer = (
+    <div className="space-y-4">
+      <div className="p-5 rounded-[32px] bg-slate-900 text-white shadow-2xl shadow-blue-200/20 relative overflow-hidden group">
+        <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/20 rounded-full blur-2xl transition-transform group-hover:scale-150" />
+        <div className="relative z-10">
+          <p className="text-xs font-bold text-slate-400 mb-1">{commonT('status')}</p>
+          <div className="flex items-center gap-2 mb-4">
+             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+             <span className="text-sm font-bold uppercase tracking-widest">{t('activeClient')}</span>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-xs font-black text-slate-300 hover:text-white transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            {commonT('signOut')}
+          </button>
+        </div>
       </div>
-      <nav className="px-4 py-4 space-y-1 overflow-y-auto scrollbar-hide">
-        {links.map((link) => {
-          const Icon = link.icon
-          const isActive = pathname === link.href
-          return (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
-                isActive
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/30'
-                  : 'text-gray-600 hover:bg-gray-50 hover:translate-x-1'
-              }`}
-            >
-              <Icon size={20} className={isActive ? '' : 'group-hover:scale-110 transition-transform'} />
-              <span className="font-medium">{link.label}</span>
-            </Link>
-          )
-        })}
-        <button 
-          onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-red-50 hover:text-red-600 w-full transition-all duration-200 group hover:translate-x-1"
-        >
-          <LogOut size={20} className="group-hover:scale-110 transition-transform" />
-          <span className="font-medium">Logout</span>
-        </button>
-      </nav>
-    </aside>
+
+      <Link 
+        href={`/${locale}/`} 
+        className="flex items-center justify-center gap-2 px-4 py-3 rounded-2xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition-all font-bold text-xs uppercase tracking-widest"
+      >
+        <Home className="w-4 h-4" />
+        {commonT('backToSite')}
+      </Link>
+    </div>
+  )
+
+  return (
+    <DashboardSidebar
+      theme="client"
+      brandName="DSL Hub"
+      brandSubtitle={t('title')}
+      brandGradient="from-blue-600 to-indigo-500"
+      groups={groups}
+      footer={footer}
+    />
   )
 }

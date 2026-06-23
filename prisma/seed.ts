@@ -1,22 +1,28 @@
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcryptjs';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  // Delete all data
-  await prisma.consultantService.deleteMany({});
-  await prisma.packageService.deleteMany({});
-  await prisma.message.deleteMany({});
+  // Delete all data in dependency order (children before parents)
+  await prisma.payment.deleteMany({});
+  await prisma.review.deleteMany({});
+  await prisma.notification.deleteMany({});
+  await prisma.missionFile.deleteMany({});
+  await prisma.milestone.deleteMany({});
   await prisma.mission.deleteMany({});
-  await prisma.subscriptions.deleteMany({});
-  await prisma.subscription_packages.deleteMany({});
-  await prisma.subscription_plans.deleteMany({});
-  await prisma.consultant.deleteMany({});
+  await prisma.call.deleteMany({});
+  await prisma.message.deleteMany({});
+  await prisma.reservation.deleteMany({});
+  await prisma.invoice.deleteMany({});
+  await prisma.order.deleteMany({});
+  await prisma.serviceTier.deleteMany({});
+  await prisma.service.deleteMany({});
   await prisma.siteContent.deleteMany({});
   await prisma.contact.deleteMany({});
   await prisma.blog.deleteMany({});
-  await prisma.service.deleteMany({});
+  await prisma.faq.deleteMany({});
+  await prisma.consultant.deleteMany({});
   await prisma.user.deleteMany({});
   console.log('✅ Deleted all data');
 
@@ -42,6 +48,23 @@ async function main() {
       email: 'client@consultpro.com',
       password: hashedClientPassword,
       name: 'Client User',
+      company: 'Entreprise ABC',
+      matriculeFiscale: '1234567X/A/000',
+      sector: 'Informatique & Télécoms',
+      address: 'Tunis, Tunisie',
+      role: 'CLIENT',
+    },
+  });
+
+  const client2 = await prisma.user.create({
+    data: {
+      email: 'client2@consultpro.com',
+      password: hashedClientPassword,
+      name: 'Client User 2',
+      company: 'Société XYZ',
+      matriculeFiscale: '7654321Y/B/001',
+      sector: 'Banque & Finance',
+      address: 'Sfax, Tunisie',
       role: 'CLIENT',
     },
   });
@@ -52,346 +75,252 @@ async function main() {
     data: {
       email: 'consultant@consultpro.com',
       password: hashedConsultantPassword,
-      name: 'Consultant Expert',
-      specialty: 'Business Strategy',
+      name: 'Ahmed Mohamed',
+      specialty: 'Management de la Performance',
+      hourlyRate: 120.00,
+      bio: 'Expert en management de la performance avec 15 ans d\'expérience.',
+      imageUrl: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=400',
+      isActive: true,
     },
   });
-  
+
   const consultant2 = await prisma.consultant.create({
     data: {
       email: 'consultant2@consultpro.com',
       password: hashedConsultantPassword,
-      name: 'Marie Dupont',
-      specialty: 'Digital Transformation',
+      name: 'Sara Ahmed',
+      specialty: 'Ressources Humaines',
+      hourlyRate: 110.00,
+      bio: 'Spécialiste en développement des talents et recrutement.',
+      imageUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400',
+      isActive: true,
     },
   });
-  console.log('✅ Created consultants:', consultant1.email, consultant2.email);
 
-  // Create services
+  const consultant3 = await prisma.consultant.create({
+    data: {
+      email: 'consultant3@consultpro.com',
+      password: hashedConsultantPassword,
+      name: 'Jean Dupont',
+      specialty: 'Qualité & Processus',
+      hourlyRate: 105.00,
+      bio: 'Expert en certification ISO et optimisation des processus.',
+      imageUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
+      isActive: true,
+    },
+  });
+
+  const consultant4 = await prisma.consultant.create({
+    data: {
+      email: 'consultant4@consultpro.com',
+      password: hashedConsultantPassword,
+      name: 'Marie Lefebvre',
+      specialty: 'Stratégie Digitale',
+      hourlyRate: 130.00,
+      bio: 'Conseillère en transformation digitale et innovation.',
+      imageUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400',
+      isActive: true,
+    },
+  });
+  console.log('✅ Created consultants');
+
+  // Helper to create the 4 packs for each service
+  const createPacks = async (serviceId: string) => {
+    await prisma.serviceTier.createMany({
+      data: [
+        { 
+          serviceId, 
+          tierType: 'BASIC', 
+          price: 150, 
+          maxMessages: 20, 
+          maxCallDuration: 90, 
+          description: 'Pack 1 : Séance de découverte (1h30m)',
+          sessionsConfig: [
+            { label: 'Audit Initial', duration: 90 }
+          ]
+        },
+        { 
+          serviceId, 
+          tierType: 'STANDARD', 
+          price: 300, 
+          maxMessages: 50, 
+          maxCallDuration: 180, 
+          description: 'Pack 2 : Formation (3h)',
+          sessionsConfig: [
+            { label: 'Formation intensive', duration: 180 }
+          ]
+        },
+        { 
+          serviceId, 
+          tierType: 'PREMIUM', 
+          price: 750, 
+          maxMessages: 100, 
+          maxCallDuration: 450, 
+          canSelectConsultant: true,
+          description: 'Pack 3 : Formation + 3 séances (3h + 3x1h30m)',
+          sessionsConfig: [
+            { label: 'Formation de base', duration: 180 },
+            { label: 'Session de Suivi 1', duration: 90 },
+            { label: 'Session de Suivi 2', duration: 90 },
+            { label: 'Session de Suivi 3', duration: 90 }
+          ]
+        },
+        { 
+          serviceId, 
+          tierType: 'ULTIMATE', 
+          price: 1500, 
+          maxMessages: null, 
+          maxCallDuration: null, 
+          canSelectConsultant: true,
+          description: 'Pack 4 : Mise totale du projet',
+          sessionsConfig: [
+            { label: 'Kick-off Projet', duration: 180 },
+            { label: 'Accompagnement Hebdo 1', duration: 120 },
+            { label: 'Accompagnement Hebdo 2', duration: 120 },
+            { label: 'Accompagnement Hebdo 3', duration: 120 },
+            { label: 'Phase de Clôture', duration: 180 }
+          ]
+        },
+      ],
+    });
+  };
+
   const service1 = await prisma.service.create({
     data: {
-      title: 'Business Strategy',
-      description: 'Develop comprehensive strategies to drive growth and competitive advantage',
-      icon: '📊',
+      name: 'Management de la performance cachée',
+      description: 'Identifier les dysfonctionnements invisibles qui freinent la performance et transformer les coûts cachés en valeur durable.',
+      category: 'Management',
+      isActive: true,
+      consultants: {
+        connect: [{ id: consultant1.id }, { id: consultant2.id }]
+      }
     },
   });
+  await createPacks(service1.id);
 
   const service2 = await prisma.service.create({
     data: {
-      title: 'Digital Transformation',
-      description: 'Modernize operations with cutting-edge technology solutions',
-      icon: '💻',
+      name: 'Gestion des parcours professionnels',
+      description: 'Construire des trajectoires professionnelles alignées avec la stratégie de l\'entreprise.',
+      category: 'RH',
+      isActive: true,
+      consultants: {
+        connect: [{ id: consultant3.id }]
+      }
     },
   });
+  await createPacks(service2.id);
 
   const service3 = await prisma.service.create({
     data: {
-      title: 'Financial Advisory',
-      description: 'Expert guidance on financial planning and investment strategies',
-      icon: '💰',
+      name: 'Marque employeur',
+      description: 'Renforcer l\'attractivité et la fidélisation en créant une expérience collaborateur cohérente et engageante.',
+      category: 'RH',
+      isActive: true,
+      consultants: {
+        connect: [{ id: consultant4.id }]
+      }
     },
   });
-  console.log('✅ Created services:', 3);
+  await createPacks(service3.id);
+
+  const service4 = await prisma.service.create({
+    data: {
+      name: 'Recrutement stratégique',
+      description: 'Sécuriser le choix des talents pour soutenir la croissance et la performance.',
+      category: 'RH',
+      isActive: true,
+    },
+  });
+  await createPacks(service4.id);
+
+  console.log('✅ Created services with 4-pack system');
 
   // Create blogs
-  const blogs = await prisma.blog.createMany({
+  await prisma.blog.createMany({
     data: [
-      {
-        title: '5 Strategies for Business Growth in 2024',
-        excerpt: 'Discover proven methods to scale your business effectively',
-        content: 'Full article content here...',
-        published: true,
-      },
-      {
-        title: 'Digital Transformation: A Complete Guide',
-        excerpt: 'Everything you need to know about modernizing your business',
-        content: 'Full article content here...',
-        published: true,
-      },
-      {
-        title: 'Financial Planning Best Practices',
-        excerpt: 'Expert tips for managing your business finances',
-        content: 'Full article content here...',
-        published: true,
-      },
+      { title: '5 Strategies for Business Growth', excerpt: 'Discover proven methods', content: 'Content...', published: true },
+      { title: 'Digital Transformation Guide', excerpt: 'Everything you need to know', content: 'Content...', published: true },
     ],
   });
-  console.log('✅ Created blogs:', blogs.count);
+  console.log('✅ Created blogs');
 
   // Create contacts
-  const contacts = await prisma.contact.createMany({
+  await prisma.contact.createMany({
     data: [
-      {
-        name: 'Alice Williams',
-        email: 'alice@example.com',
-        message: 'Interested in business strategy consulting',
-      },
-      {
-        name: 'Bob Davis',
-        email: 'bob@example.com',
-        message: 'Need help with digital transformation',
-      },
+      { name: 'Alice Williams', email: 'alice@example.com', message: 'Interested in consulting' },
+      { name: 'Bob Davis', email: 'bob@example.com', message: 'Need help' },
     ],
   });
-  console.log('✅ Created contacts:', contacts.count);
-
-  // Create subscription plans
-  const essentialPlan = await prisma.subscription_plans.create({
-    data: {
-      name: 'Essential',
-      nameAr: 'أساسي',
-      planType: 'ESSENTIAL',
-      description: 'Perfect for small businesses',
-      active: true,
-    },
-  });
-
-  const proPlan = await prisma.subscription_plans.create({
-    data: {
-      name: 'Pro',
-      nameAr: 'محترف',
-      planType: 'PRO',
-      description: 'For growing companies',
-      active: true,
-    },
-  });
-
-  const premiumPlan = await prisma.subscription_plans.create({
-    data: {
-      name: 'Premium',
-      nameAr: 'متميز',
-      planType: 'PREMIUM',
-      description: 'Enterprise solution',
-      active: true,
-    },
-  });
-  console.log('✅ Created subscription plans');
-
-  // Create subscription packages
-  const essentialPackage = await prisma.subscription_packages.create({
-    data: {
-      planId: essentialPlan.id,
-      priceMonthly: 99.000,
-      priceYearly: 990.000,
-      currency: 'TND',
-      features: JSON.stringify(['50 messages', '1 mission', 'Basic diagnostic']),
-      maxMessages: 50,
-      maxMissions: 1,
-      hasDiagnostic: true,
-    },
-  });
-
-  const proPackage = await prisma.subscription_packages.create({
-    data: {
-      planId: proPlan.id,
-      priceMonthly: 199.000,
-      priceYearly: 1990.000,
-      currency: 'TND',
-      features: JSON.stringify(['200 messages', '5 missions', 'Advanced diagnostic', 'Priority support']),
-      maxMessages: 200,
-      maxMissions: 5,
-      hasDiagnostic: true,
-    },
-  });
-
-  const premiumPackage = await prisma.subscription_packages.create({
-    data: {
-      planId: premiumPlan.id,
-      priceMonthly: 399.000,
-      priceYearly: 3990.000,
-      currency: 'TND',
-      features: JSON.stringify(['Unlimited messages', 'Unlimited missions', 'Full diagnostic', '24/7 support', 'Dedicated consultant']),
-      maxMessages: null,
-      maxMissions: null,
-      hasDiagnostic: true,
-    },
-  });
-  console.log('✅ Created subscription packages');
-
-  // Link services to packages
-  await prisma.packageService.createMany({
-    data: [
-      { packageId: essentialPackage.id, serviceId: service1.id },
-      { packageId: proPackage.id, serviceId: service1.id },
-      { packageId: proPackage.id, serviceId: service2.id },
-      { packageId: premiumPackage.id, serviceId: service1.id },
-      { packageId: premiumPackage.id, serviceId: service2.id },
-      { packageId: premiumPackage.id, serviceId: service3.id },
-    ],
-  });
-  console.log('✅ Linked services to packages');
-
-  // Link consultants to services
-  await prisma.consultantService.createMany({
-    data: [
-      { consultantId: consultant1.id, serviceId: service1.id },
-      { consultantId: consultant1.id, serviceId: service3.id },
-      { consultantId: consultant2.id, serviceId: service2.id },
-    ],
-  });
-  console.log('✅ Linked consultants to services');
-
-  // Create subscriptions for client
-  const activeSubscription = await prisma.subscriptions.create({
-    data: {
-      userId: client.id,
-      packageId: proPackage.id,
-      billingCycle: 'MONTHLY',
-      status: 'ACTIVE',
-      startDate: new Date(),
-      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      autoRenew: true,
-    },
-  });
-  console.log('✅ Created active subscription for client');
-
-  // Create missions
-  const mission1 = await prisma.mission.create({
-    data: {
-      title: 'Digital Transformation Strategy',
-      description: 'Develop a comprehensive digital transformation roadmap for the company',
-      status: 'ACTIVE',
-      progress: 45,
-      clientId: client.id,
-      consultantId: consultant1.id,
-      subscriptionId: activeSubscription.id,
-      messageCount: 12,
-    },
-  });
-
-  const mission2 = await prisma.mission.create({
-    data: {
-      title: 'Business Process Optimization',
-      description: 'Analyze and optimize core business processes to improve efficiency',
-      status: 'ACTIVE',
-      progress: 70,
-      clientId: client.id,
-      consultantId: consultant2.id,
-      subscriptionId: activeSubscription.id,
-      messageCount: 25,
-    },
-  });
-
-  const mission3 = await prisma.mission.create({
-    data: {
-      title: 'Market Expansion Analysis',
-      description: 'Research and analyze potential new markets for expansion',
-      status: 'PENDING',
-      progress: 0,
-      clientId: client.id,
-      consultantId: consultant1.id,
-      subscriptionId: activeSubscription.id,
-      messageCount: 0,
-    },
-  });
-
-  const mission4 = await prisma.mission.create({
-    data: {
-      title: 'Financial Restructuring',
-      description: 'Complete financial audit and restructuring plan',
-      status: 'COMPLETED',
-      progress: 100,
-      clientId: client.id,
-      consultantId: consultant2.id,
-      subscriptionId: activeSubscription.id,
-      messageCount: 48,
-    },
-  });
-  console.log('✅ Created missions:', 4);
-
-  // Create messages for missions
-  await prisma.message.createMany({
-    data: [
-      {
-        content: 'Hello, I would like to discuss the digital transformation strategy.',
-        senderId: client.id,
-        missionId: mission1.id,
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-      },
-      {
-        content: 'Of course! Let me share some initial insights on your current digital infrastructure.',
-        senderId: client.id,
-        missionId: mission1.id,
-        createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000 + 3600000),
-      },
-      {
-        content: 'I have reviewed your business processes. Here are my recommendations.',
-        senderId: client.id,
-        missionId: mission2.id,
-        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-      },
-      {
-        content: 'Thank you for the detailed analysis. When can we schedule a follow-up meeting?',
-        senderId: client.id,
-        missionId: mission2.id,
-        createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-      },
-      {
-        content: 'The financial restructuring has been completed successfully.',
-        senderId: client.id,
-        missionId: mission4.id,
-        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000),
-      },
-    ],
-  });
-  console.log('✅ Created messages for missions');
+  console.log('✅ Created contacts');
 
   // Create site content
-  const navbar = await prisma.siteContent.create({
-    data: {
-      key: 'navbar',
-      value: {
-        logo: 'DSL Conseil',
-        links: [
-          { label: 'Accueil', href: '/' },
-          { label: 'Services', href: '/services' },
-          { label: 'Blog', href: '/blog' },
-          { label: 'Contact', href: '/contact' },
-        ],
-      },
-    },
-  });
-  console.log('✅ Created navbar content');
-
-  const hero = await prisma.siteContent.create({
-    data: {
-      key: 'hero',
-      value: {
-        title: "Transformez votre entreprise avec l'excellence",
-        subtitle: 'Conseil en management, RH, qualité et performance. Nous accompagnons les PME vers l\'efficacité et la croissance durable.',
-        ctaText: 'Prendre rendez-vous',
-        ctaLink: '/prendre-rdv',
-      },
-    },
-  });
-  console.log('✅ Created hero content');
-
-  const footer = await prisma.siteContent.create({
-    data: {
-      key: 'footer',
-      value: {
-        company: 'DSL Conseil',
-        tagline: 'Cabinet de conseil en management, RH, qualité et performance. Nous accompagnons les PME dans leur transformation.',
-        email: 'contact@dsl-conseil.com',
-        phone: '+33 1 23 45 67 89',
-        address: 'Paris, France',
-        social: {
-          linkedin: 'https://linkedin.com/company/dsl-conseil',
-          twitter: 'https://twitter.com/dslconseil',
+  await prisma.siteContent.createMany({
+    data: [
+      {
+        key: 'logo',
+        value: {
+          url: '/logo.png',
         },
       },
-    },
+      {
+        key: 'hero',
+        value: {
+          title: 'Cabinet de Conseil & Accompagnement',
+          subtitle: 'Accédez à un réseau d’experts métier engagés et inspirants afin de favoriser la pérennité de votre entreprise.',
+          ctaText: 'Prendre rendez-vous',
+          ctaLink: '/login',
+          image: '/solutionHero.jpeg',
+        },
+      },
+      {
+        key: 'footer',
+        value: {
+          company: 'DSL Conseil',
+          logoUrl: '/logo.png',
+          tagline: 'Cabinet de conseil en management',
+          email: 'contact@dsl-conseil.com',
+          phone: '+33 1 23 45 67 89',
+          address: 'Paris, France',
+        },
+      },
+      {
+        key: 'hero-solutions',
+        value: {
+          title: 'Des expertises au service de votre performance',
+          subtitle: 'Quatre domaines d\'intervention complémentaires pour une transformation globale et pérenne de votre entreprise.',
+          image: '/solutionHero.jpeg',
+        },
+      },
+      {
+        key: 'hero-approches',
+        value: {
+          title: 'Nos approches',
+          subtitle: 'Depuis 2018, nous accompagnons les entreprises dans le renforcement de la réussite de leurs projets, grâce à trois approches complémentaires.',
+          image: '/solutionHero.jpeg',
+        },
+      },
+      {
+        key: 'hero-contact',
+        value: {
+          title: 'Parlons de votre projet',
+          subtitle: 'Notre équipe vous répond sous 24 heures. Contactez-nous pour transformer vos défis en opportunités de croissance.',
+          image: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=1600',
+        },
+      },
+    ],
   });
-  console.log('✅ Created footer content');
+  console.log('✅ Created site content');
 
   console.log('\n🎉 Seed completed successfully!');
   console.log('\n📝 Test Credentials:');
   console.log('Admin: admin@consultpro.com / admin123');
   console.log('Client: client@consultpro.com / client123');
-  console.log('Consultant: consultant@consultpro.com / consultant123');
+  console.log('Client2: client2@consultpro.com / client123');
+  console.log('Consultant 1: consultant@consultpro.com / consultant123');
   console.log('Consultant 2: consultant2@consultpro.com / consultant123');
+  console.log('Consultant 3: consultant3@consultpro.com / consultant123');
+  console.log('Consultant 4: consultant4@consultpro.com / consultant123');
 }
 
 main()

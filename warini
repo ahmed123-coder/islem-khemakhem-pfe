@@ -54,3 +54,45 @@ const packageWithServices = await prisma.subscription_packages.findUnique({
     }
   }
 })
+
+
+Viewed schema.prisma:1-150
+
+C'est une excellente question. Puisque les modèles `User` et [Consultant](cci:2://file:///c:/Users/Utilisateur/Desktop/projects/learn/src/app/client/services/page.tsx:26:0-30:1) sont séparés dans la base de données (ce ne sont pas juste des rôles différents sur la même table), l'inscription d'un consultant doit suivre un processus "Métier". 
+
+Voici les **3 meilleures options** pour l'onboarding des consultants :
+
+---
+
+### 💡 Option 1 : "Postuler pour devenir Consultant" (Recommandée ⭐)
+On crée une nouvelle page publique (ex: `/devenir-consultant`).
+1. Le candidat remplit un formulaire complet (Nom, Email, Spécialité, Bio, Lien LinkedIn/CV).
+2. Cela crée une requête dans une nouvelle table de la DB (ex: `ConsultantApplication` avec status `PENDING`).
+3. **L'admin** reçoit une notification, voit le profil dans son dashboard, et clique sur **"Accepter"**.
+4. Le clic de l'admin crée automatiquement le compte [Consultant](cci:2://file:///c:/Users/Utilisateur/Desktop/projects/learn/src/app/client/services/page.tsx:26:0-30:1) et envoie un email au candidat avec un mot de passe temporaire pour se connecter.
+
+---
+
+### 💡 Option 2 : Création Manuelle par l'Admin (Mode fermé)
+Il n'y a pas de page d'inscription pour les consultants.
+1. Les candidats postulent par simple email ou via un formulaire "Contact" basique.
+2. Si le cabinet l'accepte, **l'admin va dans son Dashboard** (ex: `/admin/consultants/new`) et crée le profil du consultant manuellement.
+3. Le système envoie un email avec les accès au nouveau consultant.
+*(Très simple et bloque totalement les inscriptions parasites).*
+
+---
+
+### 💡 Option 3 : Inscription bloquée `isActive = false`
+On ajoute un tab "Je suis Consultant" dans le modal d'inscription (Register).
+1. Le consultant s'inscrit lui-même.
+2. Le compte est créé dans la table [Consultant](cci:2://file:///c:/Users/Utilisateur/Desktop/projects/learn/src/app/client/services/page.tsx:26:0-30:1), mais avec `isActive = false` (il ne peut pas se connecter ou n'apparaît pas aux clients).
+3. L'admin voit les "Nouveaux consultants inactifs" dans son dashboard, vérifie leur profil, et bascule `isActive` sur `true`.
+
+---
+
+### 🏆 Mon avis
+- L'**Option 2** est la plus rapide à mettre en place tout de suite si tu as un petit nombre de consultants très qualifiés.
+- L'**Option 1** est la plus pro si tu comptes recruter beaucoup de consultants en continu (système de candidature).
+
+Laquelle de ces options te paraît la plus adaptée à ton business ?
+

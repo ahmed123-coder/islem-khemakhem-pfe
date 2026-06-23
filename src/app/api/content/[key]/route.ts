@@ -1,6 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
+import { requireAuth } from '@/lib/auth/middleware'
 import { prisma } from '@/lib/prisma'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
 // GET /api/content/[key] - Public route
 export async function GET(
@@ -15,18 +16,12 @@ export async function GET(
     })
 
     if (!content) {
-      return NextResponse.json(
-        { error: 'Content not found' },
-        { status: 404 }
-      )
+      return handleError(new Error('Content not found'), req)
     }
 
-    return NextResponse.json(content)
+    return successResponse(content)
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch content' },
-      { status: 500 }
-    )
+    return handleError(error, req)
   }
 }
 
@@ -35,20 +30,15 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ key: string }> }
 ) {
-  try {
-    const user = await getCurrentUser()
-    if (!user || user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-    }
+  const authResult = requireAuth(req, ['ADMIN'])
+  if (!authResult.success) return authResult.response!
 
+  try {
     const { key } = await params
     const { value } = await req.json()
 
     if (!value) {
-      return NextResponse.json(
-        { error: 'Value is required' },
-        { status: 400 }
-      )
+      return handleError(new Error('Value is required'), req)
     }
 
     // Upsert: create if not exists, update if exists
@@ -58,11 +48,9 @@ export async function PUT(
       create: { key, value }
     })
 
-    return NextResponse.json(content)
+    return successResponse(content, 'Content updated successfully')
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to update content' },
-      { status: 500 }
-    )
+    return handleError(error, req)
   }
 }
+

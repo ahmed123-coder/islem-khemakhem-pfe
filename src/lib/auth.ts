@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { cookies } from 'next/headers'
+import { NextRequest } from 'next/server'
 import { prisma } from './prisma'
 
 const JWT_SECRET = process.env.JWT_SECRET!
@@ -58,5 +59,56 @@ export async function getCurrentUser() {
     select: { id: true, email: true, name: true, role: true }
   })
 
-  return user
+  if (user) return user
+
+  // Check consultant table
+  const consultant = await prisma.consultant.findUnique({
+    where: { id: payload.userId },
+    select: { id: true, email: true, name: true }
+  })
+
+  if (consultant) {
+    return { ...consultant, role: 'CONSULTANT' }
+  }
+
+  return null
 }
+
+export async function getConsultantId(): Promise<string | null> {
+  try {
+    const token = await getAuthToken()
+    if (!token) return null
+
+    const payload = verifyToken(token)
+    if (!payload || payload.role !== 'CONSULTANT') return null
+
+    return payload.userId
+  } catch (error) {
+    return null
+  }
+}
+
+export async function getClientId(): Promise<string | null> {
+  try {
+    const token = await getAuthToken()
+    if (!token) return null
+
+    const payload = verifyToken(token)
+    if (!payload || payload.role !== 'CLIENT') return null
+
+    return payload.userId
+  } catch (error) {
+    return null
+  }
+}
+
+export function getConsultantIdFromRequest(req: NextRequest): string | null {
+  const token = req.cookies.get('auth_token')?.value
+  if (!token) return null
+
+  const payload = verifyToken(token)
+  if (!payload || payload.role !== 'CONSULTANT') return null
+
+  return payload.userId
+}
+

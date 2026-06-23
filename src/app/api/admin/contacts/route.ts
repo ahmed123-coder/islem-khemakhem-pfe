@@ -1,38 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { getCurrentUser } from '@/lib/auth'
+import { NextRequest } from 'next/server'
+import { requireAuth } from '@/lib/auth/middleware'
 import { prisma } from '@/lib/prisma'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+export async function GET(req: NextRequest) {
+  const authResult = requireAuth(req, ['ADMIN'])
+  if (!authResult.success) return authResult.response!
+
+  try {
+    const contacts = await prisma.contact.findMany({ 
+      orderBy: { createdAt: 'desc' } 
+    })
+    return successResponse(contacts)
+  } catch (error) {
+    return handleError(error, req)
   }
-
-  const contacts = await prisma.contact.findMany({ orderBy: { createdAt: 'desc' } })
-  return NextResponse.json(contacts)
 }
 
-export async function PUT(req: NextRequest) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const { id, ...data } = await req.json()
-  const contact = await prisma.contact.update({ where: { id }, data })
-  return NextResponse.json(contact)
-}
-
-export async function DELETE(req: NextRequest) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
-
-  const { searchParams } = new URL(req.url)
-  const id = searchParams.get('id')
-  if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
-
-  await prisma.contact.delete({ where: { id } })
-  return NextResponse.json({ success: true })
-}

@@ -6,9 +6,10 @@ import Footer from './Footer'
 
 export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const hideLayout = pathname === '/login' || pathname === '/register' || pathname?.startsWith('/admin')
+  const isDashboard = /\/(en|fr)\/(admin|consultant|client)/.test(pathname) || 
+    pathname?.includes('/admin') || pathname?.includes('/consultant') || pathname?.includes('/client')
 
-  if (hideLayout) {
+  if (isDashboard) {
     return <>{children}</>
   }
 
@@ -16,7 +17,7 @@ export default function LayoutWrapper({ children }: { children: React.ReactNode 
     <>
       <Navbar />
       <main className="flex-1">{children}</main>
-      <Footer />
+      {!pathname?.match(/\/(en|fr)\/(login|register)/) && pathname !== '/login' && pathname !== '/register' && <Footer />}
     </>
   )
 }

@@ -1,39 +1,25 @@
-import { NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { getCurrentUser } from '@/lib/auth'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authResult = requireAuth(request, ['CONSULTANT']);
+  if (!authResult.success || !authResult.user) return authResult.response;
+
   try {
-    const user = await getCurrentUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-    const consultant = await prisma.consultant.findUnique({ where: { email: user.email } })
-    if (!consultant) return NextResponse.json({ error: 'Consultant not found' }, { status: 404 })
-
-    const missions = await prisma.mission.findMany({
-      where: { consultantId: consultant.id },
-      include: { client: { select: { id: true, name: true, email: true } } }
+    const orders = await prisma.order.findMany({
+      where: { consultantId: authResult.user.userId },
+      include: {
+        client: { select: { id: true, name: true, email: true, firstName: true } },
+        serviceTier: { include: { service: true } },
+        reviews: true
+      },
+      orderBy: { createdAt: 'desc' }
     })
-
-    const clientsMap = new Map()
-    missions.forEach(mission => {
-      const clientId = mission.client.id
-      if (!clientsMap.has(clientId)) {
-        clientsMap.set(clientId, {
-          id: clientId,
-          name: mission.client.name,
-          email: mission.client.email,
-          missionCount: 0,
-          activeMissions: 0
-        })
-      }
-      const client = clientsMap.get(clientId)
-      client.missionCount++
-      if (mission.status === 'ACTIVE') client.activeMissions++
-    })
-
-    return NextResponse.json(Array.from(clientsMap.values()))
+    return successResponse(orders || []);
   } catch (error) {
-    return NextResponse.json([])
+    console.error('[CONSULTANT_CLIENTS_GET]', error)
+    return handleError(error, request);
   }
 }

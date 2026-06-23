@@ -1,63 +1,106 @@
-import { NextResponse } from 'next/server'
-import prisma from '@/lib/prisma'
+import { NextRequest } from 'next/server'
+import { prisma } from '@/lib/prisma'
+import { requireAuth } from '@/lib/auth/middleware'
+import { handleError, successResponse } from '@/lib/errors/handler'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const authResult = requireAuth(request, ['ADMIN']);
+  if (!authResult.success) return authResult.response;
+  
   try {
     const [
       blogs,
       services,
       contacts,
-      subscriptions,
-      missions,
       clients,
+      activeClients,
+      inactiveClients,
       consultants,
-      activeMissions,
-      pendingContacts,
-      activeSubscriptions
+      activeConsultants,
+      pendingContacts
     ] = await Promise.all([
       prisma.blog.count(),
       prisma.service.count(),
       prisma.contact.count(),
-      prisma.subscriptions.count(),
-      prisma.mission.count(),
       prisma.user.count({ where: { role: 'CLIENT' } }),
+      prisma.user.count({ where: { role: 'CLIENT', isActive: true } }),
+      prisma.user.count({ where: { role: 'CLIENT', isActive: false } }),
       prisma.consultant.count(),
-      prisma.mission.count({ where: { status: 'ACTIVE' } }),
-      prisma.contact.count({ where: { status: 'new' } }),
-      prisma.subscriptions.findMany({ where: { status: 'ACTIVE' }, include: { subscription_packages: true } })
+      prisma.consultant.count({ where: { isActive: true } }),
+      prisma.contact.count({ where: { status: 'new' } })
     ])
 
-    const revenue = activeSubscriptions.reduce((sum, sub) => {
-      const price = sub.billingCycle === 'MONTHLY' 
-        ? Number(sub.subscription_packages.priceMonthly)
-        : Number(sub.subscription_packages.priceYearly)
-      return sum + price
-    }, 0)
+    // ── Calcul du taux de croissance (30 derniers jours) ──────────
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    
+    const newClients = await prisma.user.count({
+      where: { 
+        role: 'CLIENT',
+        createdAt: { gte: thirtyDaysAgo }
+      }
+    })
 
-    return NextResponse.json({ 
+    const growth = clients > 0 ? ((newClients / clients) * 100).toFixed(1) : "0"
+
+    // ── Données réelles du graphique clients (7 derniers jours) ───
+    const clientsChartData = await Promise.all(
+      Array.from({ length: 7 }, (_, i) => {
+        const date = new Date()
+        date.setDate(date.getDate() - (6 - i))
+        const start = new Date(date)
+        start.setHours(0, 0, 0, 0)
+        const end = new Date(date)
+        end.setHours(23, 59, 59, 999)
+
+        return prisma.user.count({
+          where: {
+            role: 'CLIENT',
+            createdAt: { gte: start, lte: end }
+          }
+        }).then(count => ({
+          name: start.toLocaleDateString('fr-FR', { weekday: 'short' }),
+          value: count
+        }))
+      })
+    )
+
+    // ── Données réelles du graphique contacts (7 derniers jours) ──
+    const contactsChartData = await Promise.all(
+      Array.from({ length: 7 }, (_, i) => {
+        const date = new Date()
+        date.setDate(date.getDate() - (6 - i))
+        const start = new Date(date)
+        start.setHours(0, 0, 0, 0)
+        const end = new Date(date)
+        end.setHours(23, 59, 59, 999)
+
+        return prisma.contact.count({
+          where: {
+            createdAt: { gte: start, lte: end }
+          }
+        }).then(count => ({
+          name: start.toLocaleDateString('fr-FR', { weekday: 'short' }),
+          value: count
+        }))
+      })
+    )
+
+    return successResponse({ 
       blogs, 
       services, 
-      contacts, 
-      subscriptions, 
-      missions,
+      contacts,
       clients,
+      activeClients,
+      inactiveClients,
       consultants,
-      revenue,
-      activeMissions,
-      pendingContacts
-    })
+      activeConsultants,
+      pendingContacts,
+      growth,
+      clientsChartData,   // ← nouvelles données graphique clients
+      contactsChartData,  // ← nouvelles données graphique contacts
+    });
   } catch (error) {
-    return NextResponse.json({ 
-      blogs: 0, 
-      services: 0, 
-      contacts: 0, 
-      subscriptions: 0, 
-      missions: 0,
-      clients: 0,
-      consultants: 0,
-      revenue: 0,
-      activeMissions: 0,
-      pendingContacts: 0
-    })
+    return handleError(error, request);
   }
 }
