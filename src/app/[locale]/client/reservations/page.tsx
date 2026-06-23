@@ -15,7 +15,8 @@ import {
   ArrowRight,
   Star,
   Pencil,
-  Sparkles
+  Sparkles,
+  Play
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'react-hot-toast'
@@ -34,7 +35,8 @@ import { getNextSessionInfo, NextSessionResult } from '@/lib/sessions-config'
 export default function OrderDetails() {
   const params = useParams()
   const router = useRouter()
-  const { locale, orderId } = params
+  const { locale } = params
+  const orderId = params.orderId as string
 
   const [order, setOrder] = useState<any>(null)
   const [reservations, setReservations] = useState<any[]>([])

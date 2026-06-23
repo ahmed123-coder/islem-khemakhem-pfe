@@ -72,7 +72,7 @@ setLoading(false)
 
   return (
     <StandardPage
-      locale={locale}
+      locale={locale as string}
       title={t("title")}
       description={t("description")}
       breadcrumbs={[{ label: "Dashboard" }, { label: t("title") }]}

@@ -36,7 +36,7 @@ interface OrderLike {
 }
 
 interface ReservationLike {
-  orderId: string
+  orderId: string | null
   status: string
   startTime: string | Date
   endTime: string | Date

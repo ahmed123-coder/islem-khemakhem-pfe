@@ -8,49 +8,48 @@ datasource db {
 }
 
 model User {
-  id            String         @id @default(cuid())
-  email         String         @unique
-  password      String
-  name          String?
-  firstName     String?
-  phone         String?
-  company       String?
-  sector        String?
-  address       String?
+  id               String         @id @default(cuid())
+  email            String         @unique
+  password         String
+  name             String?
+  firstName        String?
+  phone            String?
+  company          String?
+  sector           String?
+  address          String?
   matriculeFiscale String?
-  needs         String?
-  role          Role           @default(CLIENT)
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-
-  missionFiles  MissionFile[]
-  notifications Notification[]
-  orders        Order[]
-  reservations  Reservation[]
+  needs            String?
+  role             Role           @default(CLIENT)
+  isActive         Boolean        @default(true)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  missionFiles     MissionFile[]
+  notifications    Notification[]
+  orders           Order[]
+  reservations     Reservation[]
 }
 
 model Consultant {
-  id           String        @id @default(cuid())
-  email        String        @unique
-  password     String
-  name         String
-  firstName    String?
-  phone        String?
-  specialty    String?
-  hourlyRate   Decimal?      @db.Decimal(10, 2)
-  bio          String?
-  imageUrl     String?
-  isActive     Boolean       @default(true)
-  cvUrl        String?
+  id             String         @id @default(cuid())
+  email          String         @unique
+  password       String
+  name           String
+  firstName      String?
+  phone          String?
+  specialty      String?
+  hourlyRate     Decimal?       @db.Decimal(10, 2)
+  bio            String?
+  imageUrl       String?
+  isActive       Boolean        @default(true)
+  cvUrl          String?
   certifications String[]
-  createdAt    DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  missions      Mission[]
-  orders        Order[]
-  reservations  Reservation[]
-  services      Service[]
-  notifications Notification[]
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  missions       Mission[]
+  notifications  Notification[]
+  orders         Order[]
+  reservations   Reservation[]
+  services       Service[]      @relation("ConsultantToService")
 }
 
 model Service {
@@ -65,7 +64,7 @@ model Service {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   tiers       ServiceTier[]
-  consultants Consultant[]
+  consultants Consultant[]  @relation("ConsultantToService")
 }
 
 model ServiceTier {
@@ -100,10 +99,10 @@ model Order {
   calls           Call[]
   messages        Message[]
   missions        Mission[]
+  client          User          @relation(fields: [clientId], references: [id])
+  consultant      Consultant?   @relation(fields: [consultantId], references: [id])
+  serviceTier     ServiceTier   @relation(fields: [serviceTierId], references: [id])
   reservations    Reservation[]
-  client          User        @relation(fields: [clientId], references: [id])
-  consultant      Consultant? @relation(fields: [consultantId], references: [id])
-  serviceTier     ServiceTier @relation(fields: [serviceTierId], references: [id])
 
   @@index([clientId])
   @@index([consultantId])
@@ -118,7 +117,6 @@ model Message {
   content    String
   createdAt  DateTime   @default(now())
   order      Order      @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
 
   @@index([orderId])
 }
@@ -197,9 +195,9 @@ model Reservation {
   zoomPassword  String?
   createdAt     DateTime          @default(now())
   orderId       String?
-  order         Order?            @relation(fields: [orderId], references: [id], onDelete: Cascade)
   client        User              @relation(fields: [clientId], references: [id])
   consultant    Consultant        @relation(fields: [consultantId], references: [id])
+  order         Order?            @relation(fields: [orderId], references: [id], onDelete: Cascade)
   serviceTier   ServiceTier       @relation(fields: [serviceTierId], references: [id])
 
   @@index([clientId])
@@ -216,8 +214,8 @@ model Notification {
   message      String
   isRead       Boolean          @default(false)
   createdAt    DateTime         @default(now())
-  user         User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
   consultant   Consultant?      @relation(fields: [consultantId], references: [id], onDelete: Cascade)
+  user         User?            @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([consultantId])
@@ -263,7 +261,6 @@ model Faq {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
-
 
 enum Role {
   CLIENT
