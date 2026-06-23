@@ -128,7 +128,7 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         }
       } else {
         // Pack illimité (ULTIMATE) : le projet est-il clôturé par le consultant ?
-        if (order.status === 'COMPLETED') {
+        if (String(order.status) === 'COMPLETED') {
           throw new Error('Ce projet est terminé. Aucune nouvelle séance ne peut être réservée.')
         }
       }

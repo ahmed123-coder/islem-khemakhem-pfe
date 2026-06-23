@@ -109,7 +109,7 @@ export default function ContactsCRM() {
 
   return (
     <StandardPage
-      locale={locale}
+      locale={locale as string}
       title={t("title")}
       description={t("description")}
       breadcrumbs={[{ label: t("breadcrumbs.system") }, { label: t("breadcrumbs.contacts") }]}

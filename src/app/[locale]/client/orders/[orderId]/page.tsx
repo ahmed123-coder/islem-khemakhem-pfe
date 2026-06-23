@@ -16,7 +16,8 @@ import {
   ArrowRight,
   Star,
   Pencil,
-  Sparkles
+  Sparkles,
+  Play
 } from 'lucide-react'
 import { format } from 'date-fns'
 import { toast } from 'react-hot-toast'
@@ -36,7 +37,8 @@ export default function OrderDetails() {
   const t = useTranslations("clientPage.orders")
   const params = useParams()
   const router = useRouter()
-  const { locale, orderId } = params
+  const { locale } = params
+  const orderId = params.orderId as string
 
   const [order, setOrder] = useState<any>(null)
   const [reservations, setReservations] = useState<any[]>([])
@@ -624,7 +626,7 @@ export default function OrderDetails() {
                         <div>
                             <p className="font-black text-emerald-900 text-sm uppercase tracking-tight">{t('allSessionsPlanned')}</p>
                             <p className="text-emerald-700 text-sm font-medium mt-0.5">
-                               {t('allSessionsPlannedDesc', { used: Math.round(nextSession.usedMinutes), total: nextSession.totalMinutes })}
+                               {t('allSessionsPlannedDesc', { used: Math.round(nextSession.usedMinutes), total: nextSession.totalMinutes ?? 0 })}
                             </p>
                         </div>
                      </div>

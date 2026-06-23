@@ -944,7 +944,7 @@ export default function ConsultantClients() {
               </div>
               <DialogTitle className="text-2xl font-black text-slate-900 mb-2">{t('areYouSure')}</DialogTitle>
               <DialogDescription className="text-slate-500 font-medium leading-relaxed px-4">
-                {t('deleteWarning', { type: deleteContext?.type })}
+                {t('deleteWarning', { type: deleteContext?.type ?? '' })}
               </DialogDescription>
             </div>
             <div className="p-8 flex flex-col gap-3">
@@ -989,10 +989,10 @@ export default function ConsultantClients() {
                 )}
               </div>
               <DialogTitle className="text-2xl font-black text-slate-900 mb-2">
-                {t('updateTo', { status: targetStatus })}
+                {t('updateTo', { status: targetStatus ?? '' })}
               </DialogTitle>
               <DialogDescription className="text-slate-500 font-medium leading-relaxed px-4">
-                {t('confirmStatusChange', { status: targetStatus })}
+                {t('confirmStatusChange', { status: targetStatus ?? '' })}
               </DialogDescription>
             </div>
             <div className="p-8 flex flex-col gap-3">

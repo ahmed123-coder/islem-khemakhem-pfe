@@ -422,7 +422,7 @@ export default function UsersPage() {
 
   return (
     <StandardPage
-      locale={locale}
+      locale={locale as string}
       title={t('title')}
       description={t('description', { count: users.length })}
       breadcrumbs={[{ label: t('breadcrumbs.system') }, { label: t('breadcrumbs.users') }]}
@@ -622,7 +622,7 @@ export default function UsersPage() {
                </div>
                <div>
                  <DialogTitle className="text-2xl font-black text-slate-900 leading-none mb-1">{t('order.initializeFlow')}</DialogTitle>
-                 <DialogDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400">{t('order.newAcquisition', { name: orderTarget?.name || orderTarget?.email })}</DialogDescription>
+                 <DialogDescription className="font-bold text-[10px] uppercase tracking-widest text-slate-400">{t('order.newAcquisition', { name: orderTarget?.name || orderTarget?.email || '' })}</DialogDescription>
                </div>
             </div>
           </DialogHeader>
@@ -645,22 +645,22 @@ export default function UsersPage() {
                 <div className="space-y-3">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 font-bold">{t('order.availableTiers')}</Label>
                   <div className="space-y-2">
-                    {tiers.map(t => (
+                    {tiers.map(tier => (
                       <div 
-                        key={t.id} 
-                        onClick={() => setSelectedTier(t.id)}
+                        key={tier.id} 
+                        onClick={() => setSelectedTier(tier.id)}
                         className={cn(
                           "p-4 rounded-[28px] border-2 cursor-pointer transition-all flex items-center justify-between group",
-                          selectedTier === t.id 
+                          selectedTier === tier.id 
                             ? "bg-blue-600 border-blue-600 text-white shadow-xl shadow-blue-100" 
                             : "bg-slate-50 border-transparent hover:bg-slate-100"
                         )}
                       >
                         <div>
-                          <p className={cn("text-xs font-black uppercase tracking-widest mb-0.5", selectedTier === t.id ? "text-blue-100" : "text-slate-400")}>{t.tierType}</p>
-                          <p className={cn("text-sm font-bold", selectedTier === t.id ? "text-white" : "text-slate-900")}>{t.description || t('order.fullAccess')}</p>
+                          <p className={cn("text-xs font-black uppercase tracking-widest mb-0.5", selectedTier === tier.id ? "text-blue-100" : "text-slate-400")}>{tier.tierType}</p>
+                          <p className={cn("text-sm font-bold", selectedTier === tier.id ? "text-white" : "text-slate-900")}>{tier.description || t('order.fullAccess')}</p>
                         </div>
-                        <span className={cn("text-lg font-black italic", selectedTier === t.id ? "text-white" : "text-blue-600")}>{Number(t.price).toFixed(0)} <span className="text-[10px]">DT</span></span>
+                        <span className={cn("text-lg font-black italic", selectedTier === tier.id ? "text-white" : "text-blue-600")}>{Number(tier.price).toFixed(0)} <span className="text-[10px]">DT</span></span>
                       </div>
                     ))}
                   </div>

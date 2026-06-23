@@ -446,7 +446,7 @@ export default function ConsultantsPage() {
 
   return (
     <StandardPage
-      locale={locale}
+      locale={locale as string}
       title={t("title")}
       description={t("description", { count: consultants.length })}
       breadcrumbs={[{ label: t("breadcrumbs.system") }, { label: t("breadcrumbs.consultants") }]}

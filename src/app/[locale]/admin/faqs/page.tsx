@@ -145,7 +145,7 @@ export default function FaqsAdmin() {
 
   return (
     <StandardPage
-      locale={locale}
+      locale={locale as string}
       title={t("title")}
       description={t("description")}
       breadcrumbs={[{ label: t("breadcrumbs.content") }, { label: t("breadcrumbs.faqs") }]}

@@ -293,7 +293,7 @@ export default function AdminDashboard() {
                         <XAxis dataKey="name" hide />
                         <Tooltip
                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
-                          formatter={(value: number) => [`${value} clients`, '']}
+                          formatter={(value) => [`${value} clients`, '']}
                         />
                         {/* changer stroke="#2563eb" pour la couleur de la ligne */}
                         <Area 
@@ -405,7 +405,7 @@ export default function AdminDashboard() {
                   <XAxis dataKey="name" hide />
                   <Tooltip
                     contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
-                    formatter={(value: number) => [`${value} contacts`, '']}
+                    formatter={(value) => [`${value} contacts`, '']}
                   />
                   {/* couleur orange pour les contacts */}
                   <Area 
