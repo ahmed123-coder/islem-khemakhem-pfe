@@ -8,8 +8,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
   if (!authResult.success) return authResult.response!
 
   try {
-    await prisma.consultant.delete({ where: { id: params.id } })
-    return successResponse({ success: true }, 'Consultant deleted successfully')
+    await prisma.consultant.update({
+      where: { id: params.id },
+      data: { isActive: false }
+    })
+    return successResponse({ success: true }, 'Consultant deactivated')
   } catch (error) {
     return handleError(error, req)
   }

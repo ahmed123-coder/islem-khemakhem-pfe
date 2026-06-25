@@ -35,8 +35,12 @@ import { getNextSessionInfo, NextSessionResult } from '@/lib/sessions-config'
 export default function OrderDetails() {
   const params = useParams()
   const router = useRouter()
+<<<<<<< HEAD
   const { locale } = params
   const orderId = params.orderId as string
+=======
+  const { locale, orderId } = params as { locale: string; orderId: string }
+>>>>>>> 1f2e273 (Initial commit)
 
   const [order, setOrder] = useState<any>(null)
   const [reservations, setReservations] = useState<any[]>([])
@@ -58,6 +62,8 @@ export default function OrderDetails() {
   })
 
   const scrollRef = useRef<HTMLDivElement>(null)
+  const bookingSectionRef = useRef<HTMLDivElement>(null)
+  const prevReservationsRef = useRef<any[]>([])
 
   useEffect(() => {
     fetchOrder()
@@ -101,6 +107,21 @@ export default function OrderDetails() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages, activeTab])
+
+  useEffect(() => {
+    const prev = prevReservationsRef.current
+    if (prev.length > 0) {
+      const cancelledReservations = reservations.filter(r => r.status === 'CANCELLED')
+      const prevCancelled = prev.filter(r => r.status === 'CANCELLED')
+      if (cancelledReservations.length > prevCancelled.length) {
+        toast.success('Le consultant a refusé la séance. Vous pouvez réserver une autre date.')
+        setTimeout(() => {
+          bookingSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 400)
+      }
+    }
+    prevReservationsRef.current = reservations
+  }, [reservations])
 
   const fetchOrder = async () => {
     try {
@@ -163,6 +184,10 @@ export default function OrderDetails() {
       if (res.ok) {
         toast.success('Réservation annulée')
         fetchReservations()
+        setNextSessionSelection(null)
+        setTimeout(() => {
+          bookingSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 400)
       } else {
         const data = await res.json()
         toast.error(data.error || 'Erreur lors de l\'annulation')
@@ -314,12 +339,12 @@ export default function OrderDetails() {
                <Avatar className="h-12 w-12 border-2 border-white shadow-md ring-2 ring-blue-50">
                   <AvatarImage src={order.consultant?.image} />
                   <AvatarFallback className="bg-blue-600 text-white font-bold text-xs uppercase">
-                    {order.consultant?.name?.substring(0, 2) || 'EX'}
+                    {[order.consultant?.firstName, order.consultant?.name].filter(Boolean).map(s => s[0]).join('').substring(0, 2) || 'EX'}
                   </AvatarFallback>
                </Avatar>
                <div>
                   <p className="text-[9px] font-black uppercase text-slate-400 tracking-widest mb-1 font-sans">Expert Assigned</p>
-                  <p className="text-sm font-black text-slate-900 leading-none font-sans">{order.consultant?.name || 'Assigned Pending'}</p>
+                  <p className="text-sm font-black text-slate-900 leading-none font-sans">{[order.consultant?.firstName, order.consultant?.name].filter(Boolean).join(' ') || 'Assigned Pending'}</p>
                </div>
             </div>
             <div className="flex flex-col gap-2">
@@ -525,9 +550,9 @@ export default function OrderDetails() {
                        SECTION — RÉSERVER LA PROCHAINE SÉANCE
                        S'affiche uniquement quand nextSession.canBook === true
                    ══════════════════════════════════════════ */}
-                   {nextSession.canBook && (
-                     <div className="space-y-6">
-                       <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[2rem] p-8 text-white shadow-xl shadow-blue-200 relative overflow-hidden">
+                    {nextSession.canBook && (
+                      <div ref={bookingSectionRef} className="space-y-6">
+                        <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-[2rem] p-8 text-white shadow-xl shadow-blue-200 relative overflow-hidden">
                           <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-24 -mt-24 blur-2xl" />
                           <div className="relative z-10 flex items-start gap-4">
                              <div className="w-12 h-12 bg-white/15 rounded-2xl flex items-center justify-center flex-shrink-0">

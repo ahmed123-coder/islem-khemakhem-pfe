@@ -34,7 +34,7 @@ type Faq = {
 }
 
 export default function FaqsAdmin() {
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const t = useTranslations('adminPage.faqs')
   const commonT = useTranslations('common')
   const [faqs, setFaqs] = React.useState<Faq[]>([])

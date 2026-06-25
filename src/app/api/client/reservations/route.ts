@@ -53,7 +53,10 @@ export async function POST(request: NextRequest) {
         endTime:       new Date(endTime),          // Convertir string → Date
         meetingType:   meetingType || 'ZOOM',      // Par défaut : réunion en ligne
         status:        'PENDING',                  // En attente de confirmation du consultant
+<<<<<<< HEAD
 
+=======
+>>>>>>> 1f2e273 (Initial commit)
       }
     })
 

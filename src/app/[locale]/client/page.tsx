@@ -35,7 +35,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { cn } from "@/lib/utils"
 
 export default function ClientDashboard() {
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const t = useTranslations('client.dashboard')
   const commonT = useTranslations('common')
   const [orders, setOrders] = useState<any[]>([])
@@ -230,11 +230,7 @@ export default function ClientDashboard() {
                         {t('manageSubscriptions')} <ExternalLink className="w-4 h-4 ml-2 opacity-30 group-hover:opacity-100 transition-opacity" />
                      </Button>
                    </Link>
-                   <Link href={`/${locale}/client/solutions`} className="w-full">
-                      <Button variant="outline" className="w-full h-14 bg-white border-slate-200 hover:bg-slate-50 text-slate-900 rounded-[1.5rem] font-black uppercase text-xs tracking-widest shadow-sm transition-all active:scale-95">
-                         {t('upgradeExperience')}
-                      </Button>
-                    </Link>
+                   
                 </div>
               </CardContent>
             </Card>

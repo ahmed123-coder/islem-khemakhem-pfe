@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "home": "Accueil",
     "about": "À propos",
@@ -1063,8 +1063,8 @@
         "editProfile": "Modifier le profil",
         "initializeOrder": "Initialiser la commande",
         "modifyAccount": "Modifier le compte",
-        "suspendAccess": "Suspendre l'accès",
-        "restorePulse": "Restaurer le pouls",
+        "suspendAccess": "Désactiver le compte",
+        "restorePulse": "Activer le compte",
         "terminateRecord": "Supprimer le dossier",
         "close": "Fermer"
       },
@@ -1073,7 +1073,7 @@
         "inactive": "Inactif",
         "vip": "VIP",
         "done": "terminé",
-        "pulseActive": "Pouls actif",
+        "pulseActive": "Compte actif",
         "locked": "Verrouillé"
       },
       "metrics": {
@@ -1140,8 +1140,8 @@
       "viewCertificate": "Voir le certificat {num}",
       "expertProtocols": "Protocoles Expert",
       "modifyProfile": "Modifier le profil",
-      "suspendAccess": "Suspendre l'accès",
-      "restoreNode": "Restaurer le nœud",
+      "suspendAccess": "Désactiver le compte",
+      "restoreNode": "Activer le compte",
       "deactivateConsultant": "Désactiver le consultant",
       "assignedServices": "Services assignés",
       "cvResume": "CV / Résumé",
@@ -1168,11 +1168,13 @@
         "system": "Système",
         "consultants": "Consultants"
       },
+      "activeNode": "Compte actif",
+      "suspended": "Compte inactif",
       "status": {
         "active": "Actif",
         "inactive": "Inactif",
-        "activeNode": "Nœud actif",
-        "suspended": "Suspendu"
+        "activeNode": "Compte actif",
+        "suspended": "Compte inactif"
       },
       "detail": {
         "email": "E-mail",
@@ -1200,7 +1202,12 @@
         "secureProtocol": "Protocole sécurisé (Mot de passe)",
         "primeSpecialty": "Spécialité principale",
         "hourlyRate": "Taux horaire (DT)",
-        "avatarContentUrl": "URL de l'avatar",
+        "avatarContentUrl": "Photo d'avatar",
+        "avatarFormats": "(JPG, PNG)",
+        "currentAvatarUploaded": "Avatar actuel téléchargé",
+        "clickToReplaceAvatar": "Cliquez pour remplacer l'avatar",
+        "clickToUploadAvatar": "Cliquez pour télécharger l'avatar",
+        "avatarFormatsDetailed": "JPG, PNG, WEBP",
         "cvResume": "CV / Résumé",
         "cvFormats": "(PDF, DOC)",
         "currentCvUploaded": "CV actuel téléchargé",
@@ -1218,7 +1225,7 @@
         "uploading": "Téléchargement...",
         "finalizeModification": "Finaliser la modification",
         "deployProtocol": "Déployer le protocole"
-      },
+      },      
       "actions": {
         "edit": "Modifier",
         "delete": "Supprimer",
@@ -1230,7 +1237,7 @@
         "active": "Actif",
         "inactive": "Inactif"
       },
-      "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce consultant ?"
+      "confirmDelete": "Êtes-vous sûr de vouloir désactiver ce consultant ?"
     },
     "contacts": {
       "title": "Centre de Communication",
@@ -1485,7 +1492,7 @@
       },
       "preview": "Aperçu du site",
       "saving": "Sauvegarde...",
-      "deploy": "Déployer les modifications",
+      "deploy": "Sauvegarder",
       "dynamicImagery": "Imagerie Dynamique",
       "heroBgSlideshow": "Diaporama de fond Hero",
       "dragDrop": "Glisser-déposer de nouveaux visuels",

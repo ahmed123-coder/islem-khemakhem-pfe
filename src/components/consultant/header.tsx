@@ -48,7 +48,7 @@ const navItems = [
 ]
 
 export function ConsultantHeader({ user: propUser }: { user?: any } = {}) {
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const pathname = usePathname()
   const [user, setUser] = React.useState<any>(propUser || null)
   const [notifications, setNotifications] = React.useState<any[]>([])

@@ -132,27 +132,12 @@ export default function Header({ title }: HeaderProps) {
   if (!mounted) return null
 
   return (
-    <header className="h-20 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 flex items-center justify-between px-8 md:px-12 sticky top-0 z-40 font-sans">
+    <header className="h-20 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 flex items-center justify-end px-8 md:px-12 sticky top-0 z-40 font-sans">
       
-      {/* Gauche — message de bienvenue */}
-      <div className="flex items-center gap-3">
-        <SidebarToggle theme="client" />
-        <div className="flex flex-col">
-          {/* ✅ Affiche le prénom + nom mis à jour en temps réel */}
-          <h2 className="text-xl font-black text-slate-900 tracking-tight">
-            {displayName
-              ? t('welcomeBack', { name: displayName })
-              : t('welcomeBackGuest')
-            }
-          </h2>
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mt-1 hidden sm:block">
-            {t('happeningDesc')}
-          </p>
-        </div>
-      </div>
+      <SidebarToggle theme="client" />
 
       {/* Droite — notifications + avatar */}
-      <div className="flex items-center gap-4 md:gap-6">
+      <div className="flex items-center gap-4 md:gap-6 ml-4">
         <div className="flex items-center gap-2 pr-6 border-r border-slate-200">
           <LanguageSwitcher />
 

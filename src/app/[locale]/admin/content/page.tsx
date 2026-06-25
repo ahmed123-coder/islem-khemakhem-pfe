@@ -34,7 +34,7 @@ import { cn } from '@/lib/utils'
 type Section = 'hero' | 'logo' | 'footer' | 'hero-solutions' | 'hero-approches' | 'hero-contact'
 
 export default function SiteVisualEditor() {
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const t = useTranslations("adminPage.content")
   const [activeTab, setActiveTab] = React.useState<Section>('hero')
   const [content, setContent] = React.useState<any>({})
@@ -131,15 +131,11 @@ export default function SiteVisualEditor() {
             <TabsTrigger value="logo" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
               <ImageIcon className="w-4 h-4" /> {t("tabs.globalLogo")}
             </TabsTrigger>
-            <TabsTrigger value="footer" className="gap-2 px-6 rounded-[18px] data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all">
-              <Columns className="w-4 h-4" /> {t("tabs.globalFooter")}
-            </TabsTrigger>
+            
           </TabsList>
-          
-<div className="flex items-center gap-3">
-              <Button variant="ghost" className="rounded-2xl font-bold text-xs gap-2">
-                <ExternalLink className="w-4 h-4" /> {t("preview")}
-              </Button>
+          <div className="flex items-center gap-3">
+             
+
               <Button 
                 onClick={handleSave}
                 disabled={isLoading}
@@ -217,35 +213,7 @@ export default function SiteVisualEditor() {
                       </div>
                    </div>
                 </Card>
-
-                {/* Second Row: Actions */}
-                <Card className="p-8 rounded-[40px] border-none bg-white/70 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.04)] space-y-6 md:col-span-2">
-<div className="flex items-center gap-3 mb-2">
-                       <div className="w-10 h-10 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-600">
-                          <MousePointer2 className="w-5 h-5" />
-                       </div>
-                       <h3 className="text-xl font-bold text-slate-900">{t("interactionCta")}</h3>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                      <div className="space-y-1.5">
-                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t("buttonText")}</label>
-                         <Input 
-                           value={content.ctaText || ''} 
-                           onChange={(e) => setContent({ ...content, ctaText: e.target.value })}
-                           className="h-12 rounded-2xl border-slate-100 bg-white shadow-sm font-bold"
-                         />
-                      </div>
-                      <div className="space-y-1.5">
-                         <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t("destinationUrl")}</label>
-                        <Input 
-                          value={content.ctaLink || ''} 
-                          onChange={(e) => setContent({ ...content, ctaLink: e.target.value })}
-                          className="h-12 rounded-2xl border-slate-100 bg-white shadow-sm font-bold"
-                        />
-                     </div>
-                   </div>
-                </Card>
+                
               </div>
             </div>
           </div>
@@ -286,32 +254,7 @@ export default function SiteVisualEditor() {
         </TabsContent>
       </Tabs>
       
-      {/* Live Preview System (Visual Overlay Example) */}
-      <div className="mt-20 pt-10 border-t border-slate-100">
-<div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-slate-300 mb-8">
-             {t("designSystem")} <ChevronRight className="w-3" /> {t("preview")}
-          </div>
-         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="p-6 rounded-[32px] bg-white shadow-sm border border-slate-50 flex items-center gap-4">
-               <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
-                  <Monitor className="w-6 h-6" />
-               </div>
-<div>
-                   <h4 className="font-bold text-slate-900 leading-tight">{t("desktopView")}</h4>
-                   <p className="text-[10px] font-bold text-emerald-600 uppercase">{t("optimalView")}</p>
-                </div>
-            </div>
-            <div className="p-6 rounded-[32px] bg-white shadow-sm border border-slate-50 flex items-center gap-4">
-               <div className="w-12 h-12 rounded-2xl bg-slate-50 flex items-center justify-center text-slate-400 hover:text-blue-600 transition-colors">
-                  <Smartphone className="w-6 h-6" />
-               </div>
-               <div>
-                  <h4 className="font-bold text-slate-400 leading-tight">{t("mobileResponsive")}</h4>
-                  <p className="text-[10px] font-bold text-slate-300 uppercase">{t("syncPending")}</p>
-               </div>
-            </div>
-         </div>
-      </div>
+      
     </StandardPage>
   )
 }

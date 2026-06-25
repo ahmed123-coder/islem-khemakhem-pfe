@@ -60,7 +60,7 @@ type Tier = {
 }
 
 export default function ServicesCMS() {
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const t = useTranslations("adminPage.solution")
   const [services, setServices] = React.useState<Service[]>([])
   const [selectedId, setSelectedId] = React.useState<string | null>(null)

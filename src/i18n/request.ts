@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation';
 
 export const locales = ['en', 'fr'] as const;
 export type Locale = (typeof locales)[number];
-export const defaultLocale: Locale = 'en';
+export const defaultLocale: Locale = 'fr';
 
 export default getRequestConfig(async ({ requestLocale }) => {
   const validatedLocale = typeof requestLocale === 'string' && locales.includes(requestLocale as Locale)

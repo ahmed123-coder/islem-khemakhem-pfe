@@ -17,7 +17,14 @@ export async function GET(request: NextRequest) {
       inactiveClients,
       consultants,
       activeConsultants,
-      pendingContacts
+      pendingContacts,
+      totalOrders,
+      activeOrders,
+      pendingOrders,
+      completedOrders,
+      totalReservations,
+      revenueData,
+      avgRatingData
     ] = await Promise.all([
       prisma.blog.count(),
       prisma.service.count(),
@@ -27,7 +34,20 @@ export async function GET(request: NextRequest) {
       prisma.user.count({ where: { role: 'CLIENT', isActive: false } }),
       prisma.consultant.count(),
       prisma.consultant.count({ where: { isActive: true } }),
-      prisma.contact.count({ where: { status: 'new' } })
+      prisma.contact.count({ where: { status: 'new' } }),
+      prisma.order.count(),
+      prisma.order.count({ where: { status: 'ACTIVE' } }),
+      prisma.order.count({ where: { status: 'PENDING' } }),
+      prisma.order.count({ where: { status: 'COMPLETED' } }),
+      prisma.reservation.count(),
+      prisma.invoice.aggregate({
+        _sum: { amount: true },
+        where: { status: 'PAID' }
+      }),
+      prisma.review.aggregate({
+        _avg: { rating: true },
+        where: { isPublished: true }
+      })
     ])
 
     // ── Calcul du taux de croissance (30 derniers jours) ──────────
@@ -86,6 +106,11 @@ export async function GET(request: NextRequest) {
       })
     )
 
+    const totalRevenue = Number(revenueData._sum.amount || 0)
+    const avgRating    = avgRatingData._avg.rating !== null
+      ? (avgRatingData._avg.rating || 0).toFixed(1)
+      : "0"
+
     return successResponse({ 
       blogs, 
       services, 
@@ -97,8 +122,15 @@ export async function GET(request: NextRequest) {
       activeConsultants,
       pendingContacts,
       growth,
-      clientsChartData,   // ← nouvelles données graphique clients
-      contactsChartData,  // ← nouvelles données graphique contacts
+      clientsChartData,
+      contactsChartData,
+      totalOrders,
+      activeOrders,
+      pendingOrders,
+      completedOrders,
+      totalReservations,
+      totalRevenue,
+      avgRating,
     });
   } catch (error) {
     return handleError(error, request);

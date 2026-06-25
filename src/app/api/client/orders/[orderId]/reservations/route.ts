@@ -98,14 +98,14 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
       //    - CONFIRMED dont la réunion n'a pas encore eu lieu → bloque
       //    - CONFIRMED dont l'heure est déjà passée → NE bloque PAS
       //      (compté comme "terminée" même si le consultant n'a pas cliqué "Terminer")
-      if (hasBlockingReservation(order.reservations)) {
+      if (hasBlockingReservation(order.reservations as any)) {
         throw new Error('Vous avez déjà une réservation en cours. Terminez-la ou annulez-la avant d\'en prévoir une autre.')
       }
 
       // 2. Calcule le budget de temps restant (maxCallDuration - minutes utilisées)
       const total      = getTotalMinutes(order.serviceTier)
-      const used       = getUsedMinutes(order.reservations)
-      const nextIndex  = countFinishedSessions(order.reservations)
+      const used       = getUsedMinutes(order.reservations as any)
+      const nextIndex  = countFinishedSessions(order.reservations as any)
       const sessionLabel = `Séance ${nextIndex + 1}`
 
       // Durée demandée par le client (en minutes, sans le buffer)
@@ -128,7 +128,11 @@ export async function POST(req: NextRequest, { params }: { params: { orderId: st
         }
       } else {
         // Pack illimité (ULTIMATE) : le projet est-il clôturé par le consultant ?
+<<<<<<< HEAD
         if (String(order.status) === 'COMPLETED') {
+=======
+        if ((order.status as string) === 'COMPLETED') {
+>>>>>>> 1f2e273 (Initial commit)
           throw new Error('Ce projet est terminé. Aucune nouvelle séance ne peut être réservée.')
         }
       }

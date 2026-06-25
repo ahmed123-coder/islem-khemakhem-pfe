@@ -10,7 +10,7 @@ import type { HeroContent } from '@/lib/content'
 
 export default function Hero() {
   const t = useTranslations('home')
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const [content, setContent] = useState<HeroContent | null>(null)
 
   useEffect(() => {

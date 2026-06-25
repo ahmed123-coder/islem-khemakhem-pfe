@@ -107,7 +107,7 @@ const STATUS_COLORS: Record<string, string> = {
 const COMPLETED_ORDER_THRESHOLD = 3
 
 export default function UsersPage() {
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const t = useTranslations('adminPage.users')
   const commonT = useTranslations('common')
   const [users, setUsers] = React.useState<User[]>([])
@@ -362,13 +362,7 @@ export default function UsersPage() {
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 p-2 rounded-[24px] shadow-2xl border-slate-100 backdrop-blur-xl bg-white/90">
               <DropdownMenuLabel className="px-3 py-2 text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('protocol')}</DropdownMenuLabel>
-              <DropdownMenuItem 
-               onClick={() => openOrderModal(user)}
-               className="rounded-xl px-3 py-2.5 cursor-pointer transition-colors focus:bg-blue-50 focus:text-blue-600 font-bold text-sm"
-              >
-                <ShoppingCart className="w-4 h-4 mr-3" />
-                {t('actions.initializeOrder')}
-              </DropdownMenuItem>
+              
               <DropdownMenuItem 
                onClick={() => handleOpenEdit(user)}
                className="rounded-xl px-3 py-2.5 cursor-pointer transition-colors focus:bg-blue-50 focus:text-blue-600 font-bold text-sm"
@@ -612,6 +606,7 @@ export default function UsersPage() {
         </DialogContent>
       </Dialog>
 
+<<<<<<< HEAD
       {/* Initialize Order Modal */}
       <Dialog open={!!orderTarget} onOpenChange={() => setOrderTarget(null)}>
         <DialogContent className="max-w-md p-0 overflow-hidden border-none bg-white rounded-[40px] shadow-2xl">
@@ -680,6 +675,9 @@ export default function UsersPage() {
           </div>
         </DialogContent>
       </Dialog>
+=======
+      
+>>>>>>> 1f2e273 (Initial commit)
     </StandardPage>
   )
 }

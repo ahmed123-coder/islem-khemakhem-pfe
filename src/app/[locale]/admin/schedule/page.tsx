@@ -10,6 +10,7 @@ interface Reservation {
 
 interface Consultant {
   id: string
+  firstName?: string
   name: string
   reservations: Reservation[]
 }
@@ -82,7 +83,7 @@ export default function SchedulePage() {
                 <tr className="bg-gray-100">
                   <th className="border p-2 text-left">{t("columns.hour")}</th>
                   {consultants.map(c => (
-                    <th key={c.id} className="border p-2 text-center">{c.name}</th>
+                    <th key={c.id} className="border p-2 text-center">{[c.firstName, c.name].filter(Boolean).join(' ')}</th>
                   ))}
                 </tr>
               </thead>

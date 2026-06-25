@@ -22,7 +22,7 @@ interface Order {
 }
 
 export default function SubscriptionsPage() {
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const t = useTranslations("adminPage.subscriptions")
   const commonT = useTranslations("common")
   const router = useRouter()

@@ -19,7 +19,7 @@ import { Trash2, ShieldAlert, CheckCircle } from "lucide-react"
 import { StandardPage } from "@/components/admin/standard-page"
 
 export default function AdminReviewsPage() {
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const t = useTranslations("adminPage.reviews")
   const commonT = useTranslations("common")
   const [reviews, setReviews] = React.useState<any[]>([])

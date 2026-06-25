@@ -43,7 +43,7 @@ const clientGrowthData = [
 ]
 
 export default function ConsultantWorkspace() {
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const t = useTranslations('consultant.dashboard')
   const [user, setUser] = React.useState<any>(null)
   const [stats, setStats] = React.useState<any>(null)

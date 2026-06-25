@@ -6,7 +6,7 @@ import { useRouter, useParams } from 'next/navigation'
 
 export default function Services() {
   const router = useRouter()
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const [services, setServices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 

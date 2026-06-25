@@ -63,6 +63,14 @@ export default function AdminDashboard() {
     growth:            "0",
     clientsChartData:  [] as { name: string; value: number }[],
     contactsChartData: [] as { name: string; value: number }[],
+    // nouvelles stats pour le rapport
+    totalOrders:       0,
+    activeOrders:      0,
+    pendingOrders:     0,
+    completedOrders:   0,
+    totalRevenue:      0,
+    avgRating:         "0",
+    totalReservations: 0,
   })
 
 
@@ -87,6 +95,14 @@ export default function AdminDashboard() {
             growth:            data.growth            || "0",
             clientsChartData:  data.clientsChartData  || [],
             contactsChartData: data.contactsChartData || [],
+            // nouvelles stats — l'API les retourne déjà ou on met 0 par défaut
+            totalOrders:       data.totalOrders       || 0,
+            activeOrders:      data.activeOrders      || 0,
+            pendingOrders:     data.pendingOrders     || 0,
+            completedOrders:   data.completedOrders   || 0,
+            totalRevenue:      data.totalRevenue      || 0,
+            avgRating:         data.avgRating         || "0",
+            totalReservations: data.totalReservations || 0,
           })
         }
       })
@@ -96,80 +112,315 @@ export default function AdminDashboard() {
 
   // ── TÉLÉCHARGEMENT RAPPORT HTML ──────────────
   const handleDownloadReport = () => {
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html lang="${locale}">
-      <head>
-        <meta charset="UTF-8">
-        <title>DSL Consulting - ${adminT('analyticsReport')}</title>
-        <style>
-          body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #0f172a; padding: 40px; margin: 0; }
-          .container { max-width: 900px; margin: 0 auto; }
-          .header { text-align: center; margin-bottom: 40px; }
-          .header h1 { font-size: 2.5rem; font-weight: 900; color: #1e293b; margin-bottom: 8px; }
-          .header p { color: #64748b; font-size: 1rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; }
-          .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
-          .card { background: white; padding: 32px; border-radius: 32px; box-shadow: 0 20px 50px rgba(0,0,0,0.04); }
-          .card h3 { font-size: 3rem; font-weight: 900; margin: 0; color: #0f172a; line-height: 1; margin-bottom: 16px; }
-          .card p.label { font-size: 0.8rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.2em; margin-top: 0; }
-          .tag-row { display: flex; gap: 8px; }
-          .tag { padding: 6px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; }
-          .tag-green { background: #dcfce7; color: #166534; }
-          .tag-orange { background: #ffedd5; color: #9a3412; }
-          .tag-blue { background: #dbeafe; color: #1e40af; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="header">
-            <h1>DSL Consulting</h1>
-            <p>${adminT('performanceReport')} — ${new Date().toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US')}</p>
-          </div>
-          <div class="grid">
-            <div class="card">
-              <p class="label">${adminT('totalClients')}</p>
-              <h3>${stats.clients}</h3>
-              <div class="tag-row">
-                <span class="tag tag-green">${stats.activeClients} ${adminT('active')}</span>
-                <span class="tag tag-orange">${stats.inactiveClients} ${adminT('inactive')}</span>
-              </div>
-            </div>
-            <div class="card">
-              <p class="label">${adminT('consultantsStaff')}</p>
-              <h3>${stats.consultants}</h3>
-              <div class="tag-row">
-                <span class="tag tag-green">${stats.activeConsultants} ${adminT('active')}</span>
-              </div>
-            </div>
-            <div class="card">
-              <p class="label">${adminT('clientGrowth30Days')}</p>
-              <h3 style="color: #2563eb">+${stats.growth}%</h3>
-            </div>
-            <div class="card">
-              <p class="label">${adminT('inquiriesAndContacts')}</p>
-              <h3>${stats.contacts}</h3>
-              <div class="tag-row">
-                 <span class="tag tag-orange">${stats.pendingContacts} ${adminT('pending')}</span>
-              </div>
-            </div>
-            <div class="card">
-              <p class="label">${adminT('activeServices')}</p>
-              <h3>${stats.solutions}</h3>
-            </div>
-            <div class="card">
-              <p class="label">${adminT('publishedApproches')}</p>
-              <h3>${stats.approches}</h3>
-            </div>
-          </div>
-        </div>
-      </body>
-      </html>
-    `
+    const now        = new Date()
+    const dateStr    = now.toLocaleDateString(locale === 'fr' ? 'fr-FR' : 'en-US', { day: 'numeric', month: 'long', year: 'numeric' })
+    const timeStr    = now.toLocaleTimeString(locale === 'fr' ? 'fr-FR' : 'en-US', { hour: '2-digit', minute: '2-digit' })
+    const satisfactionRate = stats.avgRating !== "0" ? `${stats.avgRating} / 5` : 'N/A'
+    const revenueStr = stats.totalRevenue > 0 ? `${Number(stats.totalRevenue).toFixed(2)} TND` : 'N/A'
+
+    const htmlContent = `<!DOCTYPE html>
+<html lang="${locale}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSL Consulting — Rapport de Performance</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #f1f5f9; color: #0f172a; }
+
+    /* ── PAGE ── */
+    .page { max-width: 960px; margin: 0 auto; padding: 40px 32px; }
+
+    /* ── HEADER ── */
+    .header {
+      background: linear-gradient(135deg, #1B3F7A 0%, #2563eb 100%);
+      border-radius: 24px;
+      padding: 40px 48px;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 200px; height: 200px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 50%;
+    }
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: 30%;
+      width: 280px; height: 280px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 50%;
+    }
+    .header-left { position: relative; z-index: 1; }
+    .header-logo { font-size: 2rem; font-weight: 900; letter-spacing: -0.02em; margin-bottom: 4px; }
+    .header-sub  { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.15em; opacity: 0.7; margin-bottom: 20px; }
+    .header-title { font-size: 1.1rem; font-weight: 700; opacity: 0.9; }
+    .header-right { position: relative; z-index: 1; text-align: right; }
+    .header-date { font-size: 0.85rem; opacity: 0.75; font-weight: 500; }
+    .header-date strong { display: block; font-size: 1.5rem; font-weight: 900; opacity: 1; letter-spacing: -0.02em; }
+    .badge-report {
+      display: inline-block;
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 12px;
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      color: #64748b;
+      margin: 32px 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+
+    /* ── KPI GRID ── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 14px; }
+    .kpi-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px; }
+    .kpi-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-bottom: 14px; }
+
+    .kpi {
+      background: white;
+      border-radius: 16px;
+      padding: 22px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+      border: 1px solid #f1f5f9;
+    }
+    .kpi.accent { background: #1B3F7A; color: white; }
+    .kpi.accent .kpi-label { color: rgba(255,255,255,0.6); }
+    .kpi.accent .kpi-value { color: white; }
+
+    .kpi-icon { font-size: 1.4rem; margin-bottom: 10px; }
+    .kpi-label { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: #94a3b8; margin-bottom: 6px; }
+    .kpi-value { font-size: 2.2rem; font-weight: 900; letter-spacing: -0.03em; color: #0f172a; line-height: 1; margin-bottom: 10px; }
+    .kpi-value.revenue { font-size: 1.5rem; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag {
+      padding: 4px 10px;
+      border-radius: 100px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+    }
+    .tag-green  { background: #dcfce7; color: #166534; }
+    .tag-orange { background: #ffedd5; color: #9a3412; }
+    .tag-blue   { background: #dbeafe; color: #1e40af; }
+    .tag-purple { background: #f3e8ff; color: #6b21a8; }
+    .tag-slate  { background: #f1f5f9; color: #475569; }
+    .tag-white  { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); }
+
+    /* ── WIDE KPI (chiffre d'affaires) ── */
+    .kpi-wide {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      border-radius: 16px;
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    }
+    .kpi-wide .kpi-label { color: rgba(255,255,255,0.5); }
+    .kpi-wide .kpi-value { color: white; font-size: 2.4rem; margin-bottom: 0; }
+    .kpi-wide-right { text-align: right; }
+    .kpi-wide-sub { font-size: 0.7rem; opacity: 0.5; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 24px;
+      border-top: 1px solid #e2e8f0;
+      color: #94a3b8;
+      font-size: 0.72rem;
+      font-weight: 500;
+    }
+    .footer strong { color: #475569; }
+
+    @media print {
+      body { background: white; }
+      .page { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ── HEADER ── -->
+  <div class="header">
+    <div class="header-left">
+      <div class="header-logo">DSL Consulting</div>
+      <div class="header-sub">Business Consulting &amp; Management Solutions</div>
+      <div class="header-title">📊 Rapport de Performance</div>
+      <div class="badge-report">Généré le ${dateStr} à ${timeStr}</div>
+    </div>
+    <div class="header-right">
+      <div class="header-date">
+        <span>Exercice</span>
+        <strong>${now.getFullYear()}</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 1 : Ressources humaines ── -->
+  <div class="section-title">👥 Ressources Humaines</div>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-icon">👤</div>
+      <div class="kpi-label">Total Clients</div>
+      <div class="kpi-value">${stats.clients}</div>
+      <div class="tags">
+        <span class="tag tag-green">${stats.activeClients} Actifs</span>
+        <span class="tag tag-orange">${stats.inactiveClients} Inactifs</span>
+      </div>
+    </div>
+    <div class="kpi accent">
+      <div class="kpi-icon">🚀</div>
+      <div class="kpi-label">Croissance Clients</div>
+      <div class="kpi-value">+${stats.growth}%</div>
+      <div class="tags">
+        <span class="tag tag-white">30 derniers jours</span>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">🎓</div>
+      <div class="kpi-label">Consultants</div>
+      <div class="kpi-value">${stats.consultants}</div>
+      <div class="tags">
+        <span class="tag tag-green">${stats.activeConsultants} Actifs</span>
+        <span class="tag tag-orange">${stats.consultants - stats.activeConsultants} Inactifs</span>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">⭐</div>
+      <div class="kpi-label">Satisfaction Moyenne</div>
+      <div class="kpi-value">${satisfactionRate}</div>
+      <div class="tags">
+        <span class="tag tag-blue">Avis clients</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 2 : Activité commerciale ── -->
+  <div class="section-title">💼 Activité Commerciale</div>
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-label">Total Commandes</div>
+      <div class="kpi-value">${stats.totalOrders}</div>
+      <div class="tags">
+        <span class="tag tag-green">${stats.activeOrders} Actives</span>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">⏳</div>
+      <div class="kpi-label">En Attente</div>
+      <div class="kpi-value">${stats.pendingOrders}</div>
+      <div class="tags">
+        <span class="tag tag-orange">À traiter</span>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-label">Terminées</div>
+      <div class="kpi-value">${stats.completedOrders}</div>
+      <div class="tags">
+        <span class="tag tag-blue">Missions clôturées</span>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">📅</div>
+      <div class="kpi-label">Réservations</div>
+      <div class="kpi-value">${stats.totalReservations}</div>
+      <div class="tags">
+        <span class="tag tag-purple">Séances planifiées</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CHIFFRE D'AFFAIRES ── -->
+  <div class="kpi-wide" style="margin-bottom:14px">
+    <div>
+      <div class="kpi-label">Chiffre d'Affaires Total</div>
+      <div class="kpi-value revenue">${revenueStr}</div>
+    </div>
+    <div class="kpi-wide-right">
+      <div class="kpi-wide-sub">Factures payées cumulées</div>
+    </div>
+  </div>
+
+  <!-- ── SECTION 3 : Catalogue & Contenu ── -->
+  <div class="section-title">🗂️ Catalogue &amp; Contenu</div>
+  <div class="kpi-grid-3">
+    <div class="kpi">
+      <div class="kpi-icon">🛠️</div>
+      <div class="kpi-label">Solutions Actives</div>
+      <div class="kpi-value">${stats.solutions}</div>
+      <div class="tags">
+        <span class="tag tag-green">Disponibles à la vente</span>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">✍️</div>
+      <div class="kpi-label">Articles Publiés</div>
+      <div class="kpi-value">${stats.approches}</div>
+      <div class="tags">
+        <span class="tag tag-blue">Approches &amp; Insights</span>
+      </div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-icon">📩</div>
+      <div class="kpi-label">Contacts Reçus</div>
+      <div class="kpi-value">${stats.contacts}</div>
+      <div class="tags">
+        <span class="tag tag-green">${stats.contacts - stats.pendingContacts} Traités</span>
+        <span class="tag tag-orange">${stats.pendingContacts} En attente</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── FOOTER ── -->
+  <div class="footer">
+    <strong>DSL Consulting</strong> · business@dsl-consulting.com · www.dsl-consulting.com<br>
+    RC: Tunis · MF: 1234567 · Tél: +216 00 000 000<br><br>
+    Document généré automatiquement le ${dateStr} à ${timeStr} — Confidentiel
+  </div>
+
+</div>
+</body>
+</html>`
+
     const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' })
     const url  = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href  = url
-    link.setAttribute('download', `dsl-analytics-report-${new Date().toISOString().split('T')[0]}.html`)
+    link.setAttribute('download', `Rapport de performance de DSL Consulting -${new Date().toISOString().split('T')[0]}.html`)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -257,8 +508,6 @@ export default function AdminDashboard() {
                 <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-200">
                   <Users className="w-6 h-6 text-white" />
                 </div>
-                {/* badge de croissance */}
-                
               </div>
               {/* bas : label + grand chiffre + graphique */}
               <div>
@@ -293,7 +542,7 @@ export default function AdminDashboard() {
                         <XAxis dataKey="name" hide />
                         <Tooltip
                           contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}
-                          formatter={(value) => [`${value} clients`, '']}
+                            formatter={(value) => [`${value ?? 0} clients`, '']}
                         />
                         {/* changer stroke="#2563eb" pour la couleur de la ligne */}
                         <Area 

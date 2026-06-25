@@ -181,7 +181,7 @@ export default function AdminBillingPage() {
               <div className="flex items-center gap-8">
                 <div className="text-center">
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{t("columns.amount")}</p>
-                  <p className="font-black text-slate-900 text-2xl">{inv.amount} DT</p>
+                  <p className="font-black text-slate-900 text-2xl">{inv.amount} {t("currency")}</p>
                 </div>
 
                 <div className="text-center">
@@ -244,6 +244,7 @@ export default function AdminBillingPage() {
                   <input 
                     type="date" 
                     className="w-full bg-slate-50 border-none rounded-xl p-3 text-sm font-bold"
+                    value={editInvoice?.id === inv.id ? new Date(inv.dueDate).toISOString().split('T')[0] : ''}
                     onChange={(e) => handleUpdate(inv.id, { dueDate: e.target.value })}
                   />
                 </div>

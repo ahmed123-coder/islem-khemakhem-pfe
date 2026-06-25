@@ -87,7 +87,7 @@ interface Service {
 }
 
 export default function ConsultantsPage() {
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const t = useTranslations('adminPage.consultants')
   const commonT = useTranslations('common')
   const [consultants, setConsultants] = React.useState<Consultant[]>([])
@@ -105,8 +105,10 @@ export default function ConsultantsPage() {
   const [detailConsultant, setDetailConsultant] = React.useState<Consultant | null>(null)
 
   // File upload state
+  const [avatarFile, setAvatarFile] = React.useState<File | null>(null)
   const [cvFile, setCvFile] = React.useState<File | null>(null)
   const [certFiles, setCertFiles] = React.useState<File[]>([])
+  const avatarRef = React.useRef<HTMLInputElement>(null)
   const cvRef = React.useRef<HTMLInputElement>(null)
   const certRef = React.useRef<HTMLInputElement>(null)
 
@@ -157,6 +159,7 @@ export default function ConsultantsPage() {
   const handleOpenCreate = () => {
     setEditItem(null)
     setForm({ serviceIds: [], isActive: true, certifications: [] })
+    setAvatarFile(null)
     setCvFile(null)
     setCertFiles([])
     setError('')
@@ -166,6 +169,7 @@ export default function ConsultantsPage() {
   const handleOpenEdit = (c: Consultant) => {
     setEditItem(c)
     setForm({ ...c, serviceIds: c.services.map(s => s.id), certifications: c.certifications || [] })
+    setAvatarFile(null)
     setCvFile(null)
     setCertFiles([])
     setError('')
@@ -189,24 +193,30 @@ export default function ConsultantsPage() {
     setSubmitting(true)
 
     try {
-      // 1. Upload CV if a new file was selected
+      // 1. Upload avatar if a new file was selected
+      let imageUrl = form.imageUrl || null
+      if (avatarFile) {
+        imageUrl = await uploadFile(avatarFile, 'consultant-avatars')
+      }
+
+      // 2. Upload CV if a new file was selected
       let cvUrl = form.cvUrl || null
       if (cvFile) {
         cvUrl = await uploadFile(cvFile, 'consultant-cvs')
       }
 
-      // 2. Upload new certification files
+      // 3. Upload new certification files
       const newCertUrls = await Promise.all(
         certFiles.map(f => uploadFile(f, 'consultant-certs'))
       )
       // Merge existing certifications (kept) + newly uploaded
       const allCertifications = [...(form.certifications || []), ...newCertUrls]
 
-      // 3. Build request body
+      // 4. Build request body
       const method = editItem ? 'PUT' : 'POST'
       const body = editItem 
-        ? { id: editItem.id, ...form, cvUrl, certifications: allCertifications }
-        : { ...form, cvUrl, certifications: allCertifications }
+        ? { id: editItem.id, ...form, imageUrl, cvUrl, certifications: allCertifications }
+        : { ...form, imageUrl, cvUrl, certifications: allCertifications }
 
       const res = await fetch('/api/admin/consultants', {
         method,
@@ -328,12 +338,12 @@ export default function ConsultantsPage() {
           {c.isActive ? (
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="w-3 h-3" />
-              {t('status.activeNode')}
+              {t('activeNode')}
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
               <ShieldAlert className="w-3 h-3" />
-              {t('status.suspended')}
+              {t('suspended')}
             </div>
           )}
         </button>
@@ -400,7 +410,6 @@ export default function ConsultantsPage() {
                 <Pencil className="w-4 h-4 mr-3" />
                 {t('modifyProfile')}
               </DropdownMenuItem>
-              <DropdownMenuSeparator className="my-1 bg-slate-50" />
               <DropdownMenuItem 
                 onClick={() => toggleActive(c)}
                 className="rounded-xl px-3 py-2.5 cursor-pointer transition-colors font-bold text-sm"
@@ -416,13 +425,6 @@ export default function ConsultantsPage() {
                     {t('restoreNode')}
                   </>
                 )}
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleDelete(c.id)}
-                className="rounded-xl px-3 py-2.5 cursor-pointer transition-colors focus:bg-red-50 focus:text-red-500 font-bold text-sm text-red-400"
-              >
-                <Trash2 className="w-4 h-4 mr-3" />
-                {t('deactivateConsultant')}
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -628,11 +630,11 @@ export default function ConsultantsPage() {
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.firstName')}</Label>
-                  <Input value={form.firstName || ''} onChange={e => setForm({ ...form, firstName: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="Nom" />
+                  <Input value={form.firstName || ''} onChange={e => setForm({ ...form, firstName: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="Prénom" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.lastName')}</Label>
-                  <Input value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} required className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder={t('form.lastNamePlaceholder')} />
+                  <Input value={form.name || ''} onChange={e => setForm({ ...form, name: e.target.value })} required className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" placeholder="Nom" />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.email')}</Label>
@@ -653,17 +655,52 @@ export default function ConsultantsPage() {
                     </div>
                   </div>
                 )}
-                <div className="space-y-2">
+                <div className="space-y-2 col-span-2">
                   <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.primeSpecialty')}</Label>
                   <Input value={form.specialty || ''} onChange={e => setForm({ ...form, specialty: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.hourlyRate')}</Label>
-                  <Input type="number" step="0.01" value={form.hourlyRate || ''} onChange={e => setForm({ ...form, hourlyRate: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" />
-                </div>
+                
                 <div className="space-y-2 col-span-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t('form.avatarContentUrl')}</Label>
-                  <Input value={form.imageUrl || ''} onChange={e => setForm({ ...form, imageUrl: e.target.value })} className="h-12 rounded-2xl bg-slate-50 border-transparent focus:bg-white transition-all font-bold" />
+                  <Label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1 flex items-center gap-2">
+                    <Image className="w-3.5 h-3.5" /> {t('form.avatarContentUrl')} <span className="text-slate-300 font-normal normal-case">{t('form.avatarFormats')}</span>
+                  </Label>
+
+                  {editItem && form.imageUrl && !avatarFile && (
+                    <div className="flex items-center justify-between p-3 rounded-2xl bg-blue-50/60 border border-blue-100/50">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Image className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                        <span className="text-xs font-bold text-blue-600 truncate">{t('form.currentAvatarUploaded')}</span>
+                      </div>
+                      <div className="flex gap-1.5 flex-shrink-0">
+                        <button type="button" onClick={() => openFile(form.imageUrl!)} className="text-[10px] font-bold text-blue-600 bg-blue-100 rounded-lg px-2 py-1 hover:bg-blue-200 transition-colors">{commonT('view')}</button>
+                        <button type="button" onClick={() => setForm({ ...form, imageUrl: null })} className="text-[10px] font-bold text-red-500 bg-red-50 rounded-lg px-2 py-1 hover:bg-red-100 transition-colors">{commonT('delete')}</button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div 
+                    onClick={() => avatarRef.current?.click()} 
+                    className="border-2 border-dashed border-slate-200 rounded-2xl p-5 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-all group"
+                  >
+                    {avatarFile ? (
+                      <div className="flex items-center justify-center gap-2">
+                        <Image className="w-5 h-5 text-blue-600" />
+                        <span className="text-sm font-bold text-blue-600">{avatarFile.name}</span>
+                        <button type="button" onClick={e => { e.stopPropagation(); setAvatarFile(null) }} className="text-red-400 hover:text-red-600 ml-2">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-1.5">
+                        <Upload className="w-6 h-6 text-slate-300 group-hover:text-blue-400 transition-colors" />
+                        <span className="text-sm text-slate-400 group-hover:text-blue-500 font-medium transition-colors">
+                          {editItem && form.imageUrl ? t('form.clickToReplaceAvatar') : t('form.clickToUploadAvatar')}
+                        </span>
+                        <span className="text-[10px] text-slate-300">{t('form.avatarFormatsDetailed')}</span>
+                      </div>
+                    )}
+                  </div>
+                  <input ref={avatarRef} type="file" accept=".jpg,.jpeg,.png,.webp" className="hidden" onChange={e => setAvatarFile(e.target.files?.[0] || null)} />
                 </div>
 
                 {/* ── CV Upload (like register page) ── */}

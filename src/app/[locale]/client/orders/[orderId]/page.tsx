@@ -37,8 +37,12 @@ export default function OrderDetails() {
   const t = useTranslations("clientPage.orders")
   const params = useParams()
   const router = useRouter()
+<<<<<<< HEAD
   const { locale } = params
   const orderId = params.orderId as string
+=======
+  const { locale, orderId } = params as { locale: string; orderId: string }
+>>>>>>> 1f2e273 (Initial commit)
 
   const [order, setOrder] = useState<any>(null)
   const [reservations, setReservations] = useState<any[]>([])

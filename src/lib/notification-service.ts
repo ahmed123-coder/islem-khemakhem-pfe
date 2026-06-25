@@ -80,7 +80,7 @@ export async function notifyReservationUpdate(reservationId: string, status: str
   if (!reservation) return
 
   await createNotification(reservation.clientId, 'CLIENT', 'RESERVATION', 'RDV mis à jour', `Votre RDV a été ${status.toLowerCase()}`, reservation.orderId ?? undefined)
-  // await notifyAdmins('RESERVATION', 'RDV mis à jour', `RDV de ${reservation.client.name || reservation.client.email} : statut ${status.toLowerCase()}`, reservation.orderId ?? undefined)
+  await notifyAdmins('RESERVATION', 'RDV mis à jour', `RDV de ${reservation.client.name || reservation.client.email} : statut ${status.toLowerCase()}`, reservation.orderId ?? undefined)
 }
 
 export async function notifyOrderStatusUpdate(orderId: string, status: string) {
@@ -108,20 +108,10 @@ export async function notifyNewOrder(orderId: string) {
 
   if (order.consultantId) {
     await createNotification(order.consultantId, 'CONSULTANT', 'ORDER', 'Nouvelle commande assignée', `Nouvelle commande pour ${order.serviceTier.service.name} de ${order.client.name || order.client.email}.`, orderId)
-    emitToRoom(`user:${order.consultantId}`, 'notification', { type: 'ORDER', orderId, title: 'Nouvelle commande assignée', message: `Nouvelle commande de ${order.client.name || order.client.email}`, timestamp: new Date().toISOString() })
   }
 
   // Create DB notifications for each admin
   await notifyAdmins('ORDER', 'Nouvelle commande', `${order.client.name || order.client.email} a passé une commande pour ${order.serviceTier.service.name}`, orderId)
-
-  // Also broadcast to the admin role room for instant real-time delivery
-  emitToRoom('role:ADMIN', 'notification', {
-    type: 'ORDER',
-    orderId,
-    title: 'Nouvelle commande',
-    message: `${order.client.name || order.client.email} a passé une commande pour ${order.serviceTier.service.name}`,
-    timestamp: new Date().toISOString()
-  })
 }
 
 export async function notifyMissionUpdate(missionId: string, title: string, message: string) {
@@ -156,14 +146,6 @@ export async function notifyNewClientRegistration(clientId: string) {
   if (!client) return
   const clientLabel = client.name || client.firstName || client.email
   await notifyAdmins('REGISTRATION', 'Nouveau client inscrit', `${clientLabel} vient de s'inscrire en tant que client.`)
-
-  // Broadcast to admin role room for instant real-time delivery
-  emitToRoom('role:ADMIN', 'notification', {
-    type: 'REGISTRATION',
-    title: 'Nouveau client inscrit',
-    message: `${clientLabel} vient de s'inscrire en tant que client.`,
-    timestamp: new Date().toISOString()
-  })
 }
 
 export async function notifyNewConsultantRegistration(consultantId: string) {
@@ -171,14 +153,6 @@ export async function notifyNewConsultantRegistration(consultantId: string) {
   if (!consultant) return
   const consultantLabel = consultant.name || consultant.firstName || consultant.email
   await notifyAdmins('REGISTRATION', 'Nouveau consultant inscrit', `${consultantLabel} vient de s'inscrire en tant que consultant. Dossier à valider.`)
-
-  // Broadcast to admin role room for instant real-time delivery
-  emitToRoom('role:ADMIN', 'notification', {
-    type: 'REGISTRATION',
-    title: 'Nouveau consultant inscrit',
-    message: `${consultantLabel} vient de s'inscrire en tant que consultant. Dossier à valider.`,
-    timestamp: new Date().toISOString()
-  })
 }
 export async function notifyNewReservation(reservationId: string) {
   const reservation = await prisma.reservation.findUnique({ 
@@ -190,9 +164,7 @@ export async function notifyNewReservation(reservationId: string) {
   const dateStr = new Date(reservation.startTime).toLocaleString('fr-FR')
 
   await createNotification(reservation.consultantId, 'CONSULTANT', 'RESERVATION', 'Nouveau RDV', `Nouveau RDV de ${reservation.client.name || reservation.client.email} le ${dateStr}`, reservation.orderId ?? undefined)
-  emitToRoom(`user:${reservation.consultantId}`, 'notification', { type: 'RESERVATION', orderId: reservation.orderId, title: 'Nouveau RDV', message: `RDV de ${reservation.client.name || reservation.client.email} le ${dateStr}`, timestamp: new Date().toISOString() })
-
-  // await notifyAdmins('RESERVATION', 'Nouveau RDV', `${reservation.client.name || reservation.client.email} a pris un RDV le ${dateStr}`, reservation.orderId ?? undefined)
+  await notifyAdmins('RESERVATION', 'Nouveau RDV', `${reservation.client.name || reservation.client.email} a pris un RDV le ${dateStr}`, reservation.orderId ?? undefined)
 }
 
 export async function notifyReservationDelete(reservationId: string, deletedBy: 'CLIENT' | 'CONSULTANT') {
@@ -207,7 +179,7 @@ export async function notifyReservationDelete(reservationId: string, deletedBy: 
   const senderLabel = deletedBy === 'CLIENT' ? 'client' : 'consultant'
 
   await createNotification(recipientId as string, recipientType, 'RESERVATION', 'RDV annulé', `Un RDV avec votre ${senderLabel} a été annulé.`, reservation.orderId ?? undefined)
-  // await notifyAdmins('RESERVATION', 'RDV annulé', `RDV annulé par le ${senderLabel} ${reservation.client.name || reservation.client.email}`, reservation.orderId ?? undefined)
+  await notifyAdmins('RESERVATION', 'RDV annulé', `RDV annulé par le ${senderLabel} ${reservation.client.name || reservation.client.email}`, reservation.orderId ?? undefined)
 }
 
 export async function notifyNewReview(reviewId: string) {
@@ -233,12 +205,4 @@ export async function notifyNewReview(reviewId: string) {
     'Nouvel avis',
     `${clientName} a laissé un avis (${review.rating}★) sur le ${targetLabel} ${targetName}`,
   )
-
-  // Broadcast to admin role room for instant real-time delivery
-  emitToRoom('role:ADMIN', 'notification', {
-    type: 'REVIEW',
-    title: 'Nouvel avis',
-    message: `${clientName} a laissé un avis (${review.rating}★) sur le ${targetLabel} ${targetName}`,
-    timestamp: new Date().toISOString()
-  })
 }

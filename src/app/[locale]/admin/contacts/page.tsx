@@ -41,7 +41,7 @@ interface Contact {
 }
 
 export default function ContactsCRM() {
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const t = useTranslations('adminPage.contacts')
   const commonT = useTranslations('common')
   const [contacts, setContacts] = React.useState<Contact[]>([])
@@ -211,13 +211,7 @@ export default function ContactsCRM() {
                       </div>
                     </div>
                     <div className="flex gap-2 relative z-10">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => window.open(`mailto:${selectedContact.email}`)}
-                        className="rounded-[18px] border-slate-100 bg-white h-11 px-6 font-bold text-xs transition-all hover:bg-slate-50 active:scale-95 shadow-sm"
-                      >
-                        <Reply className="w-4 h-4 mr-2 text-blue-600" /> {t('dispatchReply')}
-                      </Button>
+                      
                       <Button 
                         disabled={isProcessing}
                         onClick={() => updateStatus(selectedContact.id, 'replied')}
@@ -244,10 +238,7 @@ export default function ContactsCRM() {
                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{t('origin')}</p>
                            <p className="text-xs font-black text-slate-900 uppercase">{t('externalForm')}</p>
                         </div>
-                        <div className="p-5 rounded-[28px] bg-slate-50/50 border border-slate-100 flex flex-col justify-between h-24 group hover:bg-white hover:shadow-lg transition-all">
-                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{t('node')}</p>
-                           <p className="text-xs font-black text-slate-900 uppercase italic">{t('cmsHub')}</p>
-                        </div>
+                        
                         <div className="p-5 rounded-[28px] bg-slate-50/50 border border-slate-100 flex flex-col justify-between h-24 group hover:bg-white hover:shadow-lg transition-all">
                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">{t('id')}</p>
                            <p className="text-xs font-black text-slate-900 uppercase tracking-tighter">#{selectedContact.id.slice(0, 8)}</p>
@@ -275,14 +266,13 @@ export default function ContactsCRM() {
 
                   {/* Detail Footer */}
                   <footer className="p-8 border-t border-slate-100 bg-slate-50/30 flex items-center justify-between">
-                    <div className="flex items-center gap-6">
-                       <div className="flex -space-x-3">
-                          {[1,2,3].map(i => (
-                            <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 text-[10px] font-black flex items-center justify-center text-slate-400">?</div>
-                          ))}
-                       </div>
-                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('protocolVersion')}</span>
-                    </div>
+                  <Button 
+                        variant="outline" 
+                        onClick={() => window.open(`mailto:${selectedContact.email}`)}
+                        className="rounded-[18px] border-slate-100 bg-white h-11 px-6 font-bold text-xs transition-all hover:bg-slate-50 active:scale-95 shadow-sm"
+                      >
+                        <Reply className="w-4 h-4 mr-2 text-blue-600" /> {t('dispatchReply')}
+                      </Button>
                     <Button 
                       variant="ghost" 
                       onClick={() => handleDelete(selectedContact.id)}

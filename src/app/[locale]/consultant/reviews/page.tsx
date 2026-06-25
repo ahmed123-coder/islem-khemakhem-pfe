@@ -12,7 +12,7 @@ import { useParams } from 'next/navigation'
 import Link from 'next/link'
 
 export default function ConsultantReviewsPage() {
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const t = useTranslations("consultantPage.reviews")
   const [reviews, setReviews] = React.useState<any[]>([])
   const [loading, setLoading] = React.useState(true)

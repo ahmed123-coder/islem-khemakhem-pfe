@@ -17,7 +17,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 export function AdminTopBar() {
   const router = useRouter()
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const [mounted, setMounted] = React.useState(false)
   const [notifications, setNotifications] = React.useState<any[]>([])
   const [unreadCount, setUnreadCount] = React.useState(0)
@@ -81,10 +81,10 @@ export function AdminTopBar() {
   if (!mounted) return null
 
   return (
-    <header className="h-20 border-b border-slate-200/60 bg-white/50 backdrop-blur-xl sticky top-0 z-40 px-6 md:px-10 flex items-center justify-between font-sans">
+    <header className="h-20 border-b border-slate-200/60 bg-white/50 backdrop-blur-xl sticky top-0 z-40 px-6 md:px-10 flex items-center justify-end font-sans">
       <SidebarToggle theme="admin" />
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 ml-4">
         <LanguageSwitcher />
         <div className="h-6 w-px bg-slate-200/60" />
 
@@ -129,9 +129,7 @@ export function AdminTopBar() {
                 ))}
               </div>
             </ScrollArea>
-            <div className="p-4 border-t border-slate-100 bg-slate-50/30 text-center">
-              <Link href={`/${locale}/admin`} className="text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors">View Recent Logs</Link>
-            </div>
+            
           </DropdownMenuContent>
         </DropdownMenu>
 

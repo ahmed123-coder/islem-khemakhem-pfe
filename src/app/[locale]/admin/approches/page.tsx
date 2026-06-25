@@ -45,7 +45,7 @@ type Blog = {
 }
 
 export default function BlogsCMS() {
-  const { locale } = useParams()
+  const { locale } = useParams() as { locale: string }
   const t = useTranslations("adminPage.approches")
   const [blogs, setBlogs] = React.useState<Blog[]>([])
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
